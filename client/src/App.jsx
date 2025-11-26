@@ -51,7 +51,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Dashboard currentUser={currentUser} />} />
         <Route path="/attendance" element={<Attendance currentUser={currentUser} />} />
-        <Route path="/members" element={<Members />} />
+        <Route path="/members" element={<Members currentUser={currentUser} />} />
         <Route path="/matches" element={<Matches currentUser={currentUser} />} />
         <Route path="/profile" element={<Profile currentUser={currentUser} onUpdate={handleLogin} />} />
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -39,12 +39,14 @@
   "members": {
     "title": "클럽 회원",
     "addMember": "회원 추가",
+    "memberCount": "명",
     "level": {
       "beginner": "초급",
       "intermediate": "중급",
       "advanced": "상급"
     },
-    "noMembers": "회원이 없습니다"
+    "noMembers": "회원이 없습니다",
+    "searchPlaceholder": "회원 검색..."
   },
   "matches": {
     "title": "경기 기록",
@@ -52,6 +54,11 @@
     "editMatch": "경기 수정",
     "deleteMatch": "경기 삭제",
     "deleteConfirm": "이 경기 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "matchCount": "경기",
+    "matchType": "경기 유형",
+    "date": "날짜",
+    "player": "선수",
+    "selectPlayer": "선수 선택",
     "type": {
       "singles": "단식",
       "doubles": "복식"
@@ -89,7 +96,10 @@
     "create": "클럽 가입",
     "continue": "계속",
     "noUsers": "등록된 회원이 없습니다",
-    "registerFirst": "먼저 회원가입을 해주세요"
+    "registerFirst": "먼저 회원가입을 해주세요",
+    "adminPassword": "관리자 인증",
+    "password": "비밀번호",
+    "wrongPassword": "비밀번호가 올바르지 않습니다"
   },
   "common": {
     "loading": "로딩 중...",

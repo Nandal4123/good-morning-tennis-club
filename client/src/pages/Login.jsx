@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Shield, User, UserPlus, LogIn } from "lucide-react";
+import { Shield, User, UserPlus, LogIn, Lock, X } from "lucide-react";
 import { userApi } from "../lib/api";
+
+// 관리자 암호 (실제 운영시 환경변수로 관리 권장)
+const ADMIN_PASSWORD = "admin1234";
 
 function Login({ onLogin }) {
   const { t } = useTranslation();
@@ -9,6 +12,10 @@ function Login({ onLogin }) {
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [selectedAdminUser, setSelectedAdminUser] = useState(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [passwordError, setPasswordError] = useState(false);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -37,7 +44,25 @@ function Login({ onLogin }) {
   };
 
   const handleSelectUser = (user) => {
-    onLogin(user);
+    if (user.role === "ADMIN") {
+      setSelectedAdminUser(user);
+      setShowAdminModal(true);
+      setAdminPassword("");
+      setPasswordError(false);
+    } else {
+      onLogin(user);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    if (adminPassword === ADMIN_PASSWORD) {
+      onLogin(selectedAdminUser);
+      setShowAdminModal(false);
+      setSelectedAdminUser(null);
+      setAdminPassword("");
+    } else {
+      setPasswordError(true);
+    }
   };
 
   const handleCreateUser = async (e) => {
@@ -284,6 +309,71 @@ function Login({ onLogin }) {
           {t("app.subtitle")}
         </p>
       </div>
+
+      {/* Admin Password Modal */}
+      {showAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-sm p-6 animate-slide-up">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Lock className="text-orange-400" size={24} />
+                {t("login.adminPassword")}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowAdminModal(false);
+                  setSelectedAdminUser(null);
+                  setAdminPassword("");
+                  setPasswordError(false);
+                }}
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <Shield size={32} className="text-white" />
+              </div>
+              <p className="text-white font-medium">{selectedAdminUser?.name}</p>
+              <p className="text-sm text-slate-400">{t("login.roleAdmin")}</p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  {t("login.password")}
+                </label>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => {
+                    setAdminPassword(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  onKeyPress={(e) => e.key === "Enter" && handleAdminLogin()}
+                  className={`input ${passwordError ? "border-red-500" : ""}`}
+                  placeholder="••••••••"
+                  autoFocus
+                />
+                {passwordError && (
+                  <p className="text-red-400 text-sm mt-2">
+                    {t("login.wrongPassword")}
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={handleAdminLogin}
+                className="btn-primary w-full"
+              >
+                {t("login.loginTab")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

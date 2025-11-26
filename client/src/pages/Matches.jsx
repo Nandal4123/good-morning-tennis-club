@@ -188,15 +188,17 @@ function Matches({ currentUser }) {
             <Trophy className="text-tennis-400" />
             {t('matches.title')}
           </h1>
-          <p className="text-slate-400 mt-1">{matches.length} matches recorded</p>
+          <p className="text-slate-400 mt-1">{matches.length} {t('matches.matchCount')}</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
-          {t('matches.newMatch')}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={20} />
+            {t('matches.newMatch')}
+          </button>
+        )}
       </div>
 
       {/* Matches Grid */}
@@ -237,7 +239,7 @@ function Matches({ currentUser }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">
-                    Match Type
+                    {t('matches.matchType')}
                   </label>
                   <div className="input bg-purple-500/20 border-purple-500/30 text-purple-400 flex items-center gap-2">
                     <span>🎾</span> {t('matches.type.doubles')}
@@ -245,7 +247,7 @@ function Matches({ currentUser }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">
-                    Date
+                    {t('matches.date')}
                   </label>
                   <input
                     type="date"
@@ -261,28 +263,28 @@ function Matches({ currentUser }) {
                 <h3 className="font-medium text-blue-400 mb-3">{t('matches.team.a')}</h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Player 1</label>
+                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 1</label>
                     <select
                       value={newMatch.teamA[0]}
                       onChange={(e) => updateTeamPlayer('A', 0, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">Select player</option>
+                      <option value="">{t('matches.selectPlayer')}</option>
                       {users.map(user => (
                         <option key={user.id} value={user.id}>{user.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Player 2</label>
+                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 2</label>
                     <select
                       value={newMatch.teamA[1]}
                       onChange={(e) => updateTeamPlayer('A', 1, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">Select player</option>
+                      <option value="">{t('matches.selectPlayer')}</option>
                       {users.map(user => (
                         <option key={user.id} value={user.id}>{user.name}</option>
                       ))}
@@ -306,28 +308,28 @@ function Matches({ currentUser }) {
                 <h3 className="font-medium text-purple-400 mb-3">{t('matches.team.b')}</h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Player 1</label>
+                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 1</label>
                     <select
                       value={newMatch.teamB[0]}
                       onChange={(e) => updateTeamPlayer('B', 0, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">Select player</option>
+                      <option value="">{t('matches.selectPlayer')}</option>
                       {users.map(user => (
                         <option key={user.id} value={user.id}>{user.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">Player 2</label>
+                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 2</label>
                     <select
                       value={newMatch.teamB[1]}
                       onChange={(e) => updateTeamPlayer('B', 1, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">Select player</option>
+                      <option value="">{t('matches.selectPlayer')}</option>
                       {users.map(user => (
                         <option key={user.id} value={user.id}>{user.name}</option>
                       ))}
@@ -372,7 +374,7 @@ function Matches({ currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">{t('common.edit')} Match</h2>
+              <h2 className="text-xl font-bold text-white">{t('matches.editMatch')}</h2>
               <button
                 onClick={() => { setShowEditModal(false); setSelectedMatch(null); }}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
@@ -384,7 +386,7 @@ function Matches({ currentUser }) {
             <form onSubmit={handleUpdateMatch} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-2">
-                  Date
+                  {t('matches.date')}
                 </label>
                 <input
                   type="date"
@@ -463,7 +465,7 @@ function Matches({ currentUser }) {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                 <Trash2 className="text-red-400" size={32} />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">{t('common.delete')} Match?</h2>
+              <h2 className="text-xl font-bold text-white mb-2">{t('matches.deleteMatch')}</h2>
               <p className="text-slate-400 mb-6">
                 이 경기 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
               </p>

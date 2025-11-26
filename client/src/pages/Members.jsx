@@ -4,7 +4,7 @@ import { Users, Plus, X, Search } from 'lucide-react';
 import { userApi } from '../lib/api';
 import MemberCard from '../components/MemberCard';
 
-function Members() {
+function Members({ currentUser }) {
   const { t } = useTranslation();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +17,9 @@ function Members() {
     goals: ''
   });
   const [saving, setSaving] = useState(false);
+  
+  // 관리자 여부 확인
+  const isAdmin = currentUser?.role === 'ADMIN';
 
   useEffect(() => {
     loadMembers();
@@ -75,15 +78,17 @@ function Members() {
             <Users className="text-tennis-400" />
             {t('members.title')}
           </h1>
-          <p className="text-slate-400 mt-1">{members.length} members</p>
+          <p className="text-slate-400 mt-1">{members.length} {t('members.memberCount')}</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={20} />
-          {t('members.addMember')}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={20} />
+            {t('members.addMember')}
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -91,7 +96,7 @@ function Members() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
         <input
           type="text"
-          placeholder="Search members..."
+          placeholder={t('members.searchPlaceholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="input pl-12"
@@ -138,7 +143,7 @@ function Members() {
                   value={newMember.name}
                   onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
                   className="input"
-                  placeholder="John Doe"
+                  placeholder="홍길동"
                 />
               </div>
 
@@ -152,7 +157,7 @@ function Members() {
                   value={newMember.email}
                   onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
                   className="input"
-                  placeholder="john@example.com"
+                  placeholder="example@email.com"
                 />
               </div>
 
@@ -180,7 +185,7 @@ function Members() {
                   onChange={(e) => setNewMember({ ...newMember, goals: e.target.value })}
                   className="input resize-none"
                   rows={3}
-                  placeholder="Improve my serve..."
+                  placeholder="서브 실력 향상..."
                 />
               </div>
 
