@@ -18,6 +18,9 @@
     "checkedIn": "출석 완료!",
     "attendanceRate": "출석률",
     "totalMatches": "총 경기 수",
+    "totalAttendance": "총 출석",
+    "wins": "승리",
+    "membersPresent": "명 출석",
     "recentActivity": "최근 활동",
     "noActivity": "최근 활동이 없습니다"
   },

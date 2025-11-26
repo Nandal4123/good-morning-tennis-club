@@ -76,7 +76,7 @@ function Dashboard({ currentUser }) {
             {t('dashboard.welcome')}, {currentUser.name}! 👋
           </h1>
           <p className="text-slate-400 mt-1">
-            {new Date().toLocaleDateString(undefined, { 
+            {new Date().toLocaleDateString('ko-KR', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 
@@ -133,7 +133,7 @@ function Dashboard({ currentUser }) {
         <div className="stagger-item">
           <StatCard
             icon={TrendingUp}
-            label="Total Attendance"
+            label={t('dashboard.totalAttendance')}
             value={userStats?.stats?.totalAttendance || 0}
             color="purple"
           />
@@ -141,7 +141,7 @@ function Dashboard({ currentUser }) {
         <div className="stagger-item">
           <StatCard
             icon={Clock}
-            label="Wins"
+            label={t('dashboard.wins')}
             value={userStats?.stats?.wins || 0}
             color="orange"
           />
@@ -163,7 +163,7 @@ function Dashboard({ currentUser }) {
                 <span className="text-2xl font-bold font-display">
                   {todaySession.attendances?.length || 0}
                 </span>
-                <span className="text-slate-400">members present</span>
+                <span className="text-slate-400">{t('dashboard.membersPresent')}</span>
               </div>
               {todaySession.attendances?.length > 0 && (
                 <div className="mt-4 flex -space-x-2">

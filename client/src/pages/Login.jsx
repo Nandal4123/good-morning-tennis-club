@@ -4,9 +4,9 @@ import { Shield, User, UserPlus, LogIn } from "lucide-react";
 import { userApi } from "../lib/api";
 
 function Login({ onLogin }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
-  const [activeTab, setActiveTab] = useState("login"); // 'login' or 'register'
+  const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newUser, setNewUser] = useState({
@@ -25,7 +25,6 @@ function Login({ onLogin }) {
       setLoading(true);
       const data = await userApi.getAll();
       setUsers(data);
-      // 사용자가 없으면 회원가입 탭으로
       if (data.length === 0) {
         setActiveTab("register");
       }
@@ -38,7 +37,6 @@ function Login({ onLogin }) {
   };
 
   const handleSelectUser = (user) => {
-    i18n.changeLanguage(user.languagePref || "en");
     onLogin(user);
   };
 
@@ -56,25 +54,12 @@ function Login({ onLogin }) {
     }
   };
 
-  const toggleLanguage = () => {
-    const newLang = i18n.language === "en" ? "ko" : "en";
-    i18n.changeLanguage(newLang);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background elements */}
       <div className="absolute inset-0 court-pattern opacity-30" />
       <div className="absolute top-1/4 -left-20 w-96 h-96 bg-tennis-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-tennis-500/10 rounded-full blur-3xl" />
-
-      {/* Language toggle */}
-      <button
-        onClick={toggleLanguage}
-        className="absolute top-4 right-4 px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700 text-slate-400 hover:text-white hover:border-slate-600 transition-all duration-300"
-      >
-        {i18n.language === "en" ? "🇰🇷 한국어" : "🇺🇸 English"}
-      </button>
 
       <div className="w-full max-w-md relative">
         {/* Logo */}
@@ -138,7 +123,7 @@ function Login({ onLogin }) {
                       setNewUser({ ...newUser, name: e.target.value })
                     }
                     className="input"
-                    placeholder="John Doe"
+                    placeholder="홍길동"
                   />
                 </div>
                 <div>
@@ -153,7 +138,7 @@ function Login({ onLogin }) {
                       setNewUser({ ...newUser, email: e.target.value })
                     }
                     className="input"
-                    placeholder="john@example.com"
+                    placeholder="example@email.com"
                   />
                 </div>
 
