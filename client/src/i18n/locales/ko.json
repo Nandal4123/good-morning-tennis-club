@@ -74,6 +74,8 @@
   "login": {
     "title": "굿모닝 클럽에 오신 것을 환영합니다",
     "subtitle": "계속하려면 로그인하세요",
+    "loginTab": "로그인",
+    "registerTab": "회원가입",
     "selectUser": "프로필을 선택하세요",
     "newUser": "새 프로필 만들기",
     "name": "이름",
@@ -82,7 +84,9 @@
     "roleUser": "일반회원",
     "roleAdmin": "관리자",
     "create": "클럽 가입",
-    "continue": "계속"
+    "continue": "계속",
+    "noUsers": "등록된 회원이 없습니다",
+    "registerFirst": "먼저 회원가입을 해주세요"
   },
   "common": {
     "loading": "로딩 중...",
@@ -97,4 +101,3 @@
     "yesterday": "어제"
   }
 }
-

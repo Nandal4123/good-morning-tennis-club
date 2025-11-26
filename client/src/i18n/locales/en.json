@@ -74,6 +74,8 @@
   "login": {
     "title": "Welcome to Good Morning Club",
     "subtitle": "Sign in to continue",
+    "loginTab": "Login",
+    "registerTab": "Register",
     "selectUser": "Select your profile",
     "newUser": "Create new profile",
     "name": "Your name",
@@ -82,7 +84,9 @@
     "roleUser": "Member",
     "roleAdmin": "Admin",
     "create": "Join Club",
-    "continue": "Continue"
+    "continue": "Continue",
+    "noUsers": "No registered members",
+    "registerFirst": "Please register first"
   },
   "common": {
     "loading": "Loading...",
@@ -97,4 +101,3 @@
     "yesterday": "Yesterday"
   }
 }
-
