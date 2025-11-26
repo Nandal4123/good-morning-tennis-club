@@ -4,7 +4,7 @@ import { Shield, User, UserPlus, LogIn, Lock, X } from "lucide-react";
 import { userApi } from "../lib/api";
 
 // 관리자 암호 (실제 운영시 환경변수로 관리 권장)
-const ADMIN_PASSWORD = "admin1234";
+const ADMIN_PASSWORD = "admin0405";
 
 function Login({ onLogin }) {
   const { t } = useTranslation();
