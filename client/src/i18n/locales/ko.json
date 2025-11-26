@@ -1,0 +1,100 @@
+{
+  "app": {
+    "title": "굿모닝 클럽",
+    "subtitle": "테니스 클럽 출석 관리"
+  },
+  "nav": {
+    "dashboard": "대시보드",
+    "attendance": "출석",
+    "members": "회원",
+    "matches": "경기",
+    "profile": "프로필",
+    "logout": "로그아웃"
+  },
+  "dashboard": {
+    "welcome": "환영합니다",
+    "todaySession": "오늘의 세션",
+    "quickCheckIn": "빠른 출석체크",
+    "checkedIn": "출석 완료!",
+    "attendanceRate": "출석률",
+    "totalMatches": "총 경기 수",
+    "recentActivity": "최근 활동",
+    "noActivity": "최근 활동이 없습니다"
+  },
+  "attendance": {
+    "title": "출석",
+    "checkIn": "출석하기",
+    "checkOut": "결석 처리",
+    "status": {
+      "attended": "출석",
+      "absent": "결석"
+    },
+    "todayAttendees": "오늘 출석자",
+    "noAttendees": "아직 출석자가 없습니다",
+    "history": "출석 기록"
+  },
+  "members": {
+    "title": "클럽 회원",
+    "addMember": "회원 추가",
+    "level": {
+      "beginner": "초급",
+      "intermediate": "중급",
+      "advanced": "상급"
+    },
+    "noMembers": "회원이 없습니다"
+  },
+  "matches": {
+    "title": "경기 기록",
+    "newMatch": "새 경기",
+    "editMatch": "경기 수정",
+    "deleteMatch": "경기 삭제",
+    "deleteConfirm": "이 경기 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+    "type": {
+      "singles": "단식",
+      "doubles": "복식"
+    },
+    "team": {
+      "a": "A팀",
+      "b": "B팀"
+    },
+    "score": "점수",
+    "noMatches": "기록된 경기가 없습니다"
+  },
+  "profile": {
+    "title": "내 프로필",
+    "edit": "프로필 수정",
+    "save": "저장",
+    "name": "이름",
+    "email": "이메일",
+    "level": "테니스 레벨",
+    "goals": "목표",
+    "language": "언어",
+    "stats": "내 통계"
+  },
+  "login": {
+    "title": "굿모닝 클럽에 오신 것을 환영합니다",
+    "subtitle": "계속하려면 로그인하세요",
+    "selectUser": "프로필을 선택하세요",
+    "newUser": "새 프로필 만들기",
+    "name": "이름",
+    "email": "이메일",
+    "memberType": "회원 유형",
+    "roleUser": "일반회원",
+    "roleAdmin": "관리자",
+    "create": "클럽 가입",
+    "continue": "계속"
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "error": "문제가 발생했습니다",
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "수정",
+    "close": "닫기",
+    "confirm": "확인",
+    "today": "오늘",
+    "yesterday": "어제"
+  }
+}
+

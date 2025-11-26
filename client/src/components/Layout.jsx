@@ -1,0 +1,134 @@
+import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { 
+  LayoutDashboard, 
+  ClipboardCheck, 
+  Users, 
+  Trophy, 
+  User, 
+  LogOut,
+  Menu,
+  X
+} from 'lucide-react';
+import { useState } from 'react';
+
+function Layout({ children, currentUser, onLogout }) {
+  const { t } = useTranslation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { to: '/', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/attendance', icon: ClipboardCheck, label: t('nav.attendance') },
+    { to: '/members', icon: Users, label: t('nav.members') },
+    { to: '/matches', icon: Trophy, label: t('nav.matches') },
+    { to: '/profile', icon: User, label: t('nav.profile') },
+  ];
+
+  const NavItem = ({ to, icon: Icon, label }) => (
+    <NavLink
+      to={to}
+      onClick={() => setMobileMenuOpen(false)}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+          isActive
+            ? 'bg-tennis-500/20 text-tennis-400 border border-tennis-500/30'
+            : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+        }`
+      }
+    >
+      <Icon size={20} />
+      <span className="font-medium">{label}</span>
+    </NavLink>
+  );
+
+  return (
+    <div className="min-h-screen flex">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 bg-slate-900/50 border-r border-slate-700/50 p-6">
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-tennis-400 to-tennis-600 flex items-center justify-center">
+            <span className="text-xl">🎾</span>
+          </div>
+          <div>
+            <h1 className="font-display font-bold text-lg text-white">{t('app.title')}</h1>
+            <p className="text-xs text-slate-500">{t('app.subtitle')}</p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-2">
+          {navItems.map((item) => (
+            <NavItem key={item.to} {...item} />
+          ))}
+        </nav>
+
+        {/* User Info & Logout */}
+        <div className="pt-6 border-t border-slate-700/50">
+          <div className="flex items-center gap-3 mb-4 px-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center">
+              <span className="text-lg">{currentUser?.name?.charAt(0) || '?'}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-white truncate">{currentUser?.name}</p>
+              <p className="text-xs text-slate-500 truncate">{currentUser?.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">{t('nav.logout')}</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-tennis-400 to-tennis-600 flex items-center justify-center">
+              <span className="text-sm">🎾</span>
+            </div>
+            <h1 className="font-display font-bold text-white">{t('app.title')}</h1>
+          </div>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-b border-slate-700/50 p-4 animate-slide-up">
+            <nav className="space-y-2">
+              {navItems.map((item) => (
+                <NavItem key={item.to} {...item} />
+              ))}
+              <button
+                onClick={onLogout}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-300"
+              >
+                <LogOut size={20} />
+                <span className="font-medium">{t('nav.logout')}</span>
+              </button>
+            </nav>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 lg:p-8 p-4 pt-20 lg:pt-8 overflow-auto court-pattern">
+        <div className="max-w-6xl mx-auto">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default Layout;
+

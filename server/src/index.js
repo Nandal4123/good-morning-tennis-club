@@ -1,0 +1,60 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+
+import userRoutes from './routes/userRoutes.js';
+import sessionRoutes from './routes/sessionRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
+import matchRoutes from './routes/matchRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
+
+dotenv.config();
+
+const app = express();
+const prisma = new PrismaClient();
+const PORT = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(express.json());
+
+// Make prisma available to routes
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+});
+
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/attendances', attendanceRoutes);
+app.use('/api/matches', matchRoutes);
+app.use('/api/feedbacks', feedbackRoutes);
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+app.listen(PORT, () => {
+  console.log(`🎾 Club Attendance Server running on port ${PORT}`);
+});
+
+export { prisma };
+
