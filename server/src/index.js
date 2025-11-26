@@ -15,22 +15,9 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-const allowedOrigins = [
-  'http://localhost:5173',
-  'https://good-morning-tennis-club.vercel.app',
-  process.env.CLIENT_URL
-].filter(Boolean);
-
+// Middleware - Allow all origins for deployment
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(null, true); // Allow all origins for now
-  },
+  origin: true,
   credentials: true
 }));
 app.use(express.json());
