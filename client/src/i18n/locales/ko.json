@@ -39,6 +39,8 @@
   "members": {
     "title": "클럽 회원",
     "addMember": "회원 추가",
+    "deleteMember": "회원 삭제",
+    "deleteConfirm": "이 회원을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "memberCount": "명",
     "level": {
       "beginner": "초급",

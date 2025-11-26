@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Plus, X, Search } from 'lucide-react';
+import { Users, Plus, X, Search, Trash2 } from 'lucide-react';
 import { userApi } from '../lib/api';
 import MemberCard from '../components/MemberCard';
 
@@ -9,6 +9,8 @@ function Members({ currentUser }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newMember, setNewMember] = useState({
     name: '',
@@ -17,6 +19,7 @@ function Members({ currentUser }) {
     goals: ''
   });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   // 관리자 여부 확인
   const isAdmin = currentUser?.role === 'ADMIN';
@@ -50,6 +53,26 @@ function Members({ currentUser }) {
       alert(error.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteClick = (member) => {
+    setSelectedMember(member);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteMember = async () => {
+    try {
+      setDeleting(true);
+      await userApi.delete(selectedMember.id);
+      setShowDeleteModal(false);
+      setSelectedMember(null);
+      await loadMembers();
+    } catch (error) {
+      console.error('Failed to delete member:', error);
+      alert(error.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -107,7 +130,11 @@ function Members({ currentUser }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredMembers.map((member, i) => (
           <div key={member.id} className="stagger-item">
-            <MemberCard member={member} />
+            <MemberCard 
+              member={member} 
+              isAdmin={isAdmin}
+              onDelete={handleDeleteClick}
+            />
           </div>
         ))}
         {filteredMembers.length === 0 && (
@@ -206,6 +233,52 @@ function Members({ currentUser }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Member Modal */}
+      {showDeleteModal && selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 className="text-red-400" size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">{t('members.deleteMember')}</h2>
+              <p className="text-slate-400 mb-6">
+                {t('members.deleteConfirm')}
+              </p>
+              
+              {/* Member Preview */}
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-lg font-bold text-white">
+                    {selectedMember.name?.charAt(0) || '?'}
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{selectedMember.name}</p>
+                    <p className="text-sm text-slate-400">{selectedMember.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowDeleteModal(false); setSelectedMember(null); }}
+                  className="btn-secondary flex-1"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleDeleteMember}
+                  disabled={deleting}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+                >
+                  {deleting ? t('common.loading') : t('common.delete')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
