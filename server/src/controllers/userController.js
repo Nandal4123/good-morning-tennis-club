@@ -52,7 +52,7 @@ export const createUser = async (req, res) => {
         email,
         name,
         role: role || 'USER',
-        tennisLevel: tennisLevel || 'BEGINNER',
+        tennisLevel: tennisLevel || 'NTRP_3_0',
         goals,
         languagePref: languagePref || 'en',
         profileMetadata

@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Plus, X, Search, Trash2 } from 'lucide-react';
+import { Users, Plus, X, Search, Trash2, HelpCircle } from 'lucide-react';
 import { userApi } from '../lib/api';
 import MemberCard from '../components/MemberCard';
+
+// NTRP 등급 목록
+const NTRP_LEVELS = [
+  "NTRP_2_0",
+  "NTRP_2_5",
+  "NTRP_3_0",
+  "NTRP_3_5",
+  "NTRP_4_0",
+  "NTRP_4_5",
+  "NTRP_5_0",
+];
 
 function Members({ currentUser }) {
   const { t } = useTranslation();
@@ -10,12 +21,13 @@ function Members({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showNtrpGuide, setShowNtrpGuide] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newMember, setNewMember] = useState({
     name: '',
     email: '',
-    tennisLevel: 'BEGINNER',
+    tennisLevel: 'NTRP_3_0',
     goals: ''
   });
   const [saving, setSaving] = useState(false);
@@ -46,7 +58,7 @@ function Members({ currentUser }) {
       setSaving(true);
       await userApi.create(newMember);
       setShowModal(false);
-      setNewMember({ name: '', email: '', tennisLevel: 'BEGINNER', goals: '' });
+      setNewMember({ name: '', email: '', tennisLevel: 'NTRP_3_0', goals: '' });
       await loadMembers();
     } catch (error) {
       console.error('Failed to create member:', error);
@@ -189,17 +201,29 @@ function Members({ currentUser }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-400 mb-2">
-                  {t('profile.level')}
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium text-slate-400">
+                    {t('profile.level')} (NTRP)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowNtrpGuide(true)}
+                    className="flex items-center gap-1 text-xs text-tennis-400 hover:text-tennis-300 transition-colors"
+                  >
+                    <HelpCircle size={14} />
+                    {t('members.ntrpGuide')}
+                  </button>
+                </div>
                 <select
                   value={newMember.tennisLevel}
                   onChange={(e) => setNewMember({ ...newMember, tennisLevel: e.target.value })}
                   className="input"
                 >
-                  <option value="BEGINNER">{t('members.level.beginner')}</option>
-                  <option value="INTERMEDIATE">{t('members.level.intermediate')}</option>
-                  <option value="ADVANCED">{t('members.level.advanced')}</option>
+                  {NTRP_LEVELS.map((level) => (
+                    <option key={level} value={level}>
+                      NTRP {t(`members.level.${level.toLowerCase()}`)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -279,6 +303,53 @@ function Members({ currentUser }) {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* NTRP Guide Modal */}
+      {showNtrpGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                🎾 {t("members.ntrpGuide")}
+              </h2>
+              <button
+                onClick={() => setShowNtrpGuide(false)}
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {NTRP_LEVELS.map((level) => {
+                const displayLevel = level.replace("NTRP_", "").replace("_", ".");
+                return (
+                  <div
+                    key={level}
+                    className="p-4 rounded-xl bg-slate-700/30 border border-slate-700/50"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="px-3 py-1 rounded-full text-sm font-bold bg-tennis-500/20 text-tennis-400 border border-tennis-500/30">
+                        {displayLevel}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      {t(`members.ntrpDescription.${level.toLowerCase()}`)}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setShowNtrpGuide(false)}
+              className="btn-primary w-full mt-6"
+            >
+              {t("common.confirm")}
+            </button>
           </div>
         </div>
       )}

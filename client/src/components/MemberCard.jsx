@@ -4,16 +4,10 @@ import { Trash2, Shield } from 'lucide-react';
 function MemberCard({ member, onClick, onDelete, isAdmin }) {
   const { t } = useTranslation();
   
-  const levelColors = {
-    BEGINNER: 'bg-green-500/20 text-green-400 border-green-500/30',
-    INTERMEDIATE: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    ADVANCED: 'bg-red-500/20 text-red-400 border-red-500/30',
-  };
-
-  const levelLabels = {
-    BEGINNER: t('members.level.beginner'),
-    INTERMEDIATE: t('members.level.intermediate'),
-    ADVANCED: t('members.level.advanced'),
+  // NTRP 등급을 표시용 문자열로 변환
+  const formatNtrpLevel = (level) => {
+    if (!level) return '-';
+    return level.replace('NTRP_', '').replace('_', '.');
   };
 
   const handleDelete = (e) => {
@@ -46,8 +40,8 @@ function MemberCard({ member, onClick, onDelete, isAdmin }) {
           <p className="text-sm text-slate-400 truncate">{member.email}</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${levelColors[member.tennisLevel]}`}>
-            {levelLabels[member.tennisLevel]}
+          <span className="px-3 py-1 rounded-full text-xs font-medium border bg-tennis-500/20 text-tennis-400 border-tennis-500/30">
+            {formatNtrpLevel(member.tennisLevel)}
           </span>
           {isAdmin && (
             <button
