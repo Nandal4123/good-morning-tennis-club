@@ -47,6 +47,8 @@ export const createUser = async (req, res) => {
   try {
     const { email, name, role, tennisLevel, goals, languagePref, profileMetadata } = req.body;
     
+    console.log('Creating user with data:', { email, name, role, tennisLevel });
+    
     const user = await req.prisma.user.create({
       data: {
         email,
@@ -54,18 +56,25 @@ export const createUser = async (req, res) => {
         role: role || 'USER',
         tennisLevel: tennisLevel || 'NTRP_3_0',
         goals,
-        languagePref: languagePref || 'en',
+        languagePref: languagePref || 'ko',
         profileMetadata
       }
     });
     
+    console.log('User created successfully:', user.id);
     res.status(201).json(user);
   } catch (error) {
     console.error('Error creating user:', error);
+    console.error('Error details:', error.message);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'Email already exists' });
     }
-    res.status(500).json({ error: 'Failed to create user' });
+    // 개발 환경에서 상세 에러 반환
+    res.status(500).json({ 
+      error: 'Failed to create user',
+      details: error.message,
+      code: error.code 
+    });
   }
 };
 
