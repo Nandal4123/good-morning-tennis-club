@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Shield, User, UserPlus, LogIn, Lock, X, HelpCircle } from "lucide-react";
+import {
+  Shield,
+  User,
+  UserPlus,
+  LogIn,
+  Lock,
+  X,
+  HelpCircle,
+} from "lucide-react";
 import { userApi } from "../lib/api";
 
 // 관리자 암호 (실제 운영시 환경변수로 관리 권장)
@@ -305,7 +313,9 @@ function Login({ onLogin }) {
                         </p>
                       </div>
                       <span className="px-2 py-1 rounded-full text-xs bg-tennis-500/20 text-tennis-400 border border-tennis-500/30">
-                        {user.tennisLevel?.replace("NTRP_", "").replace("_", ".")}
+                        {user.tennisLevel
+                          ?.replace("NTRP_", "")
+                          .replace("_", ".")}
                       </span>
                     </button>
                   ))}
@@ -338,7 +348,9 @@ function Login({ onLogin }) {
 
             <div className="space-y-3">
               {NTRP_LEVELS.map((level) => {
-                const displayLevel = level.replace("NTRP_", "").replace("_", ".");
+                const displayLevel = level
+                  .replace("NTRP_", "")
+                  .replace("_", ".");
                 return (
                   <div
                     key={level}
