@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Trash2, Shield } from "lucide-react";
+import { Trash2, Shield, Swords } from "lucide-react";
 
-function MemberCard({ member, onClick, onDelete, isAdmin }) {
+function MemberCard({ member, currentUser, onClick, onDelete, onHeadToHead, isAdmin }) {
   const { t } = useTranslation();
 
   // NTRP 등급을 표시용 문자열로 변환
@@ -15,6 +15,13 @@ function MemberCard({ member, onClick, onDelete, isAdmin }) {
     onDelete?.(member);
   };
 
+  const handleHeadToHead = (e) => {
+    e.stopPropagation();
+    onHeadToHead?.(member);
+  };
+
+  const isCurrentUser = currentUser?.id === member.id;
+
   return (
     <div
       className="card cursor-pointer hover:scale-[1.02] transform"
@@ -25,6 +32,8 @@ function MemberCard({ member, onClick, onDelete, isAdmin }) {
           className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
             member.role === "ADMIN"
               ? "bg-gradient-to-br from-orange-500 to-orange-600"
+              : isCurrentUser
+              ? "bg-gradient-to-br from-tennis-500 to-tennis-600"
               : "bg-gradient-to-br from-slate-600 to-slate-700"
           }`}
         >
@@ -37,6 +46,11 @@ function MemberCard({ member, onClick, onDelete, isAdmin }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-white truncate">{member.name}</h3>
+            {isCurrentUser && (
+              <span className="px-2 py-0.5 rounded-full text-xs bg-tennis-500/20 text-tennis-400 border border-tennis-500/30">
+                나
+              </span>
+            )}
             {member.role === "ADMIN" && (
               <span className="px-2 py-0.5 rounded-full text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30">
                 {t("login.roleAdmin")}
@@ -49,6 +63,15 @@ function MemberCard({ member, onClick, onDelete, isAdmin }) {
           <span className="px-3 py-1 rounded-full text-xs font-medium border bg-tennis-500/20 text-tennis-400 border-tennis-500/30">
             {formatNtrpLevel(member.tennisLevel)}
           </span>
+          {!isCurrentUser && (
+            <button
+              onClick={handleHeadToHead}
+              className="p-2 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-purple-500/10 transition-colors"
+              title="상대전적 보기"
+            >
+              <Swords size={18} />
+            </button>
+          )}
           {isAdmin && (
             <button
               onClick={handleDelete}

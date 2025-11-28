@@ -27,6 +27,7 @@ export const userApi = {
   update: (id, data) => fetchApi(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => fetchApi(`/users/${id}`, { method: 'DELETE' }),
   getStats: (id) => fetchApi(`/users/${id}/stats`),
+  getHeadToHead: (userId, opponentId) => fetchApi(`/users/${userId}/versus/${opponentId}`),
 };
 
 // Session API

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Users, Plus, X, Search, Trash2, HelpCircle } from "lucide-react";
+import { Users, Plus, X, Search, Trash2, HelpCircle, Swords, Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { userApi } from "../lib/api";
 import MemberCard from "../components/MemberCard";
 
@@ -22,6 +22,9 @@ function Members({ currentUser }) {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showNtrpGuide, setShowNtrpGuide] = useState(false);
+  const [showHeadToHead, setShowHeadToHead] = useState(false);
+  const [headToHeadData, setHeadToHeadData] = useState(null);
+  const [headToHeadLoading, setHeadToHeadLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [newMember, setNewMember] = useState({
@@ -88,6 +91,26 @@ function Members({ currentUser }) {
     }
   };
 
+  const handleHeadToHead = async (member) => {
+    if (member.id === currentUser.id) {
+      alert("자신과의 상대전적은 볼 수 없습니다.");
+      return;
+    }
+    
+    try {
+      setHeadToHeadLoading(true);
+      setShowHeadToHead(true);
+      const data = await userApi.getHeadToHead(currentUser.id, member.id);
+      setHeadToHeadData(data);
+    } catch (error) {
+      console.error("Failed to load head-to-head:", error);
+      alert("상대전적을 불러오는데 실패했습니다.");
+      setShowHeadToHead(false);
+    } finally {
+      setHeadToHeadLoading(false);
+    }
+  };
+
   const filteredMembers = members.filter(
     (member) =>
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -150,8 +173,10 @@ function Members({ currentUser }) {
           <div key={member.id} className="stagger-item">
             <MemberCard
               member={member}
+              currentUser={currentUser}
               isAdmin={isAdmin}
               onDelete={handleDeleteClick}
+              onHeadToHead={handleHeadToHead}
             />
           </div>
         ))}
@@ -328,6 +353,152 @@ function Members({ currentUser }) {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Head-to-Head Modal */}
+      {showHeadToHead && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Swords className="text-tennis-400" />
+                상대전적
+              </h2>
+              <button
+                onClick={() => {
+                  setShowHeadToHead(false);
+                  setHeadToHeadData(null);
+                }}
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {headToHeadLoading ? (
+              <div className="text-center py-12">
+                <div className="w-10 h-10 mx-auto border-2 border-tennis-500/30 border-t-tennis-500 rounded-full animate-spin mb-4" />
+                <p className="text-slate-400">{t("common.loading")}</p>
+              </div>
+            ) : headToHeadData ? (
+              <div className="space-y-6">
+                {/* VS Header */}
+                <div className="flex items-center justify-center gap-4 py-4">
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-tennis-500 to-tennis-600 flex items-center justify-center text-2xl font-bold text-white">
+                      {currentUser.name?.charAt(0)}
+                    </div>
+                    <p className="text-white font-medium">{currentUser.name}</p>
+                  </div>
+                  <div className="text-3xl font-bold text-slate-500">VS</div>
+                  <div className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white">
+                      {headToHeadData.opponent?.name?.charAt(0)}
+                    </div>
+                    <p className="text-white font-medium">{headToHeadData.opponent?.name}</p>
+                  </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-4 rounded-xl bg-tennis-500/10 border border-tennis-500/30 text-center">
+                    <TrendingUp className="w-6 h-6 mx-auto mb-2 text-tennis-400" />
+                    <p className="text-2xl font-bold text-tennis-400">{headToHeadData.stats?.wins || 0}</p>
+                    <p className="text-sm text-slate-400">승리</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-slate-500/10 border border-slate-500/30 text-center">
+                    <Minus className="w-6 h-6 mx-auto mb-2 text-slate-400" />
+                    <p className="text-2xl font-bold text-slate-400">{headToHeadData.stats?.draws || 0}</p>
+                    <p className="text-sm text-slate-400">무승부</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-center">
+                    <TrendingDown className="w-6 h-6 mx-auto mb-2 text-red-400" />
+                    <p className="text-2xl font-bold text-red-400">{headToHeadData.stats?.losses || 0}</p>
+                    <p className="text-sm text-slate-400">패배</p>
+                  </div>
+                </div>
+
+                {/* Win Rate */}
+                <div className="p-4 rounded-xl bg-slate-700/30 border border-slate-700/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-400">승률</span>
+                    <span className="text-xl font-bold text-white">{headToHeadData.stats?.winRate || 0}%</span>
+                  </div>
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-tennis-500 to-tennis-400 rounded-full transition-all duration-500"
+                      style={{ width: `${headToHeadData.stats?.winRate || 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Match History */}
+                {headToHeadData.matchHistory?.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-3">경기 기록</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {headToHeadData.matchHistory.map((match, index) => (
+                        <div 
+                          key={match.matchId || index}
+                          className={`p-3 rounded-xl border ${
+                            match.result === 'WIN' 
+                              ? 'bg-tennis-500/10 border-tennis-500/30' 
+                              : match.result === 'LOSS'
+                              ? 'bg-red-500/10 border-red-500/30'
+                              : 'bg-slate-700/30 border-slate-700/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {match.result === 'WIN' && <Trophy className="w-4 h-4 text-tennis-400" />}
+                              <span className="text-sm text-slate-400">
+                                {new Date(match.date).toLocaleDateString('ko-KR')}
+                              </span>
+                            </div>
+                            <span className={`text-sm font-medium ${
+                              match.result === 'WIN' ? 'text-tennis-400' : 
+                              match.result === 'LOSS' ? 'text-red-400' : 'text-slate-400'
+                            }`}>
+                              {match.result === 'WIN' ? '승' : match.result === 'LOSS' ? '패' : '무'}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-center gap-3 mt-2">
+                            <span className="text-white text-sm">{match.myTeam?.join(' & ')}</span>
+                            <span className={`text-lg font-bold ${
+                              match.myScore > match.opponentScore ? 'text-tennis-400' : 
+                              match.myScore < match.opponentScore ? 'text-red-400' : 'text-slate-400'
+                            }`}>
+                              {match.myScore} : {match.opponentScore}
+                            </span>
+                            <span className="text-white text-sm">{match.opponentTeam?.join(' & ')}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {headToHeadData.matchHistory?.length === 0 && (
+                  <div className="text-center py-8">
+                    <Swords className="w-12 h-12 mx-auto text-slate-600 mb-3" />
+                    <p className="text-slate-400">아직 상대전적이 없습니다.</p>
+                    <p className="text-sm text-slate-500 mt-1">경기를 기록하면 여기에 표시됩니다.</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            <button
+              onClick={() => {
+                setShowHeadToHead(false);
+                setHeadToHeadData(null);
+              }}
+              className="btn-primary w-full mt-6"
+            >
+              {t("common.confirm")}
+            </button>
           </div>
         </div>
       )}
