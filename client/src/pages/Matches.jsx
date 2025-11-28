@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Trophy, Plus, X, Trash2 } from 'lucide-react';
-import { matchApi, userApi } from '../lib/api';
-import MatchCard from '../components/MatchCard';
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { Trophy, Plus, X, Trash2 } from "lucide-react";
+import { matchApi, userApi } from "../lib/api";
+import MatchCard from "../components/MatchCard";
 
 function Matches({ currentUser }) {
   const { t } = useTranslation();
@@ -15,26 +15,26 @@ function Matches({ currentUser }) {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  
+
   // Check if current user is admin
-  const isAdmin = currentUser?.role === 'ADMIN';
-  
+  const isAdmin = currentUser?.role === "ADMIN";
+
   const [newMatch, setNewMatch] = useState({
-    type: 'DOUBLES',
-    date: new Date().toISOString().split('T')[0],
-    teamA: ['', ''],
-    teamB: ['', ''],
+    type: "DOUBLES",
+    date: new Date().toISOString().split("T")[0],
+    teamA: ["", ""],
+    teamB: ["", ""],
     scoreA: 0,
-    scoreB: 0
+    scoreB: 0,
   });
 
   const [editMatch, setEditMatch] = useState({
-    id: '',
-    date: '',
+    id: "",
+    date: "",
     scoreA: 0,
     scoreB: 0,
     participantsA: [],
-    participantsB: []
+    participantsB: [],
   });
 
   useEffect(() => {
@@ -46,12 +46,12 @@ function Matches({ currentUser }) {
       setLoading(true);
       const [matchData, userData] = await Promise.all([
         matchApi.getAll(),
-        userApi.getAll()
+        userApi.getAll(),
       ]);
       setMatches(matchData);
       setUsers(userData);
     } catch (error) {
-      console.error('Failed to load matches:', error);
+      console.error("Failed to load matches:", error);
     } finally {
       setLoading(false);
     }
@@ -61,54 +61,58 @@ function Matches({ currentUser }) {
     e.preventDefault();
     try {
       setSaving(true);
-      
+
       const participants = [
-        ...newMatch.teamA.filter(id => id).map(userId => ({
-          userId,
-          team: 'A',
-          score: newMatch.scoreA
-        })),
-        ...newMatch.teamB.filter(id => id).map(userId => ({
-          userId,
-          team: 'B',
-          score: newMatch.scoreB
-        }))
+        ...newMatch.teamA
+          .filter((id) => id)
+          .map((userId) => ({
+            userId,
+            team: "A",
+            score: newMatch.scoreA,
+          })),
+        ...newMatch.teamB
+          .filter((id) => id)
+          .map((userId) => ({
+            userId,
+            team: "B",
+            score: newMatch.scoreB,
+          })),
       ];
 
       await matchApi.create({
         date: newMatch.date,
         type: newMatch.type,
-        participants
+        participants,
       });
 
       setShowModal(false);
       setNewMatch({
-        type: 'DOUBLES',
-        date: new Date().toISOString().split('T')[0],
-        teamA: ['', ''],
-        teamB: ['', ''],
+        type: "DOUBLES",
+        date: new Date().toISOString().split("T")[0],
+        teamA: ["", ""],
+        teamB: ["", ""],
         scoreA: 0,
-        scoreB: 0
+        scoreB: 0,
       });
       await loadData();
     } catch (error) {
-      console.error('Failed to create match:', error);
+      console.error("Failed to create match:", error);
     } finally {
       setSaving(false);
     }
   };
 
   const handleEditMatch = (match) => {
-    const teamA = match.participants?.filter(p => p.team === 'A') || [];
-    const teamB = match.participants?.filter(p => p.team === 'B') || [];
-    
+    const teamA = match.participants?.filter((p) => p.team === "A") || [];
+    const teamB = match.participants?.filter((p) => p.team === "B") || [];
+
     setEditMatch({
       id: match.id,
-      date: new Date(match.date).toISOString().split('T')[0],
+      date: new Date(match.date).toISOString().split("T")[0],
       scoreA: teamA[0]?.score || 0,
       scoreB: teamB[0]?.score || 0,
       participantsA: teamA,
-      participantsB: teamB
+      participantsB: teamB,
     });
     setSelectedMatch(match);
     setShowEditModal(true);
@@ -118,25 +122,33 @@ function Matches({ currentUser }) {
     e.preventDefault();
     try {
       setSaving(true);
-      
+
       // Update match date
       await matchApi.update(editMatch.id, {
-        date: editMatch.date
+        date: editMatch.date,
       });
-      
+
       // Update scores for each participant
       for (const participant of editMatch.participantsA) {
-        await matchApi.updateScore(editMatch.id, participant.id, editMatch.scoreA);
+        await matchApi.updateScore(
+          editMatch.id,
+          participant.id,
+          editMatch.scoreA
+        );
       }
       for (const participant of editMatch.participantsB) {
-        await matchApi.updateScore(editMatch.id, participant.id, editMatch.scoreB);
+        await matchApi.updateScore(
+          editMatch.id,
+          participant.id,
+          editMatch.scoreB
+        );
       }
-      
+
       setShowEditModal(false);
       setSelectedMatch(null);
       await loadData();
     } catch (error) {
-      console.error('Failed to update match:', error);
+      console.error("Failed to update match:", error);
     } finally {
       setSaving(false);
     }
@@ -155,14 +167,14 @@ function Matches({ currentUser }) {
       setSelectedMatch(null);
       await loadData();
     } catch (error) {
-      console.error('Failed to delete match:', error);
+      console.error("Failed to delete match:", error);
     } finally {
       setDeleting(false);
     }
   };
 
   const updateTeamPlayer = (team, index, value) => {
-    const key = team === 'A' ? 'teamA' : 'teamB';
+    const key = team === "A" ? "teamA" : "teamB";
     const updated = [...newMatch[key]];
     updated[index] = value;
     setNewMatch({ ...newMatch, [key]: updated });
@@ -173,7 +185,7 @@ function Matches({ currentUser }) {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-tennis-500 tennis-ball" />
-          <p className="text-slate-400">{t('common.loading')}</p>
+          <p className="text-slate-400">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -186,27 +198,27 @@ function Matches({ currentUser }) {
         <div>
           <h1 className="text-3xl font-bold text-white font-display flex items-center gap-3">
             <Trophy className="text-tennis-400" />
-            {t('matches.title')}
+            {t("matches.title")}
           </h1>
-          <p className="text-slate-400 mt-1">{matches.length} {t('matches.matchCount')}</p>
+          <p className="text-slate-400 mt-1">
+            {matches.length} {t("matches.matchCount")}
+          </p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus size={20} />
-            {t('matches.newMatch')}
-          </button>
-        )}
+        <button
+          onClick={() => setShowModal(true)}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus size={20} />
+          {t("matches.newMatch")}
+        </button>
       </div>
 
       {/* Matches Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {matches.map((match) => (
           <div key={match.id} className="stagger-item">
-            <MatchCard 
-              match={match} 
+            <MatchCard
+              match={match}
               isAdmin={isAdmin}
               onEdit={() => handleEditMatch(match)}
               onDelete={() => handleDeleteClick(match)}
@@ -216,7 +228,7 @@ function Matches({ currentUser }) {
         {matches.length === 0 && (
           <div className="col-span-full text-center py-12">
             <Trophy className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-            <p className="text-slate-400">{t('matches.noMatches')}</p>
+            <p className="text-slate-400">{t("matches.noMatches")}</p>
           </div>
         )}
       </div>
@@ -226,7 +238,9 @@ function Matches({ currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">{t('matches.newMatch')}</h2>
+              <h2 className="text-xl font-bold text-white">
+                {t("matches.newMatch")}
+              </h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
@@ -239,20 +253,22 @@ function Matches({ currentUser }) {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t('matches.matchType')}
+                    {t("matches.matchType")}
                   </label>
                   <div className="input bg-purple-500/20 border-purple-500/30 text-purple-400 flex items-center gap-2">
-                    <span>🎾</span> {t('matches.type.doubles')}
+                    <span>🎾</span> {t("matches.type.doubles")}
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t('matches.date')}
+                    {t("matches.date")}
                   </label>
                   <input
                     type="date"
                     value={newMatch.date}
-                    onChange={(e) => setNewMatch({ ...newMatch, date: e.target.value })}
+                    onChange={(e) =>
+                      setNewMatch({ ...newMatch, date: e.target.value })
+                    }
                     className="input"
                   />
                 </div>
@@ -260,44 +276,61 @@ function Matches({ currentUser }) {
 
               {/* Team A */}
               <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
-                <h3 className="font-medium text-blue-400 mb-3">{t('matches.team.a')}</h3>
+                <h3 className="font-medium text-blue-400 mb-3">
+                  {t("matches.team.a")}
+                </h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 1</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      {t("matches.player")} 1
+                    </label>
                     <select
                       value={newMatch.teamA[0]}
-                      onChange={(e) => updateTeamPlayer('A', 0, e.target.value)}
+                      onChange={(e) => updateTeamPlayer("A", 0, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">{t('matches.selectPlayer')}</option>
-                      {users.map(user => (
-                        <option key={user.id} value={user.id}>{user.name}</option>
+                      <option value="">{t("matches.selectPlayer")}</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 2</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      {t("matches.player")} 2
+                    </label>
                     <select
                       value={newMatch.teamA[1]}
-                      onChange={(e) => updateTeamPlayer('A', 1, e.target.value)}
+                      onChange={(e) => updateTeamPlayer("A", 1, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">{t('matches.selectPlayer')}</option>
-                      {users.map(user => (
-                        <option key={user.id} value={user.id}>{user.name}</option>
+                      <option value="">{t("matches.selectPlayer")}</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
                 <div className="mt-3">
-                  <label className="block text-xs text-slate-500 mb-1">{t('matches.score')}</label>
+                  <label className="block text-xs text-slate-500 mb-1">
+                    {t("matches.score")}
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={newMatch.scoreA}
-                    onChange={(e) => setNewMatch({ ...newMatch, scoreA: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setNewMatch({
+                        ...newMatch,
+                        scoreA: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="input w-24"
                   />
                 </div>
@@ -305,44 +338,61 @@ function Matches({ currentUser }) {
 
               {/* Team B */}
               <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
-                <h3 className="font-medium text-purple-400 mb-3">{t('matches.team.b')}</h3>
+                <h3 className="font-medium text-purple-400 mb-3">
+                  {t("matches.team.b")}
+                </h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 1</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      {t("matches.player")} 1
+                    </label>
                     <select
                       value={newMatch.teamB[0]}
-                      onChange={(e) => updateTeamPlayer('B', 0, e.target.value)}
+                      onChange={(e) => updateTeamPlayer("B", 0, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">{t('matches.selectPlayer')}</option>
-                      {users.map(user => (
-                        <option key={user.id} value={user.id}>{user.name}</option>
+                      <option value="">{t("matches.selectPlayer")}</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-500 mb-1">{t('matches.player')} 2</label>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      {t("matches.player")} 2
+                    </label>
                     <select
                       value={newMatch.teamB[1]}
-                      onChange={(e) => updateTeamPlayer('B', 1, e.target.value)}
+                      onChange={(e) => updateTeamPlayer("B", 1, e.target.value)}
                       className="input"
                       required
                     >
-                      <option value="">{t('matches.selectPlayer')}</option>
-                      {users.map(user => (
-                        <option key={user.id} value={user.id}>{user.name}</option>
+                      <option value="">{t("matches.selectPlayer")}</option>
+                      {users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
                 <div className="mt-3">
-                  <label className="block text-xs text-slate-500 mb-1">{t('matches.score')}</label>
+                  <label className="block text-xs text-slate-500 mb-1">
+                    {t("matches.score")}
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={newMatch.scoreB}
-                    onChange={(e) => setNewMatch({ ...newMatch, scoreB: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setNewMatch({
+                        ...newMatch,
+                        scoreB: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="input w-24"
                   />
                 </div>
@@ -354,14 +404,14 @@ function Matches({ currentUser }) {
                   onClick={() => setShowModal(false)}
                   className="btn-secondary flex-1"
                 >
-                  {t('common.cancel')}
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="btn-primary flex-1"
                 >
-                  {saving ? t('common.loading') : t('common.save')}
+                  {saving ? t("common.loading") : t("common.save")}
                 </button>
               </div>
             </form>
@@ -374,9 +424,14 @@ function Matches({ currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">{t('matches.editMatch')}</h2>
+              <h2 className="text-xl font-bold text-white">
+                {t("matches.editMatch")}
+              </h2>
               <button
-                onClick={() => { setShowEditModal(false); setSelectedMatch(null); }}
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedMatch(null);
+                }}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
               >
                 <X size={20} />
@@ -386,31 +441,44 @@ function Matches({ currentUser }) {
             <form onSubmit={handleUpdateMatch} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-2">
-                  {t('matches.date')}
+                  {t("matches.date")}
                 </label>
                 <input
                   type="date"
                   value={editMatch.date}
-                  onChange={(e) => setEditMatch({ ...editMatch, date: e.target.value })}
+                  onChange={(e) =>
+                    setEditMatch({ ...editMatch, date: e.target.value })
+                  }
                   className="input"
                 />
               </div>
 
               {/* Team A */}
               <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30">
-                <h3 className="font-medium text-blue-400 mb-3">{t('matches.team.a')}</h3>
+                <h3 className="font-medium text-blue-400 mb-3">
+                  {t("matches.team.a")}
+                </h3>
                 <div className="space-y-1 mb-3">
                   {editMatch.participantsA.map((p) => (
-                    <p key={p.id} className="text-white">{p.user?.name}</p>
+                    <p key={p.id} className="text-white">
+                      {p.user?.name}
+                    </p>
                   ))}
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">{t('matches.score')}</label>
+                  <label className="block text-xs text-slate-500 mb-1">
+                    {t("matches.score")}
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={editMatch.scoreA}
-                    onChange={(e) => setEditMatch({ ...editMatch, scoreA: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setEditMatch({
+                        ...editMatch,
+                        scoreA: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="input w-24"
                   />
                 </div>
@@ -418,19 +486,30 @@ function Matches({ currentUser }) {
 
               {/* Team B */}
               <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30">
-                <h3 className="font-medium text-purple-400 mb-3">{t('matches.team.b')}</h3>
+                <h3 className="font-medium text-purple-400 mb-3">
+                  {t("matches.team.b")}
+                </h3>
                 <div className="space-y-1 mb-3">
                   {editMatch.participantsB.map((p) => (
-                    <p key={p.id} className="text-white">{p.user?.name}</p>
+                    <p key={p.id} className="text-white">
+                      {p.user?.name}
+                    </p>
                   ))}
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-500 mb-1">{t('matches.score')}</label>
+                  <label className="block text-xs text-slate-500 mb-1">
+                    {t("matches.score")}
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={editMatch.scoreB}
-                    onChange={(e) => setEditMatch({ ...editMatch, scoreB: parseInt(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setEditMatch({
+                        ...editMatch,
+                        scoreB: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="input w-24"
                   />
                 </div>
@@ -439,17 +518,20 @@ function Matches({ currentUser }) {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => { setShowEditModal(false); setSelectedMatch(null); }}
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setSelectedMatch(null);
+                  }}
                   className="btn-secondary flex-1"
                 >
-                  {t('common.cancel')}
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="btn-primary flex-1"
                 >
-                  {saving ? t('common.loading') : t('common.save')}
+                  {saving ? t("common.loading") : t("common.save")}
                 </button>
               </div>
             </form>
@@ -465,11 +547,13 @@ function Matches({ currentUser }) {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
                 <Trash2 className="text-red-400" size={32} />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">{t('matches.deleteMatch')}</h2>
+              <h2 className="text-xl font-bold text-white mb-2">
+                {t("matches.deleteMatch")}
+              </h2>
               <p className="text-slate-400 mb-6">
-                이 경기 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                {t("matches.deleteConfirm")}
               </p>
-              
+
               {/* Match Preview */}
               <div className="bg-slate-700/50 rounded-xl p-4 mb-6 text-left">
                 <p className="text-sm text-slate-400 mb-2">
@@ -477,32 +561,43 @@ function Matches({ currentUser }) {
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
-                    {selectedMatch.participants?.filter(p => p.team === 'A').map(p => (
-                      <p key={p.id} className="text-white text-sm">{p.user?.name}</p>
-                    ))}
+                    {selectedMatch.participants
+                      ?.filter((p) => p.team === "A")
+                      .map((p) => (
+                        <p key={p.id} className="text-white text-sm">
+                          {p.user?.name}
+                        </p>
+                      ))}
                   </div>
                   <div className="text-lg font-bold text-slate-400">VS</div>
                   <div className="text-right">
-                    {selectedMatch.participants?.filter(p => p.team === 'B').map(p => (
-                      <p key={p.id} className="text-white text-sm">{p.user?.name}</p>
-                    ))}
+                    {selectedMatch.participants
+                      ?.filter((p) => p.team === "B")
+                      .map((p) => (
+                        <p key={p.id} className="text-white text-sm">
+                          {p.user?.name}
+                        </p>
+                      ))}
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setShowDeleteModal(false); setSelectedMatch(null); }}
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setSelectedMatch(null);
+                  }}
                   className="btn-secondary flex-1"
                 >
-                  {t('common.cancel')}
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleDeleteMatch}
                   disabled={deleting}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
                 >
-                  {deleting ? t('common.loading') : t('common.delete')}
+                  {deleting ? t("common.loading") : t("common.delete")}
                 </button>
               </div>
             </div>

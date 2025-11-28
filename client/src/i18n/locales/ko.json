@@ -34,7 +34,8 @@
     },
     "todayAttendees": "오늘 출석자",
     "noAttendees": "아직 출석자가 없습니다",
-    "history": "출석 기록"
+    "history": "출석 기록",
+    "morningSession": "오전 세션"
   },
   "members": {
     "title": "클럽 회원",

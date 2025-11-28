@@ -8,6 +8,7 @@ import {
   Lock,
   X,
   HelpCircle,
+  Search,
 } from "lucide-react";
 import { userApi } from "../lib/api";
 
@@ -30,12 +31,15 @@ function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(true);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [showNtrpGuide, setShowNtrpGuide] = useState(false);
   const [selectedAdminUser, setSelectedAdminUser] = useState(null);
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
+  const [loginName, setLoginName] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -63,14 +67,37 @@ function Login({ onLogin }) {
     }
   };
 
-  const handleSelectUser = (user) => {
-    if (user.role === "ADMIN") {
-      setSelectedAdminUser(user);
-      setShowAdminModal(true);
-      setAdminPassword("");
-      setPasswordError(false);
-    } else {
-      onLogin(user);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoggingIn(true);
+
+    try {
+      // 이름으로 회원 찾기
+      const foundUser = users.find(
+        (user) => user.name.toLowerCase() === loginName.toLowerCase().trim()
+      );
+
+      if (!foundUser) {
+        setLoginError("등록되지 않은 이름입니다. 회원가입을 먼저 해주세요.");
+        setLoggingIn(false);
+        return;
+      }
+
+      // 관리자인 경우 비밀번호 확인
+      if (foundUser.role === "ADMIN") {
+        setSelectedAdminUser(foundUser);
+        setShowAdminModal(true);
+        setAdminPassword("");
+        setPasswordError(false);
+      } else {
+        onLogin(foundUser);
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      setLoginError("로그인 중 오류가 발생했습니다.");
+    } finally {
+      setLoggingIn(false);
     }
   };
 
@@ -80,6 +107,7 @@ function Login({ onLogin }) {
       setShowAdminModal(false);
       setSelectedAdminUser(null);
       setAdminPassword("");
+      setLoginName("");
     } else {
       setPasswordError(true);
     }
@@ -264,63 +292,65 @@ function Login({ onLogin }) {
           ) : (
             <>
               <h2 className="text-xl font-bold text-white mb-6">
-                {t("login.selectUser")}
+                이름으로 로그인
               </h2>
-              {users.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-slate-400 mb-4">{t("login.noUsers")}</p>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
+                    {t("login.name")}
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                      size={20}
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={loginName}
+                      onChange={(e) => {
+                        setLoginName(e.target.value);
+                        setLoginError("");
+                      }}
+                      className="input pl-12"
+                      placeholder="이름을 입력하세요"
+                      autoFocus
+                    />
+                  </div>
+                  {loginError && (
+                    <p className="text-red-400 text-sm mt-2">{loginError}</p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loggingIn || !loginName.trim()}
+                  className="btn-primary w-full mt-6 flex items-center justify-center gap-2"
+                >
+                  {loggingIn ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      {t("common.loading")}
+                    </>
+                  ) : (
+                    <>
+                      <LogIn size={20} />
+                      {t("login.loginTab")}
+                    </>
+                  )}
+                </button>
+
+                <p className="text-center text-slate-500 text-sm mt-4">
+                  회원이 아니신가요?{" "}
                   <button
+                    type="button"
                     onClick={() => setActiveTab("register")}
-                    className="btn-primary"
+                    className="text-tennis-400 hover:text-tennis-300 font-medium"
                   >
-                    {t("login.registerFirst")}
+                    회원가입
                   </button>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {users.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleSelectUser(user)}
-                      className="w-full flex items-center gap-4 p-4 rounded-xl bg-slate-700/30 border border-slate-700/50 hover:border-tennis-500/50 hover:bg-tennis-500/10 transition-all duration-300 text-left group"
-                    >
-                      <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white transition-all duration-300 ${
-                          user.role === "ADMIN"
-                            ? "bg-gradient-to-br from-orange-500 to-orange-600 group-hover:from-orange-400 group-hover:to-orange-500"
-                            : "bg-gradient-to-br from-slate-600 to-slate-700 group-hover:from-tennis-600 group-hover:to-tennis-700"
-                        }`}
-                      >
-                        {user.role === "ADMIN" ? (
-                          <Shield size={24} />
-                        ) : (
-                          user.name?.charAt(0)
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-white truncate">
-                            {user.name}
-                          </p>
-                          {user.role === "ADMIN" && (
-                            <span className="px-2 py-0.5 rounded-full text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                              {t("login.roleAdmin")}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-slate-400 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                      <span className="px-2 py-1 rounded-full text-xs bg-tennis-500/20 text-tennis-400 border border-tennis-500/30">
-                        {user.tennisLevel
-                          ?.replace("NTRP_", "")
-                          .replace("_", ".")}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
+                </p>
+              </form>
             </>
           )}
         </div>

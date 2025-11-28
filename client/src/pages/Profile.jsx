@@ -191,7 +191,7 @@ function Profile({ currentUser, onUpdate }) {
                   <CalendarCheck className="text-tennis-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.totalAttendance || 0}</p>
-                    <p className="text-sm text-slate-400">Total Attendance</p>
+                    <p className="text-sm text-slate-400">총 출석</p>
                   </div>
                 </div>
               </div>
@@ -201,7 +201,7 @@ function Profile({ currentUser, onUpdate }) {
                   <Trophy className="text-blue-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.totalMatches || 0}</p>
-                    <p className="text-sm text-slate-400">Total Matches</p>
+                    <p className="text-sm text-slate-400">총 경기 수</p>
                   </div>
                 </div>
               </div>
@@ -211,7 +211,7 @@ function Profile({ currentUser, onUpdate }) {
                   <Award className="text-purple-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.wins || 0}</p>
-                    <p className="text-sm text-slate-400">Wins</p>
+                    <p className="text-sm text-slate-400">승리</p>
                   </div>
                 </div>
               </div>
@@ -221,7 +221,7 @@ function Profile({ currentUser, onUpdate }) {
                   <TrendingUp className="text-orange-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.attendanceRate || 0}%</p>
-                    <p className="text-sm text-slate-400">Attendance Rate</p>
+                    <p className="text-sm text-slate-400">출석률</p>
                   </div>
                 </div>
               </div>
