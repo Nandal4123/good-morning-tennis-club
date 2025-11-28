@@ -139,6 +139,16 @@ export const getUserStats = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // 사용자 존재 확인
+    const user = await req.prisma.user.findUnique({
+      where: { id },
+      select: { name: true, tennisLevel: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     // 출석 수
     const attendanceCount = await req.prisma.attendance.count({
       where: { userId: id, status: "ATTENDED" },
@@ -163,27 +173,24 @@ export const getUserStats = async (req, res) => {
     for (const participant of userMatches) {
       const myTeam = participant.team;
       const match = participant.match;
+      const participants = match?.participants || [];
+
+      if (participants.length === 0) continue;
 
       // 내 팀 점수와 상대팀 점수 계산
-      const myTeamScore = match.participants
-        .filter((p) => p.team === myTeam)
-        .reduce((max, p) => Math.max(max, p.score), 0);
-      const opponentScore = match.participants
-        .filter((p) => p.team !== myTeam)
-        .reduce((max, p) => Math.max(max, p.score), 0);
+      const myTeamPlayers = participants.filter((p) => p.team === myTeam);
+      const opponentPlayers = participants.filter((p) => p.team !== myTeam);
+
+      const myTeamScore = myTeamPlayers.length > 0 
+        ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
+        : 0;
+      const opponentScore = opponentPlayers.length > 0 
+        ? Math.max(...opponentPlayers.map((p) => p.score || 0))
+        : 0;
 
       if (myTeamScore > opponentScore) {
         winCount++;
       }
-    }
-
-    const user = await req.prisma.user.findUnique({
-      where: { id },
-      select: { name: true, tennisLevel: true },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
     }
 
     // 전체 세션 수 가져오기 (출석률 계산용)
@@ -203,7 +210,8 @@ export const getUserStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching user stats:", error);
-    res.status(500).json({ error: "Failed to fetch user statistics" });
+    console.error("Error details:", error.message);
+    res.status(500).json({ error: "Failed to fetch user statistics", details: error.message });
   }
 };
 
@@ -257,12 +265,16 @@ export const getHeadToHead = async (req, res) => {
       if (myTeam === opponentTeam) continue;
 
       // 점수 계산
-      const myTeamScore = match.participants
-        .filter((p) => p.team === myTeam)
-        .reduce((max, p) => Math.max(max, p.score), 0);
-      const opponentTeamScore = match.participants
-        .filter((p) => p.team === opponentTeam)
-        .reduce((max, p) => Math.max(max, p.score), 0);
+      const participants = match?.participants || [];
+      const myTeamPlayers = participants.filter((p) => p.team === myTeam);
+      const opponentTeamPlayers = participants.filter((p) => p.team === opponentTeam);
+      
+      const myTeamScore = myTeamPlayers.length > 0
+        ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
+        : 0;
+      const opponentTeamScore = opponentTeamPlayers.length > 0
+        ? Math.max(...opponentTeamPlayers.map((p) => p.score || 0))
+        : 0;
 
       // 승/패/무 계산
       let result;

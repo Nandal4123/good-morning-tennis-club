@@ -1,7 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Trash2, Shield, Swords } from "lucide-react";
 
-function MemberCard({ member, currentUser, onClick, onDelete, onHeadToHead, isAdmin }) {
+function MemberCard({
+  member,
+  currentUser,
+  onClick,
+  onDelete,
+  onHeadToHead,
+  isAdmin,
+}) {
   const { t } = useTranslation();
 
   // NTRP 등급을 표시용 문자열로 변환
