@@ -187,8 +187,12 @@ function Dashboard({ currentUser }) {
               <CalendarCheck className="text-tennis-400" size={20} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{getMonthlyAttendance()}</p>
-              <p className="text-xs text-slate-400">{t("dashboard.monthlyAttendance")}</p>
+              <p className="text-2xl font-bold text-white">
+                {getMonthlyAttendance()}
+              </p>
+              <p className="text-xs text-slate-400">
+                {t("dashboard.monthlyAttendance")}
+              </p>
             </div>
           </div>
         </div>
@@ -201,8 +205,12 @@ function Dashboard({ currentUser }) {
               <Trophy className="text-blue-400" size={20} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{userStats?.stats?.totalMatches || 0}</p>
-              <p className="text-xs text-slate-400">{t("dashboard.totalMatches")}</p>
+              <p className="text-2xl font-bold text-white">
+                {userStats?.stats?.totalMatches || 0}
+              </p>
+              <p className="text-xs text-slate-400">
+                {t("dashboard.totalMatches")}
+              </p>
             </div>
           </div>
         </div>
@@ -215,18 +223,27 @@ function Dashboard({ currentUser }) {
               <TrendingUp className="text-purple-400" size={20} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{userStats?.stats?.totalAttendance || 0}</p>
-              <p className="text-xs text-slate-400">{t("dashboard.totalAttendance")}</p>
+              <p className="text-2xl font-bold text-white">
+                {userStats?.stats?.totalAttendance || 0}
+              </p>
+              <p className="text-xs text-slate-400">
+                {t("dashboard.totalAttendance")}
+              </p>
             </div>
           </div>
         </div>
-        <div className="stagger-item cursor-pointer" onClick={() => setShowMatches(true)}>
+        <div
+          className="stagger-item cursor-pointer"
+          onClick={() => setShowMatches(true)}
+        >
           <div className="card !p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
               <Clock className="text-orange-400" size={20} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{userStats?.stats?.wins || 0}</p>
+              <p className="text-2xl font-bold text-white">
+                {userStats?.stats?.wins || 0}
+              </p>
               <p className="text-xs text-slate-400">{t("dashboard.wins")}</p>
             </div>
           </div>

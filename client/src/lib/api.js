@@ -42,7 +42,7 @@ export const userApi = {
 export const sessionApi = {
   getAll: () => fetchApi("/sessions"),
   getById: (id) => fetchApi(`/sessions/${id}`),
-  getToday: () => fetchApi("/sessions/today/current"),
+  getToday: () => fetchApi("/sessions/today"),
   create: (data) =>
     fetchApi("/sessions", { method: "POST", body: JSON.stringify(data) }),
   update: (id, data) =>
