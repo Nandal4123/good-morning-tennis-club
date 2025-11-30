@@ -14,15 +14,15 @@
   "dashboard": {
     "welcome": "환영합니다",
     "todaySession": "오늘의 세션",
-    "quickCheckIn": "빠른 출석체크",
+    "quickCheckIn": "빠른출석체크",
     "checkedIn": "출석 완료!",
     "attendanceRate": "출석률",
     "totalMatches": "총 경기 수",
-    "totalAttendance": "총 출석",
+    "totalAttendance": "총출석",
     "wins": "승리",
     "membersPresent": "명 출석",
     "recentActivity": "최근 활동",
-    "noActivity": "최근 활동이 없습니다"
+    "noActivity": "최근에는 활동이 없습니다"
   },
   "attendance": {
     "title": "출석",
