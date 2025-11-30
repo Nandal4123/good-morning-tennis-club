@@ -171,54 +171,65 @@ function Dashboard({ currentUser }) {
             onClick={() => navigate("/matches")}
             className="btn-secondary flex items-center gap-2"
           >
-            <Trophy size={20} />
-            새 경기
+            <Trophy size={20} />새 경기
           </button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats Grid - Compact 2x2 on mobile, 4 columns on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div
           className="stagger-item cursor-pointer"
           onClick={handleShowCalendar}
         >
-          <StatCard
-            icon={CalendarCheck}
-            label={t("dashboard.monthlyAttendance")}
-            value={getMonthlyAttendance()}
-            color="tennis"
-          />
+          <div className="card !p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-tennis-500/20 flex items-center justify-center">
+              <CalendarCheck className="text-tennis-400" size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{getMonthlyAttendance()}</p>
+              <p className="text-xs text-slate-400">{t("dashboard.monthlyAttendance")}</p>
+            </div>
+          </div>
         </div>
         <div
           className="stagger-item cursor-pointer"
           onClick={() => setShowMatches(true)}
         >
-          <StatCard
-            icon={Trophy}
-            label={t("dashboard.totalMatches")}
-            value={userStats?.stats?.totalMatches || 0}
-            color="blue"
-          />
+          <div className="card !p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <Trophy className="text-blue-400" size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{userStats?.stats?.totalMatches || 0}</p>
+              <p className="text-xs text-slate-400">{t("dashboard.totalMatches")}</p>
+            </div>
+          </div>
         </div>
         <div
           className="stagger-item cursor-pointer"
           onClick={handleShowCalendar}
         >
-          <StatCard
-            icon={TrendingUp}
-            label={t("dashboard.totalAttendance")}
-            value={userStats?.stats?.totalAttendance || 0}
-            color="purple"
-          />
+          <div className="card !p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+              <TrendingUp className="text-purple-400" size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{userStats?.stats?.totalAttendance || 0}</p>
+              <p className="text-xs text-slate-400">{t("dashboard.totalAttendance")}</p>
+            </div>
+          </div>
         </div>
-        <div className="stagger-item">
-          <StatCard
-            icon={Clock}
-            label={t("dashboard.wins")}
-            value={userStats?.stats?.wins || 0}
-            color="orange"
-          />
+        <div className="stagger-item cursor-pointer" onClick={() => setShowMatches(true)}>
+          <div className="card !p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <Clock className="text-orange-400" size={20} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-white">{userStats?.stats?.wins || 0}</p>
+              <p className="text-xs text-slate-400">{t("dashboard.wins")}</p>
+            </div>
+          </div>
         </div>
       </div>
 
