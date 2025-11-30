@@ -134,6 +134,41 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+// Delete multiple users (admin only)
+export const deleteMultipleUsers = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ error: "No user IDs provided" });
+    }
+
+    // 삭제할 사용자 수 확인
+    const usersToDelete = await req.prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true },
+    });
+
+    if (usersToDelete.length === 0) {
+      return res.status(404).json({ error: "No users found" });
+    }
+
+    // 일괄 삭제
+    const result = await req.prisma.user.deleteMany({
+      where: { id: { in: userIds } },
+    });
+
+    res.json({
+      message: `${result.count} users deleted successfully`,
+      deletedCount: result.count,
+      deletedUsers: usersToDelete.map((u) => u.name),
+    });
+  } catch (error) {
+    console.error("Error deleting multiple users:", error);
+    res.status(500).json({ error: "Failed to delete users" });
+  }
+};
+
 // Get user statistics
 export const getUserStats = async (req, res) => {
   try {

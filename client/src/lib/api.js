@@ -34,6 +34,11 @@ export const userApi = {
   update: (id, data) =>
     fetchApi(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id) => fetchApi(`/users/${id}`, { method: "DELETE" }),
+  deleteMultiple: (userIds) =>
+    fetchApi("/users/delete-multiple", {
+      method: "POST",
+      body: JSON.stringify({ userIds }),
+    }),
   getStats: (id) => fetchApi(`/users/${id}/stats`),
   getHeadToHead: (userId, opponentId) =>
     fetchApi(`/users/${userId}/versus/${opponentId}`),

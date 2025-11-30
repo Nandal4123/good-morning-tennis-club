@@ -21,6 +21,9 @@ router.put('/:id', userController.updateUser);
 // DELETE /api/users/:id - Delete user
 router.delete('/:id', userController.deleteUser);
 
+// POST /api/users/delete-multiple - Delete multiple users (admin)
+router.post('/delete-multiple', userController.deleteMultipleUsers);
+
 // GET /api/users/:id/stats - Get user statistics
 router.get('/:id/stats', userController.getUserStats);
 

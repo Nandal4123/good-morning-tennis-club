@@ -53,6 +53,8 @@ function Members({ currentUser }) {
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // 관리자용 상태
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
@@ -222,6 +224,34 @@ function Members({ currentUser }) {
     setSelectedMembers([]);
   };
 
+  // 일괄 삭제
+  const handleBulkDelete = async () => {
+    if (selectedMembers.length === 0) return;
+
+    try {
+      setBulkDeleting(true);
+      const userIds = selectedMembers.map((m) => m.id);
+      await userApi.deleteMultiple(userIds);
+      setShowBulkDeleteModal(false);
+      setSelectedMembers([]);
+      await loadMembers();
+    } catch (error) {
+      console.error("Failed to delete members:", error);
+      alert("회원 삭제에 실패했습니다: " + error.message);
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  // 전체 선택/해제
+  const handleSelectAll = () => {
+    if (selectedMembers.length === filteredMembers.length) {
+      setSelectedMembers([]);
+    } else {
+      setSelectedMembers([...filteredMembers]);
+    }
+  };
+
   // 필터링 및 정렬
   const filteredMembers = members
     .filter(
@@ -343,29 +373,19 @@ function Members({ currentUser }) {
         />
       </div>
 
-      {/* Admin Compare Bar */}
+      {/* Admin Action Bar */}
       {isAdmin && viewMode === "table" && selectedMembers.length > 0 && (
         <div className="flex items-center justify-between p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 animate-slide-up">
           <div className="flex items-center gap-3">
-            <Swords className="text-purple-400" size={20} />
             <span className="text-white font-medium">
-              {selectedMembers.length === 1 ? (
-                <>
-                  <span className="text-purple-400">
-                    {selectedMembers[0].name}
-                  </span>{" "}
-                  선택됨 - 비교할 회원을 한 명 더 선택하세요
-                </>
-              ) : (
-                <>
-                  <span className="text-purple-400">
-                    {selectedMembers[0].name}
-                  </span>
-                  <span className="text-slate-400 mx-2">VS</span>
-                  <span className="text-purple-400">
-                    {selectedMembers[1].name}
-                  </span>
-                </>
+              <span className="text-purple-400 font-bold">
+                {selectedMembers.length}명
+              </span>{" "}
+              선택됨
+              {selectedMembers.length === 2 && (
+                <span className="text-slate-400 ml-2">
+                  ({selectedMembers[0].name} vs {selectedMembers[1].name})
+                </span>
               )}
             </span>
           </div>
@@ -376,9 +396,16 @@ function Members({ currentUser }) {
                 className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl transition-all"
               >
                 <Swords size={16} />
-                상대전적 비교
+                상대전적
               </button>
             )}
+            <button
+              onClick={() => setShowBulkDeleteModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all"
+            >
+              <Trash2 size={16} />
+              삭제 ({selectedMembers.length})
+            </button>
             <button
               onClick={clearSelection}
               className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
@@ -419,7 +446,33 @@ function Members({ currentUser }) {
               <thead>
                 <tr className="border-b border-slate-700">
                   <th className="px-3 py-3 text-center w-12">
-                    <span className="text-xs text-slate-500">비교</span>
+                    <button
+                      onClick={handleSelectAll}
+                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                        selectedMembers.length === filteredMembers.length && filteredMembers.length > 0
+                          ? "bg-purple-500 border-purple-500 text-white"
+                          : selectedMembers.length > 0
+                          ? "bg-purple-500/50 border-purple-500 text-white"
+                          : "border-slate-600 hover:border-purple-400"
+                      }`}
+                      title={selectedMembers.length === filteredMembers.length ? "전체 해제" : "전체 선택"}
+                    >
+                      {selectedMembers.length > 0 && (
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d={selectedMembers.length === filteredMembers.length ? "M5 13l4 4L19 7" : "M20 12H4"}
+                          />
+                        </svg>
+                      )}
+                    </button>
                   </th>
                   <th
                     className="px-4 py-3 text-left cursor-pointer hover:bg-slate-700/50 transition-colors"
@@ -983,6 +1036,60 @@ function Members({ currentUser }) {
             >
               {t("common.confirm")}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Modal */}
+      {showBulkDeleteModal && selectedMembers.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 className="text-red-400" size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">
+                회원 일괄 삭제
+              </h2>
+              <p className="text-slate-400 mb-4">
+                선택한 <span className="text-red-400 font-bold">{selectedMembers.length}명</span>의 회원을 삭제하시겠습니까?
+              </p>
+              <p className="text-sm text-red-400 mb-6">
+                ⚠️ 이 작업은 되돌릴 수 없습니다.
+              </p>
+
+              {/* 삭제될 회원 목록 */}
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6 max-h-40 overflow-y-auto text-left">
+                <p className="text-xs text-slate-500 mb-2">삭제될 회원:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedMembers.map((member) => (
+                    <span
+                      key={member.id}
+                      className="px-3 py-1 bg-red-500/20 text-red-300 text-sm rounded-full border border-red-500/30"
+                    >
+                      {member.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBulkDeleteModal(false)}
+                  className="btn-secondary flex-1"
+                  disabled={bulkDeleting}
+                >
+                  {t("common.cancel")}
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
+                >
+                  {bulkDeleting ? t("common.loading") : `${selectedMembers.length}명 삭제`}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
