@@ -8,6 +8,8 @@ import {
   Clock,
   CheckCircle,
   Plus,
+  Crown,
+  Medal,
 } from "lucide-react";
 import StatCard from "../components/StatCard";
 import AttendanceItem from "../components/AttendanceItem";
@@ -28,6 +30,11 @@ function Dashboard({ currentUser }) {
   const [allAttendances, setAllAttendances] = useState([]);
   const [showMatches, setShowMatches] = useState(false);
   const [todayMatches, setTodayMatches] = useState([]);
+  const [rankings, setRankings] = useState({
+    winRate: [],
+    wins: [],
+    attendance: [],
+  });
 
   useEffect(() => {
     loadDashboardData();
@@ -36,11 +43,12 @@ function Dashboard({ currentUser }) {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [session, stats, attendance, allMatches] = await Promise.all([
+      const [session, stats, attendance, allMatches, allUsersWithStats] = await Promise.all([
         sessionApi.getToday().catch(() => null),
         userApi.getStats(currentUser.id).catch(() => null),
         attendanceApi.getByUser(currentUser.id).catch(() => []),
         matchApi.getAll().catch(() => []),
+        userApi.getAllWithStats().catch(() => []),
       ]);
 
       setTodaySession(session);
@@ -53,6 +61,33 @@ function Dashboard({ currentUser }) {
         (m) => new Date(m.date).toDateString() === today
       );
       setTodayMatches(todayOnly);
+
+      // 랭킹 계산
+      if (allUsersWithStats.length > 0) {
+        // 승률 TOP 3 (최소 3경기 이상)
+        const winRateRanking = [...allUsersWithStats]
+          .filter((u) => (u.stats?.totalMatches || 0) >= 3)
+          .sort((a, b) => (b.stats?.winRate || 0) - (a.stats?.winRate || 0))
+          .slice(0, 3);
+
+        // 다승왕 TOP 3
+        const winsRanking = [...allUsersWithStats]
+          .filter((u) => (u.stats?.wins || 0) > 0)
+          .sort((a, b) => (b.stats?.wins || 0) - (a.stats?.wins || 0))
+          .slice(0, 3);
+
+        // 출석왕 TOP 3
+        const attendanceRanking = [...allUsersWithStats]
+          .filter((u) => (u.stats?.totalAttendance || 0) > 0)
+          .sort((a, b) => (b.stats?.totalAttendance || 0) - (a.stats?.totalAttendance || 0))
+          .slice(0, 3);
+
+        setRankings({
+          winRate: winRateRanking,
+          wins: winsRanking,
+          attendance: attendanceRanking,
+        });
+      }
 
       // Check if user is already checked in today
       if (session) {
@@ -250,6 +285,99 @@ function Dashboard({ currentUser }) {
           </div>
         </div>
       </div>
+
+      {/* Rankings */}
+      {(rankings.winRate.length > 0 || rankings.wins.length > 0 || rankings.attendance.length > 0) && (
+        <div className="card stagger-item">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Crown className="text-yellow-400" size={24} />
+            🏆 이달의 랭킹
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 승률 TOP 3 */}
+            <div className="p-4 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl">
+              <h3 className="text-sm font-semibold text-yellow-400 mb-3 flex items-center gap-2">
+                <TrendingUp size={16} />
+                승률왕
+                <span className="text-xs text-slate-500">(3경기 이상)</span>
+              </h3>
+              {rankings.winRate.length > 0 ? (
+                <div className="space-y-2">
+                  {rankings.winRate.map((user, index) => (
+                    <div key={user.id} className="flex items-center gap-3">
+                      <span className="text-lg">
+                        {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate">{user.name}</p>
+                      </div>
+                      <span className="text-yellow-400 font-bold">
+                        {user.stats?.winRate || 0}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm">3경기 이상 참여자 없음</p>
+              )}
+            </div>
+
+            {/* 다승왕 TOP 3 */}
+            <div className="p-4 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl">
+              <h3 className="text-sm font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                <Trophy size={16} />
+                다승왕
+              </h3>
+              {rankings.wins.length > 0 ? (
+                <div className="space-y-2">
+                  {rankings.wins.map((user, index) => (
+                    <div key={user.id} className="flex items-center gap-3">
+                      <span className="text-lg">
+                        {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate">{user.name}</p>
+                      </div>
+                      <span className="text-blue-400 font-bold">
+                        {user.stats?.wins || 0}승
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm">승리 기록 없음</p>
+              )}
+            </div>
+
+            {/* 출석왕 TOP 3 */}
+            <div className="p-4 bg-gradient-to-br from-tennis-500/10 to-green-500/10 border border-tennis-500/30 rounded-xl">
+              <h3 className="text-sm font-semibold text-tennis-400 mb-3 flex items-center gap-2">
+                <CalendarCheck size={16} />
+                출석왕
+              </h3>
+              {rankings.attendance.length > 0 ? (
+                <div className="space-y-2">
+                  {rankings.attendance.map((user, index) => (
+                    <div key={user.id} className="flex items-center gap-3">
+                      <span className="text-lg">
+                        {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium truncate">{user.name}</p>
+                      </div>
+                      <span className="text-tennis-400 font-bold">
+                        {user.stats?.totalAttendance || 0}일
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm">출석 기록 없음</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Today's Attendees */}
       <div className="card stagger-item">
