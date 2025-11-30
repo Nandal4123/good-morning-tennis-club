@@ -27,6 +27,7 @@ async function fetchApi(endpoint, options = {}) {
 // User API
 export const userApi = {
   getAll: () => fetchApi("/users"),
+  getAllWithStats: () => fetchApi("/users/with-stats"),
   getById: (id) => fetchApi(`/users/${id}`),
   create: (data) =>
     fetchApi("/users", { method: "POST", body: JSON.stringify(data) }),

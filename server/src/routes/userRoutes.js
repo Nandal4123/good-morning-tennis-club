@@ -6,6 +6,9 @@ const router = express.Router();
 // GET /api/users - Get all users
 router.get('/', userController.getAllUsers);
 
+// GET /api/users/with-stats - Get all users with stats (admin)
+router.get('/with-stats', userController.getAllUsersWithStats);
+
 // GET /api/users/:id - Get user by ID
 router.get('/:id', userController.getUserById);
 

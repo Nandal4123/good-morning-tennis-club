@@ -343,3 +343,93 @@ export const getHeadToHead = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch head-to-head record" });
   }
 };
+
+// Get all users with stats (for admin)
+export const getAllUsersWithStats = async (req, res) => {
+  try {
+    // 모든 사용자 가져오기
+    const users = await req.prisma.user.findMany({
+      orderBy: { name: "asc" },
+    });
+
+    // 모든 세션 수 (출석률 계산용)
+    const totalSessions = await req.prisma.session.count();
+
+    // 각 사용자의 통계 계산
+    const usersWithStats = await Promise.all(
+      users.map(async (user) => {
+        // 출석 수
+        const attendanceCount = await req.prisma.attendance.count({
+          where: { userId: user.id, status: "ATTENDED" },
+        });
+
+        // 경기 참여 기록
+        const matchParticipants = await req.prisma.matchParticipant.findMany({
+          where: { userId: user.id },
+          include: {
+            match: {
+              include: {
+                participants: true,
+              },
+            },
+          },
+        });
+
+        let wins = 0;
+        let losses = 0;
+        let draws = 0;
+
+        for (const participant of matchParticipants) {
+          const match = participant.match;
+          const myTeam = participant.team;
+          const participants = match?.participants || [];
+
+          if (participants.length === 0) continue;
+
+          const myTeamPlayers = participants.filter((p) => p.team === myTeam);
+          const opponentPlayers = participants.filter((p) => p.team !== myTeam);
+
+          const myTeamScore =
+            myTeamPlayers.length > 0
+              ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
+              : 0;
+          const opponentScore =
+            opponentPlayers.length > 0
+              ? Math.max(...opponentPlayers.map((p) => p.score || 0))
+              : 0;
+
+          if (myTeamScore > opponentScore) {
+            wins++;
+          } else if (myTeamScore < opponentScore) {
+            losses++;
+          } else {
+            draws++;
+          }
+        }
+
+        const totalGames = wins + losses + draws;
+        const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+        const attendanceRate =
+          totalSessions > 0 ? Math.round((attendanceCount / totalSessions) * 100) : 0;
+
+        return {
+          ...user,
+          stats: {
+            totalAttendance: attendanceCount,
+            attendanceRate,
+            totalMatches: totalGames,
+            wins,
+            losses,
+            draws,
+            winRate,
+          },
+        };
+      })
+    );
+
+    res.json(usersWithStats);
+  } catch (error) {
+    console.error("Error fetching users with stats:", error);
+    res.status(500).json({ error: "Failed to fetch users with stats" });
+  }
+};

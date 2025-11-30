@@ -12,6 +12,12 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  LayoutGrid,
+  Table,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  CalendarCheck,
 } from "lucide-react";
 import { userApi } from "../lib/api";
 import MemberCard from "../components/MemberCard";
@@ -48,23 +54,48 @@ function Members({ currentUser }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // 관리자용 상태
+  const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
+  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
+
   // 관리자 여부 확인
   const isAdmin = currentUser?.role === "ADMIN";
 
   useEffect(() => {
     loadMembers();
-  }, []);
+  }, [isAdmin]);
 
   const loadMembers = async () => {
     try {
       setLoading(true);
-      const data = await userApi.getAll();
+      // 관리자는 통계 포함된 데이터를 가져옴
+      const data = isAdmin
+        ? await userApi.getAllWithStats()
+        : await userApi.getAll();
       setMembers(data);
     } catch (error) {
       console.error("Failed to load members:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // 정렬 함수
+  const handleSort = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  // 정렬 아이콘
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <ArrowUpDown size={14} className="text-slate-500" />;
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp size={14} className="text-tennis-400" />
+    ) : (
+      <ArrowDown size={14} className="text-tennis-400" />
+    );
   };
 
   const handleCreateMember = async (e) => {
@@ -123,11 +154,39 @@ function Members({ currentUser }) {
     }
   };
 
-  const filteredMembers = members.filter(
-    (member) =>
-      member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 필터링 및 정렬
+  const filteredMembers = members
+    .filter(
+      (member) =>
+        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const { key, direction } = sortConfig;
+      let aVal, bVal;
+
+      // 통계 값 접근
+      if (["totalAttendance", "wins", "losses", "winRate", "totalMatches"].includes(key)) {
+        aVal = a.stats?.[key] || 0;
+        bVal = b.stats?.[key] || 0;
+      } else if (key === "tennisLevel") {
+        aVal = a.tennisLevel || "";
+        bVal = b.tennisLevel || "";
+      } else {
+        aVal = a[key] || "";
+        bVal = b[key] || "";
+      }
+
+      // 문자열 비교
+      if (typeof aVal === "string") {
+        return direction === "asc"
+          ? aVal.localeCompare(bVal, "ko")
+          : bVal.localeCompare(aVal, "ko");
+      }
+
+      // 숫자 비교
+      return direction === "asc" ? aVal - bVal : bVal - aVal;
+    });
 
   if (loading) {
     return (
@@ -153,15 +212,44 @@ function Members({ currentUser }) {
             {members.length} {t("members.memberCount")}
           </p>
         </div>
-        {isAdmin && (
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus size={20} />
-            {t("members.addMember")}
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* View Mode Toggle (Admin Only) */}
+          {isAdmin && (
+            <div className="flex items-center bg-slate-800 rounded-xl p-1 border border-slate-700">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === "grid"
+                    ? "bg-tennis-500 text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="카드 보기"
+              >
+                <LayoutGrid size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === "table"
+                    ? "bg-tennis-500 text-white"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="통계 보기"
+              >
+                <Table size={18} />
+              </button>
+            </div>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus size={20} />
+              {t("members.addMember")}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -179,26 +267,190 @@ function Members({ currentUser }) {
         />
       </div>
 
-      {/* Members Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredMembers.map((member, i) => (
-          <div key={member.id} className="stagger-item">
-            <MemberCard
-              member={member}
-              currentUser={currentUser}
-              isAdmin={isAdmin}
-              onDelete={handleDeleteClick}
-              onHeadToHead={handleHeadToHead}
-            />
+      {/* Members Grid or Table */}
+      {viewMode === "grid" || !isAdmin ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredMembers.map((member, i) => (
+            <div key={member.id} className="stagger-item">
+              <MemberCard
+                member={member}
+                currentUser={currentUser}
+                isAdmin={isAdmin}
+                onDelete={handleDeleteClick}
+                onHeadToHead={handleHeadToHead}
+              />
+            </div>
+          ))}
+          {filteredMembers.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <Users className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+              <p className="text-slate-400">{t("members.noMembers")}</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Admin Table View */
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  <th
+                    className="px-4 py-3 text-left cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("name")}
+                  >
+                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
+                      이름 {getSortIcon("name")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("tennisLevel")}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
+                      NTRP {getSortIcon("tennisLevel")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("totalAttendance")}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
+                      <CalendarCheck size={14} /> 총출석 {getSortIcon("totalAttendance")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("totalMatches")}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
+                      <Trophy size={14} /> 경기 {getSortIcon("totalMatches")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("wins")}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
+                      <TrendingUp size={14} /> 승 {getSortIcon("wins")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("losses")}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
+                      <TrendingDown size={14} /> 패 {getSortIcon("losses")}
+                    </div>
+                  </th>
+                  <th
+                    className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    onClick={() => handleSort("winRate")}
+                  >
+                    <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
+                      승률 {getSortIcon("winRate")}
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-slate-400">
+                    관리
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMembers.map((member) => {
+                  const displayLevel = member.tennisLevel
+                    ?.replace("NTRP_", "")
+                    .replace("_", ".") || "-";
+                  const stats = member.stats || {};
+                  
+                  return (
+                    <tr
+                      key={member.id}
+                      className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors"
+                    >
+                      {/* 이름 */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-tennis-500 to-tennis-600 flex items-center justify-center text-white font-bold">
+                            {member.name?.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{member.name}</p>
+                            <p className="text-xs text-slate-500">{member.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      {/* NTRP */}
+                      <td className="px-4 py-3 text-center">
+                        <span className="px-2 py-1 rounded-full text-xs font-bold bg-tennis-500/20 text-tennis-400 border border-tennis-500/30">
+                          {displayLevel}
+                        </span>
+                      </td>
+                      {/* 총출석 */}
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-white font-semibold">{stats.totalAttendance || 0}</span>
+                        <span className="text-slate-500 text-sm">일</span>
+                      </td>
+                      {/* 경기 */}
+                      <td className="px-4 py-3 text-center text-slate-300">
+                        {stats.totalMatches || 0}
+                      </td>
+                      {/* 승 */}
+                      <td className="px-4 py-3 text-center text-tennis-400 font-semibold">
+                        {stats.wins || 0}
+                      </td>
+                      {/* 패 */}
+                      <td className="px-4 py-3 text-center text-red-400 font-semibold">
+                        {stats.losses || 0}
+                      </td>
+                      {/* 승률 */}
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-tennis-500 to-tennis-400 rounded-full"
+                              style={{ width: `${stats.winRate || 0}%` }}
+                            />
+                          </div>
+                          <span className="text-white text-sm font-medium w-10">
+                            {stats.winRate || 0}%
+                          </span>
+                        </div>
+                      </td>
+                      {/* 관리 */}
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleHeadToHead(member)}
+                            className="p-2 rounded-lg text-purple-400 hover:bg-purple-500/20 transition-colors"
+                            title="상대전적"
+                          >
+                            <Swords size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(member)}
+                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
+                            title="삭제"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        ))}
-        {filteredMembers.length === 0 && (
-          <div className="col-span-full text-center py-12">
-            <Users className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-            <p className="text-slate-400">{t("members.noMembers")}</p>
-          </div>
-        )}
-      </div>
+
+          {filteredMembers.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="w-16 h-16 mx-auto text-slate-600 mb-4" />
+              <p className="text-slate-400">{t("members.noMembers")}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add Member Modal */}
       {showModal && (
