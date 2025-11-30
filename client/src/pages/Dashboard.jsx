@@ -11,7 +11,7 @@ import StatCard from "../components/StatCard";
 import AttendanceItem from "../components/AttendanceItem";
 import AttendanceCalendar from "../components/AttendanceCalendar";
 import MyMatchesModal from "../components/MyMatchesModal";
-import { sessionApi, attendanceApi, userApi } from "../lib/api";
+import { sessionApi, attendanceApi, userApi, matchApi } from "../lib/api";
 
 function Dashboard({ currentUser }) {
   const { t } = useTranslation();
@@ -24,6 +24,7 @@ function Dashboard({ currentUser }) {
   const [showCalendar, setShowCalendar] = useState(false);
   const [allAttendances, setAllAttendances] = useState([]);
   const [showMatches, setShowMatches] = useState(false);
+  const [todayMatches, setTodayMatches] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -32,15 +33,23 @@ function Dashboard({ currentUser }) {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [session, stats, attendance] = await Promise.all([
+      const [session, stats, attendance, allMatches] = await Promise.all([
         sessionApi.getToday().catch(() => null),
         userApi.getStats(currentUser.id).catch(() => null),
         attendanceApi.getByUser(currentUser.id).catch(() => []),
+        matchApi.getAll().catch(() => []),
       ]);
 
       setTodaySession(session);
       setUserStats(stats);
       setRecentAttendance(attendance);
+
+      // 오늘의 경기 필터링
+      const today = new Date().toDateString();
+      const todayOnly = allMatches.filter(
+        (m) => new Date(m.date).toDateString() === today
+      );
+      setTodayMatches(todayOnly);
 
       // Check if user is already checked in today
       if (session) {
@@ -198,68 +207,122 @@ function Dashboard({ currentUser }) {
         </div>
       </div>
 
-      {/* Today's Session & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Session */}
-        <div className="card stagger-item">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <CalendarCheck className="text-tennis-400" size={24} />
-            {t("dashboard.todaySession")}
-          </h2>
-          {todaySession ? (
-            <div>
-              <p className="text-slate-400 mb-4">{todaySession.description}</p>
-              <div className="flex items-center gap-2 text-tennis-400">
-                <span className="text-2xl font-bold font-display">
-                  {todaySession.attendances?.length || 0}
-                </span>
-                <span className="text-slate-400">
-                  {t("dashboard.membersPresent")}
-                </span>
+      {/* Today's Attendees */}
+      <div className="card stagger-item">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <CalendarCheck className="text-tennis-400" size={24} />
+          📅 오늘의 출석자
+          <span className="text-sm font-normal text-slate-400">
+            ({todaySession?.attendances?.length || 0}명)
+          </span>
+        </h2>
+        {todaySession?.attendances?.length > 0 ? (
+          <div className="flex flex-wrap gap-3">
+            {todaySession.attendances.map((a) => (
+              <div
+                key={a.id}
+                className="flex items-center gap-2 px-3 py-2 bg-tennis-500/10 border border-tennis-500/30 rounded-xl"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-tennis-500 to-tennis-600 flex items-center justify-center text-xs font-bold text-white">
+                  {a.user?.name?.charAt(0)}
+                </div>
+                <span className="text-white font-medium">{a.user?.name}</span>
               </div>
-              {todaySession.attendances?.length > 0 && (
-                <div className="mt-4 flex -space-x-2">
-                  {todaySession.attendances.slice(0, 5).map((a, i) => (
-                    <div
-                      key={a.id}
-                      className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs font-bold text-white"
-                      title={a.user?.name}
-                    >
-                      {a.user?.name?.charAt(0)}
+            ))}
+          </div>
+        ) : (
+          <p className="text-slate-500">아직 출석자가 없습니다</p>
+        )}
+      </div>
+
+      {/* Today's Matches */}
+      <div className="card stagger-item">
+        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Trophy className="text-blue-400" size={24} />
+          🏆 오늘의 경기 결과
+          <span className="text-sm font-normal text-slate-400">
+            ({todayMatches.length}경기)
+          </span>
+        </h2>
+        {todayMatches.length > 0 ? (
+          <div className="space-y-3">
+            {todayMatches.map((match) => {
+              const teamA = match.participants?.filter((p) => p.team === "A") || [];
+              const teamB = match.participants?.filter((p) => p.team === "B") || [];
+              const scoreA = teamA.length > 0 ? Math.max(...teamA.map((p) => p.score || 0)) : 0;
+              const scoreB = teamB.length > 0 ? Math.max(...teamB.map((p) => p.score || 0)) : 0;
+              const winner = scoreA > scoreB ? "A" : scoreB > scoreA ? "B" : null;
+
+              return (
+                <div
+                  key={match.id}
+                  className="p-4 bg-slate-700/30 border border-slate-600/50 rounded-xl"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-lg">
+                      🎾 복식
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    {/* Team A */}
+                    <div className={`flex-1 text-center ${winner === "A" ? "text-tennis-400" : "text-white"}`}>
+                      <p className="text-xs text-slate-400 mb-1">A팀</p>
+                      <p className="font-medium">
+                        {teamA.map((p) => p.user?.name).join(", ") || "-"}
+                      </p>
                     </div>
-                  ))}
-                  {todaySession.attendances.length > 5 && (
-                    <div className="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-800 flex items-center justify-center text-xs text-slate-400">
-                      +{todaySession.attendances.length - 5}
+                    {/* Score */}
+                    <div className="px-6">
+                      <span className={`text-3xl font-bold ${winner === "A" ? "text-tennis-400" : "text-white"}`}>
+                        {scoreA}
+                      </span>
+                      <span className="text-slate-500 mx-2">:</span>
+                      <span className={`text-3xl font-bold ${winner === "B" ? "text-tennis-400" : "text-white"}`}>
+                        {scoreB}
+                      </span>
+                    </div>
+                    {/* Team B */}
+                    <div className={`flex-1 text-center ${winner === "B" ? "text-tennis-400" : "text-white"}`}>
+                      <p className="text-xs text-slate-400 mb-1">B팀</p>
+                      <p className="font-medium">
+                        {teamB.map((p) => p.user?.name).join(", ") || "-"}
+                      </p>
+                    </div>
+                  </div>
+                  {winner && (
+                    <div className="mt-3 text-center">
+                      <span className="text-sm text-tennis-400">
+                        🏆 승자: {winner === "A" ? teamA.map((p) => p.user?.name).join(" & ") : teamB.map((p) => p.user?.name).join(" & ")}
+                      </span>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-slate-500">{t("dashboard.noActivity")}</p>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-slate-500">오늘 등록된 경기가 없습니다</p>
+        )}
+      </div>
 
-        {/* Recent Activity */}
-        <div className="card stagger-item">
-          <h2 className="text-xl font-bold text-white mb-4">
-            {t("dashboard.recentActivity")}
-          </h2>
-          {recentAttendance.length > 0 ? (
-            <div className="space-y-1">
-              {recentAttendance.map((attendance) => (
-                <AttendanceItem
-                  key={attendance.id}
-                  attendance={attendance}
-                  showUser={false}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-slate-500">{t("dashboard.noActivity")}</p>
-          )}
-        </div>
+      {/* Recent Activity */}
+      <div className="card stagger-item">
+        <h2 className="text-xl font-bold text-white mb-4">
+          {t("dashboard.recentActivity")}
+        </h2>
+        {recentAttendance.length > 0 ? (
+          <div className="space-y-1">
+            {recentAttendance.slice(0, 5).map((attendance) => (
+              <AttendanceItem
+                key={attendance.id}
+                attendance={attendance}
+                showUser={false}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-slate-500">{t("dashboard.noActivity")}</p>
+        )}
       </div>
 
       {/* Attendance Calendar Modal */}
