@@ -33,7 +33,7 @@ function Dashboard({ currentUser }) {
       const [session, stats, attendance] = await Promise.all([
         sessionApi.getToday().catch(() => null),
         userApi.getStats(currentUser.id).catch(() => null),
-        attendanceApi.getByUser(currentUser.id, 5).catch(() => []),
+        attendanceApi.getByUser(currentUser.id).catch(() => []),
       ]);
 
       setTodaySession(session);
@@ -77,6 +77,20 @@ function Dashboard({ currentUser }) {
     } catch (error) {
       console.error("Failed to load attendances:", error);
     }
+  };
+
+  // 이달의 출석 횟수 계산
+  const getMonthlyAttendance = () => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    return recentAttendance.filter(a => {
+      const attendanceDate = new Date(a.date);
+      return attendanceDate.getMonth() === currentMonth && 
+             attendanceDate.getFullYear() === currentYear &&
+             a.status === 'ATTENDED';
+    }).length;
   };
 
   if (loading) {
@@ -143,8 +157,8 @@ function Dashboard({ currentUser }) {
         >
           <StatCard
             icon={CalendarCheck}
-            label={t("dashboard.totalAttendance")}
-            value={userStats?.stats?.totalAttendance || 0}
+            label={t("dashboard.monthlyAttendance")}
+            value={getMonthlyAttendance()}
             color="tennis"
           />
         </div>
@@ -162,8 +176,8 @@ function Dashboard({ currentUser }) {
         >
           <StatCard
             icon={TrendingUp}
-            label={t("dashboard.attendanceRate")}
-            value={`${userStats?.stats?.attendanceRate || 0}%`}
+            label={t("dashboard.totalAttendance")}
+            value={userStats?.stats?.totalAttendance || 0}
             color="purple"
           />
         </div>
