@@ -139,29 +139,29 @@ function Dashboard({ currentUser }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex gap-2 w-full sm:w-auto">
           {/* Quick Check-in Button */}
           <button
             onClick={handleQuickCheckIn}
             disabled={isCheckedIn || checkingIn}
-            className={`btn-primary flex items-center gap-2 ${
+            className={`btn-primary flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 ${
               isCheckedIn ? "opacity-60 cursor-not-allowed" : ""
             }`}
           >
             {isCheckedIn ? (
               <>
-                <CheckCircle size={20} />
-                {t("dashboard.checkedIn")}
+                <CheckCircle size={18} />
+                <span className="text-sm">{t("dashboard.checkedIn")}</span>
               </>
             ) : checkingIn ? (
               <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                {t("common.loading")}
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="text-sm">{t("common.loading")}</span>
               </>
             ) : (
               <>
-                <CalendarCheck size={20} />
-                {t("dashboard.quickCheckIn")}
+                <CalendarCheck size={18} />
+                <span className="text-sm">{t("dashboard.quickCheckIn")}</span>
               </>
             )}
           </button>
@@ -169,9 +169,10 @@ function Dashboard({ currentUser }) {
           {/* New Match Button */}
           <button
             onClick={() => navigate("/matches")}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3"
           >
-            <Trophy size={20} />새 경기
+            <Trophy size={18} />
+            <span className="text-sm">새 경기</span>
           </button>
         </div>
       </div>
