@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CalendarCheck, Trophy, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import StatCard from '../components/StatCard';
 import AttendanceItem from '../components/AttendanceItem';
+import AttendanceCalendar from '../components/AttendanceCalendar';
 import { sessionApi, attendanceApi, userApi } from '../lib/api';
 
 function Dashboard({ currentUser }) {
@@ -13,6 +14,8 @@ function Dashboard({ currentUser }) {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [allAttendances, setAllAttendances] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
@@ -53,6 +56,16 @@ function Dashboard({ currentUser }) {
       console.error('Check-in failed:', error);
     } finally {
       setCheckingIn(false);
+    }
+  };
+
+  const handleShowCalendar = async () => {
+    try {
+      const attendances = await attendanceApi.getByUser(currentUser.id);
+      setAllAttendances(attendances);
+      setShowCalendar(true);
+    } catch (error) {
+      console.error('Failed to load attendances:', error);
     }
   };
 
@@ -114,7 +127,7 @@ function Dashboard({ currentUser }) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stagger-item">
+        <div className="stagger-item cursor-pointer" onClick={handleShowCalendar}>
           <StatCard
             icon={CalendarCheck}
             label={t('dashboard.attendanceRate')}
@@ -209,6 +222,14 @@ function Dashboard({ currentUser }) {
           )}
         </div>
       </div>
+
+      {/* Attendance Calendar Modal */}
+      {showCalendar && (
+        <AttendanceCalendar
+          attendances={allAttendances}
+          onClose={() => setShowCalendar(false)}
+        />
+      )}
     </div>
   );
 }
