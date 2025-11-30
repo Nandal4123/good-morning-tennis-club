@@ -56,7 +56,10 @@ function Members({ currentUser }) {
 
   // 관리자용 상태
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
-  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "asc",
+  });
 
   // 관리자 여부 확인
   const isAdmin = currentUser?.role === "ADMIN";
@@ -68,10 +71,20 @@ function Members({ currentUser }) {
   const loadMembers = async () => {
     try {
       setLoading(true);
-      // 관리자는 통계 포함된 데이터를 가져옴
-      const data = isAdmin
-        ? await userApi.getAllWithStats()
-        : await userApi.getAll();
+      let data;
+      
+      // 관리자는 통계 포함된 데이터를 가져옴 (실패 시 기본 API로 폴백)
+      if (isAdmin) {
+        try {
+          data = await userApi.getAllWithStats();
+        } catch (statsError) {
+          console.warn("Stats API failed, falling back to basic API:", statsError);
+          data = await userApi.getAll();
+        }
+      } else {
+        data = await userApi.getAll();
+      }
+      
       setMembers(data);
     } catch (error) {
       console.error("Failed to load members:", error);
@@ -90,7 +103,8 @@ function Members({ currentUser }) {
 
   // 정렬 아이콘
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return <ArrowUpDown size={14} className="text-slate-500" />;
+    if (sortConfig.key !== key)
+      return <ArrowUpDown size={14} className="text-slate-500" />;
     return sortConfig.direction === "asc" ? (
       <ArrowUp size={14} className="text-tennis-400" />
     ) : (
@@ -166,7 +180,15 @@ function Members({ currentUser }) {
       let aVal, bVal;
 
       // 통계 값 접근
-      if (["totalAttendance", "wins", "losses", "winRate", "totalMatches"].includes(key)) {
+      if (
+        [
+          "totalAttendance",
+          "wins",
+          "losses",
+          "winRate",
+          "totalMatches",
+        ].includes(key)
+      ) {
         aVal = a.stats?.[key] || 0;
         bVal = b.stats?.[key] || 0;
       } else if (key === "tennisLevel") {
@@ -316,7 +338,8 @@ function Members({ currentUser }) {
                     onClick={() => handleSort("totalAttendance")}
                   >
                     <div className="flex items-center justify-center gap-2 text-sm font-semibold text-slate-400">
-                      <CalendarCheck size={14} /> 총출석 {getSortIcon("totalAttendance")}
+                      <CalendarCheck size={14} /> 총출석{" "}
+                      {getSortIcon("totalAttendance")}
                     </div>
                   </th>
                   <th
@@ -358,11 +381,12 @@ function Members({ currentUser }) {
               </thead>
               <tbody>
                 {filteredMembers.map((member) => {
-                  const displayLevel = member.tennisLevel
-                    ?.replace("NTRP_", "")
-                    .replace("_", ".") || "-";
+                  const displayLevel =
+                    member.tennisLevel
+                      ?.replace("NTRP_", "")
+                      .replace("_", ".") || "-";
                   const stats = member.stats || {};
-                  
+
                   return (
                     <tr
                       key={member.id}
@@ -375,8 +399,12 @@ function Members({ currentUser }) {
                             {member.name?.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-white font-medium">{member.name}</p>
-                            <p className="text-xs text-slate-500">{member.email}</p>
+                            <p className="text-white font-medium">
+                              {member.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {member.email}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -388,7 +416,9 @@ function Members({ currentUser }) {
                       </td>
                       {/* 총출석 */}
                       <td className="px-4 py-3 text-center">
-                        <span className="text-white font-semibold">{stats.totalAttendance || 0}</span>
+                        <span className="text-white font-semibold">
+                          {stats.totalAttendance || 0}
+                        </span>
                         <span className="text-slate-500 text-sm">일</span>
                       </td>
                       {/* 경기 */}

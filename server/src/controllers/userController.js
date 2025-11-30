@@ -213,12 +213,10 @@ export const getUserStats = async (req, res) => {
   } catch (error) {
     console.error("Error fetching user stats:", error);
     console.error("Error details:", error.message);
-    res
-      .status(500)
-      .json({
-        error: "Failed to fetch user statistics",
-        details: error.message,
-      });
+    res.status(500).json({
+      error: "Failed to fetch user statistics",
+      details: error.message,
+    });
   }
 };
 
@@ -408,9 +406,12 @@ export const getAllUsersWithStats = async (req, res) => {
         }
 
         const totalGames = wins + losses + draws;
-        const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+        const winRate =
+          totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
         const attendanceRate =
-          totalSessions > 0 ? Math.round((attendanceCount / totalSessions) * 100) : 0;
+          totalSessions > 0
+            ? Math.round((attendanceCount / totalSessions) * 100)
+            : 0;
 
         return {
           ...user,
