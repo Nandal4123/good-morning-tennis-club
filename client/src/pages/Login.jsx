@@ -15,6 +15,9 @@ import { userApi } from "../lib/api";
 // 관리자 암호 (실제 운영시 환경변수로 관리 권장)
 const ADMIN_PASSWORD = "admin0405";
 
+// 회원가입 승인 코드
+const JOIN_CODE = "good morning 0405";
+
 // NTRP 등급 목록
 const NTRP_LEVELS = [
   "NTRP_2_0",
@@ -45,7 +48,9 @@ function Login({ onLogin }) {
     email: "",
     role: "USER",
     tennisLevel: "NTRP_3_0",
+    joinCode: "",
   });
+  const [joinCodeError, setJoinCodeError] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -115,9 +120,19 @@ function Login({ onLogin }) {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    setJoinCodeError(false);
+
+    // 승인 코드 검증
+    if (newUser.joinCode.toLowerCase().trim() !== JOIN_CODE.toLowerCase()) {
+      setJoinCodeError(true);
+      return;
+    }
+
     try {
       setCreating(true);
-      const user = await userApi.create(newUser);
+      // joinCode는 서버로 전송하지 않음
+      const { joinCode, ...userData } = newUser;
+      const user = await userApi.create(userData);
       onLogin(user);
     } catch (error) {
       console.error("Failed to create user:", error);
@@ -280,6 +295,33 @@ function Login({ onLogin }) {
                     ))}
                   </select>
                 </div>
+
+                {/* 승인 코드 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
+                    🔐 가입 승인 코드
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newUser.joinCode}
+                    onChange={(e) => {
+                      setNewUser({ ...newUser, joinCode: e.target.value });
+                      setJoinCodeError(false);
+                    }}
+                    className={`input ${joinCodeError ? "border-red-500 focus:ring-red-500" : ""}`}
+                    placeholder="관리자에게 문의하세요"
+                  />
+                  {joinCodeError && (
+                    <p className="text-red-400 text-sm mt-1">
+                      승인 코드가 올바르지 않습니다
+                    </p>
+                  )}
+                  <p className="text-slate-500 text-xs mt-1">
+                    * 클럽 관리자에게 문의하여 승인 코드를 받으세요
+                  </p>
+                </div>
+
                 <button
                   type="submit"
                   disabled={creating}
