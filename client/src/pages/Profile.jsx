@@ -102,54 +102,23 @@ function Profile({ currentUser, onUpdate }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t('profile.level')}
-                  </label>
-                  <select
-                    value={profile.tennisLevel}
-                    onChange={(e) => setProfile({ ...profile, tennisLevel: e.target.value })}
-                    className="input"
-                  >
-                    <option value="NTRP_2_0">{t('members.level.ntrp_2_0')}</option>
-                    <option value="NTRP_2_5">{t('members.level.ntrp_2_5')}</option>
-                    <option value="NTRP_3_0">{t('members.level.ntrp_3_0')}</option>
-                    <option value="NTRP_3_5">{t('members.level.ntrp_3_5')}</option>
-                    <option value="NTRP_4_0">{t('members.level.ntrp_4_0')}</option>
-                    <option value="NTRP_4_5">{t('members.level.ntrp_4_5')}</option>
-                    <option value="NTRP_5_0">{t('members.level.ntrp_5_0')}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t('profile.language')}
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageChange('en')}
-                      className={`flex-1 py-3 px-4 rounded-xl border transition-all duration-300 ${
-                        profile.languagePref === 'en'
-                          ? 'bg-tennis-500/20 border-tennis-500/50 text-tennis-400'
-                          : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
-                      }`}
-                    >
-                      🇺🇸 English
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageChange('ko')}
-                      className={`flex-1 py-3 px-4 rounded-xl border transition-all duration-300 ${
-                        profile.languagePref === 'ko'
-                          ? 'bg-tennis-500/20 border-tennis-500/50 text-tennis-400'
-                          : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
-                      }`}
-                    >
-                      🇰🇷 한국어
-                    </button>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  {t('profile.level')}
+                </label>
+                <select
+                  value={profile.tennisLevel}
+                  onChange={(e) => setProfile({ ...profile, tennisLevel: e.target.value })}
+                  className="input"
+                >
+                  <option value="NTRP_2_0">{t('members.level.ntrp_2_0')}</option>
+                  <option value="NTRP_2_5">{t('members.level.ntrp_2_5')}</option>
+                  <option value="NTRP_3_0">{t('members.level.ntrp_3_0')}</option>
+                  <option value="NTRP_3_5">{t('members.level.ntrp_3_5')}</option>
+                  <option value="NTRP_4_0">{t('members.level.ntrp_4_0')}</option>
+                  <option value="NTRP_4_5">{t('members.level.ntrp_4_5')}</option>
+                  <option value="NTRP_5_0">{t('members.level.ntrp_5_0')}</option>
+                </select>
               </div>
 
               <div>
