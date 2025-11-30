@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   CalendarCheck,
   Trophy,
   TrendingUp,
   Clock,
   CheckCircle,
+  Plus,
 } from "lucide-react";
 import StatCard from "../components/StatCard";
 import AttendanceItem from "../components/AttendanceItem";
@@ -15,6 +17,7 @@ import { sessionApi, attendanceApi, userApi, matchApi } from "../lib/api";
 
 function Dashboard({ currentUser }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [todaySession, setTodaySession] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [recentAttendance, setRecentAttendance] = useState([]);
@@ -135,31 +138,43 @@ function Dashboard({ currentUser }) {
           </p>
         </div>
 
-        {/* Quick Check-in Button */}
-        <button
-          onClick={handleQuickCheckIn}
-          disabled={isCheckedIn || checkingIn}
-          className={`btn-primary flex items-center gap-2 ${
-            isCheckedIn ? "opacity-60 cursor-not-allowed" : ""
-          }`}
-        >
-          {isCheckedIn ? (
-            <>
-              <CheckCircle size={20} />
-              {t("dashboard.checkedIn")}
-            </>
-          ) : checkingIn ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              {t("common.loading")}
-            </>
-          ) : (
-            <>
-              <CalendarCheck size={20} />
-              {t("dashboard.quickCheckIn")}
-            </>
-          )}
-        </button>
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {/* Quick Check-in Button */}
+          <button
+            onClick={handleQuickCheckIn}
+            disabled={isCheckedIn || checkingIn}
+            className={`btn-primary flex items-center gap-2 ${
+              isCheckedIn ? "opacity-60 cursor-not-allowed" : ""
+            }`}
+          >
+            {isCheckedIn ? (
+              <>
+                <CheckCircle size={20} />
+                {t("dashboard.checkedIn")}
+              </>
+            ) : checkingIn ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                {t("common.loading")}
+              </>
+            ) : (
+              <>
+                <CalendarCheck size={20} />
+                {t("dashboard.quickCheckIn")}
+              </>
+            )}
+          </button>
+
+          {/* New Match Button */}
+          <button
+            onClick={() => navigate("/matches")}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <Trophy size={20} />
+            새 경기
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -237,21 +252,39 @@ function Dashboard({ currentUser }) {
 
       {/* Today's Matches */}
       <div className="card stagger-item">
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Trophy className="text-blue-400" size={24} />
-          🏆 오늘의 경기 결과
-          <span className="text-sm font-normal text-slate-400">
-            ({todayMatches.length}경기)
-          </span>
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <Trophy className="text-blue-400" size={24} />
+            🏆 오늘의 경기 결과
+            <span className="text-sm font-normal text-slate-400">
+              ({todayMatches.length}경기)
+            </span>
+          </h2>
+          <button
+            onClick={() => navigate("/matches")}
+            className="flex items-center gap-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm"
+          >
+            <Plus size={16} />
+            경기 등록
+          </button>
+        </div>
         {todayMatches.length > 0 ? (
           <div className="space-y-3">
             {todayMatches.map((match) => {
-              const teamA = match.participants?.filter((p) => p.team === "A") || [];
-              const teamB = match.participants?.filter((p) => p.team === "B") || [];
-              const scoreA = teamA.length > 0 ? Math.max(...teamA.map((p) => p.score || 0)) : 0;
-              const scoreB = teamB.length > 0 ? Math.max(...teamB.map((p) => p.score || 0)) : 0;
-              const winner = scoreA > scoreB ? "A" : scoreB > scoreA ? "B" : null;
+              const teamA =
+                match.participants?.filter((p) => p.team === "A") || [];
+              const teamB =
+                match.participants?.filter((p) => p.team === "B") || [];
+              const scoreA =
+                teamA.length > 0
+                  ? Math.max(...teamA.map((p) => p.score || 0))
+                  : 0;
+              const scoreB =
+                teamB.length > 0
+                  ? Math.max(...teamB.map((p) => p.score || 0))
+                  : 0;
+              const winner =
+                scoreA > scoreB ? "A" : scoreB > scoreA ? "B" : null;
 
               return (
                 <div
@@ -265,7 +298,11 @@ function Dashboard({ currentUser }) {
                   </div>
                   <div className="flex items-center justify-between">
                     {/* Team A */}
-                    <div className={`flex-1 text-center ${winner === "A" ? "text-tennis-400" : "text-white"}`}>
+                    <div
+                      className={`flex-1 text-center ${
+                        winner === "A" ? "text-tennis-400" : "text-white"
+                      }`}
+                    >
                       <p className="text-xs text-slate-400 mb-1">A팀</p>
                       <p className="font-medium">
                         {teamA.map((p) => p.user?.name).join(", ") || "-"}
@@ -273,16 +310,28 @@ function Dashboard({ currentUser }) {
                     </div>
                     {/* Score */}
                     <div className="px-6">
-                      <span className={`text-3xl font-bold ${winner === "A" ? "text-tennis-400" : "text-white"}`}>
+                      <span
+                        className={`text-3xl font-bold ${
+                          winner === "A" ? "text-tennis-400" : "text-white"
+                        }`}
+                      >
                         {scoreA}
                       </span>
                       <span className="text-slate-500 mx-2">:</span>
-                      <span className={`text-3xl font-bold ${winner === "B" ? "text-tennis-400" : "text-white"}`}>
+                      <span
+                        className={`text-3xl font-bold ${
+                          winner === "B" ? "text-tennis-400" : "text-white"
+                        }`}
+                      >
                         {scoreB}
                       </span>
                     </div>
                     {/* Team B */}
-                    <div className={`flex-1 text-center ${winner === "B" ? "text-tennis-400" : "text-white"}`}>
+                    <div
+                      className={`flex-1 text-center ${
+                        winner === "B" ? "text-tennis-400" : "text-white"
+                      }`}
+                    >
                       <p className="text-xs text-slate-400 mb-1">B팀</p>
                       <p className="font-medium">
                         {teamB.map((p) => p.user?.name).join(", ") || "-"}
@@ -292,7 +341,10 @@ function Dashboard({ currentUser }) {
                   {winner && (
                     <div className="mt-3 text-center">
                       <span className="text-sm text-tennis-400">
-                        🏆 승자: {winner === "A" ? teamA.map((p) => p.user?.name).join(" & ") : teamB.map((p) => p.user?.name).join(" & ")}
+                        🏆 승자:{" "}
+                        {winner === "A"
+                          ? teamA.map((p) => p.user?.name).join(" & ")
+                          : teamB.map((p) => p.user?.name).join(" & ")}
                       </span>
                     </div>
                   )}
