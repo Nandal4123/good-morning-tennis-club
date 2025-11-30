@@ -91,7 +91,7 @@ function Attendance({ currentUser }) {
             {t('attendance.todayAttendees')}
           </h2>
           <p className="text-slate-400 text-sm mb-6">
-            {todaySession?.description || 'Morning Session'}
+            {todaySession?.description || t('attendance.morningSession')}
           </p>
 
           <div className="space-y-3">

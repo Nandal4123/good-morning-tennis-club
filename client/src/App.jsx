@@ -1,12 +1,13 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import Attendance from './pages/Attendance';
-import Members from './pages/Members';
-import Matches from './pages/Matches';
-import Profile from './pages/Profile';
-import Login from './pages/Login';
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import Layout from "./components/Layout";
+import Dashboard from "./pages/Dashboard";
+import Attendance from "./pages/Attendance";
+import Members from "./pages/Members";
+import Matches from "./pages/Matches";
+import Profile from "./pages/Profile";
+import Login from "./pages/Login";
+import InstallPrompt from "./components/InstallPrompt";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -14,7 +15,7 @@ function App() {
 
   useEffect(() => {
     // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('clubUser');
+    const savedUser = localStorage.getItem("clubUser");
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
     }
@@ -23,12 +24,12 @@ function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user);
-    localStorage.setItem('clubUser', JSON.stringify(user));
+    localStorage.setItem("clubUser", JSON.stringify(user));
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('clubUser');
+    localStorage.removeItem("clubUser");
   };
 
   if (loading) {
@@ -47,18 +48,34 @@ function App() {
   }
 
   return (
-    <Layout currentUser={currentUser} onLogout={handleLogout}>
-      <Routes>
-        <Route path="/" element={<Dashboard currentUser={currentUser} />} />
-        <Route path="/attendance" element={<Attendance currentUser={currentUser} />} />
-        <Route path="/members" element={<Members />} />
-        <Route path="/matches" element={<Matches currentUser={currentUser} />} />
-        <Route path="/profile" element={<Profile currentUser={currentUser} onUpdate={handleLogin} />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+    <>
+      <Layout currentUser={currentUser} onLogout={handleLogout}>
+        <Routes>
+          <Route path="/" element={<Dashboard currentUser={currentUser} />} />
+          <Route
+            path="/attendance"
+            element={<Attendance currentUser={currentUser} />}
+          />
+          <Route
+            path="/members"
+            element={<Members currentUser={currentUser} />}
+          />
+          <Route
+            path="/matches"
+            element={<Matches currentUser={currentUser} />}
+          />
+          <Route
+            path="/profile"
+            element={
+              <Profile currentUser={currentUser} onUpdate={handleLogin} />
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Layout>
+      <InstallPrompt />
+    </>
   );
 }
 
 export default App;
-

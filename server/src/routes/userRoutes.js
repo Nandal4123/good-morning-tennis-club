@@ -6,6 +6,9 @@ const router = express.Router();
 // GET /api/users - Get all users
 router.get('/', userController.getAllUsers);
 
+// GET /api/users/with-stats - Get all users with stats (admin)
+router.get('/with-stats', userController.getAllUsersWithStats);
+
 // GET /api/users/:id - Get user by ID
 router.get('/:id', userController.getUserById);
 
@@ -20,6 +23,9 @@ router.delete('/:id', userController.deleteUser);
 
 // GET /api/users/:id/stats - Get user statistics
 router.get('/:id/stats', userController.getUserStats);
+
+// GET /api/users/:id/versus/:opponentId - Get head-to-head record
+router.get('/:id/versus/:opponentId', userController.getHeadToHead);
 
 export default router;
 

@@ -8,9 +8,13 @@ datasource db {
 }
 
 enum TennisLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
+  NTRP_2_0
+  NTRP_2_5
+  NTRP_3_0
+  NTRP_3_5
+  NTRP_4_0
+  NTRP_4_5
+  NTRP_5_0
 }
 
 enum AttendanceStatus {
@@ -38,7 +42,7 @@ model User {
   email           String    @unique
   name            String
   role            UserRole  @default(USER)
-  tennisLevel     TennisLevel @default(BEGINNER)
+  tennisLevel     TennisLevel @default(NTRP_3_0)
   goals           String?
   languagePref    String    @default("en")
   profileMetadata Json?

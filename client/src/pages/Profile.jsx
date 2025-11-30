@@ -10,9 +10,9 @@ function Profile({ currentUser, onUpdate }) {
   const [profile, setProfile] = useState({
     name: currentUser?.name || '',
     email: currentUser?.email || '',
-    tennisLevel: currentUser?.tennisLevel || 'BEGINNER',
+    tennisLevel: currentUser?.tennisLevel || 'NTRP_3_0',
     goals: currentUser?.goals || '',
-    languagePref: currentUser?.languagePref || 'en'
+    languagePref: currentUser?.languagePref || 'ko'
   });
   const [stats, setStats] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -102,50 +102,23 @@ function Profile({ currentUser, onUpdate }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t('profile.level')}
-                  </label>
-                  <select
-                    value={profile.tennisLevel}
-                    onChange={(e) => setProfile({ ...profile, tennisLevel: e.target.value })}
-                    className="input"
-                  >
-                    <option value="BEGINNER">{t('members.level.beginner')}</option>
-                    <option value="INTERMEDIATE">{t('members.level.intermediate')}</option>
-                    <option value="ADVANCED">{t('members.level.advanced')}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t('profile.language')}
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageChange('en')}
-                      className={`flex-1 py-3 px-4 rounded-xl border transition-all duration-300 ${
-                        profile.languagePref === 'en'
-                          ? 'bg-tennis-500/20 border-tennis-500/50 text-tennis-400'
-                          : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
-                      }`}
-                    >
-                      🇺🇸 English
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageChange('ko')}
-                      className={`flex-1 py-3 px-4 rounded-xl border transition-all duration-300 ${
-                        profile.languagePref === 'ko'
-                          ? 'bg-tennis-500/20 border-tennis-500/50 text-tennis-400'
-                          : 'bg-slate-800/50 border-slate-700 text-slate-400 hover:border-slate-600'
-                      }`}
-                    >
-                      🇰🇷 한국어
-                    </button>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-400 mb-2">
+                  {t('profile.level')}
+                </label>
+                <select
+                  value={profile.tennisLevel}
+                  onChange={(e) => setProfile({ ...profile, tennisLevel: e.target.value })}
+                  className="input"
+                >
+                  <option value="NTRP_2_0">{t('members.level.ntrp_2_0')}</option>
+                  <option value="NTRP_2_5">{t('members.level.ntrp_2_5')}</option>
+                  <option value="NTRP_3_0">{t('members.level.ntrp_3_0')}</option>
+                  <option value="NTRP_3_5">{t('members.level.ntrp_3_5')}</option>
+                  <option value="NTRP_4_0">{t('members.level.ntrp_4_0')}</option>
+                  <option value="NTRP_4_5">{t('members.level.ntrp_4_5')}</option>
+                  <option value="NTRP_5_0">{t('members.level.ntrp_5_0')}</option>
+                </select>
               </div>
 
               <div>
@@ -191,7 +164,7 @@ function Profile({ currentUser, onUpdate }) {
                   <CalendarCheck className="text-tennis-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.totalAttendance || 0}</p>
-                    <p className="text-sm text-slate-400">Total Attendance</p>
+                    <p className="text-sm text-slate-400">총 출석</p>
                   </div>
                 </div>
               </div>
@@ -201,7 +174,7 @@ function Profile({ currentUser, onUpdate }) {
                   <Trophy className="text-blue-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.totalMatches || 0}</p>
-                    <p className="text-sm text-slate-400">Total Matches</p>
+                    <p className="text-sm text-slate-400">총 경기 수</p>
                   </div>
                 </div>
               </div>
@@ -211,7 +184,7 @@ function Profile({ currentUser, onUpdate }) {
                   <Award className="text-purple-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.wins || 0}</p>
-                    <p className="text-sm text-slate-400">Wins</p>
+                    <p className="text-sm text-slate-400">승리</p>
                   </div>
                 </div>
               </div>
@@ -221,7 +194,7 @@ function Profile({ currentUser, onUpdate }) {
                   <TrendingUp className="text-orange-400" size={24} />
                   <div>
                     <p className="text-2xl font-bold text-white font-display">{stats?.attendanceRate || 0}%</p>
-                    <p className="text-sm text-slate-400">Attendance Rate</p>
+                    <p className="text-sm text-slate-400">출석률</p>
                   </div>
                 </div>
               </div>
