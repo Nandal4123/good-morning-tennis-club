@@ -181,12 +181,14 @@ export const getUserStats = async (req, res) => {
       const myTeamPlayers = participants.filter((p) => p.team === myTeam);
       const opponentPlayers = participants.filter((p) => p.team !== myTeam);
 
-      const myTeamScore = myTeamPlayers.length > 0 
-        ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
-        : 0;
-      const opponentScore = opponentPlayers.length > 0 
-        ? Math.max(...opponentPlayers.map((p) => p.score || 0))
-        : 0;
+      const myTeamScore =
+        myTeamPlayers.length > 0
+          ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
+          : 0;
+      const opponentScore =
+        opponentPlayers.length > 0
+          ? Math.max(...opponentPlayers.map((p) => p.score || 0))
+          : 0;
 
       if (myTeamScore > opponentScore) {
         winCount++;
@@ -211,7 +213,12 @@ export const getUserStats = async (req, res) => {
   } catch (error) {
     console.error("Error fetching user stats:", error);
     console.error("Error details:", error.message);
-    res.status(500).json({ error: "Failed to fetch user statistics", details: error.message });
+    res
+      .status(500)
+      .json({
+        error: "Failed to fetch user statistics",
+        details: error.message,
+      });
   }
 };
 
@@ -267,14 +274,18 @@ export const getHeadToHead = async (req, res) => {
       // 점수 계산
       const participants = match?.participants || [];
       const myTeamPlayers = participants.filter((p) => p.team === myTeam);
-      const opponentTeamPlayers = participants.filter((p) => p.team === opponentTeam);
-      
-      const myTeamScore = myTeamPlayers.length > 0
-        ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
-        : 0;
-      const opponentTeamScore = opponentTeamPlayers.length > 0
-        ? Math.max(...opponentTeamPlayers.map((p) => p.score || 0))
-        : 0;
+      const opponentTeamPlayers = participants.filter(
+        (p) => p.team === opponentTeam
+      );
+
+      const myTeamScore =
+        myTeamPlayers.length > 0
+          ? Math.max(...myTeamPlayers.map((p) => p.score || 0))
+          : 0;
+      const opponentTeamScore =
+        opponentTeamPlayers.length > 0
+          ? Math.max(...opponentTeamPlayers.map((p) => p.score || 0))
+          : 0;
 
       // 승/패/무 계산
       let result;

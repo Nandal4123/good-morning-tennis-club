@@ -10,9 +10,9 @@ function Profile({ currentUser, onUpdate }) {
   const [profile, setProfile] = useState({
     name: currentUser?.name || '',
     email: currentUser?.email || '',
-    tennisLevel: currentUser?.tennisLevel || 'BEGINNER',
+    tennisLevel: currentUser?.tennisLevel || 'NTRP_3_0',
     goals: currentUser?.goals || '',
-    languagePref: currentUser?.languagePref || 'en'
+    languagePref: currentUser?.languagePref || 'ko'
   });
   const [stats, setStats] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -112,9 +112,13 @@ function Profile({ currentUser, onUpdate }) {
                     onChange={(e) => setProfile({ ...profile, tennisLevel: e.target.value })}
                     className="input"
                   >
-                    <option value="BEGINNER">{t('members.level.beginner')}</option>
-                    <option value="INTERMEDIATE">{t('members.level.intermediate')}</option>
-                    <option value="ADVANCED">{t('members.level.advanced')}</option>
+                    <option value="NTRP_2_0">{t('members.level.ntrp_2_0')}</option>
+                    <option value="NTRP_2_5">{t('members.level.ntrp_2_5')}</option>
+                    <option value="NTRP_3_0">{t('members.level.ntrp_3_0')}</option>
+                    <option value="NTRP_3_5">{t('members.level.ntrp_3_5')}</option>
+                    <option value="NTRP_4_0">{t('members.level.ntrp_4_0')}</option>
+                    <option value="NTRP_4_5">{t('members.level.ntrp_4_5')}</option>
+                    <option value="NTRP_5_0">{t('members.level.ntrp_5_0')}</option>
                   </select>
                 </div>
                 <div>
