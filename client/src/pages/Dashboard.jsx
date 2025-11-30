@@ -10,6 +10,7 @@ import {
 import StatCard from "../components/StatCard";
 import AttendanceItem from "../components/AttendanceItem";
 import AttendanceCalendar from "../components/AttendanceCalendar";
+import MyMatchesModal from "../components/MyMatchesModal";
 import { sessionApi, attendanceApi, userApi } from "../lib/api";
 
 function Dashboard({ currentUser }) {
@@ -22,6 +23,7 @@ function Dashboard({ currentUser }) {
   const [checkingIn, setCheckingIn] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [allAttendances, setAllAttendances] = useState([]);
+  const [showMatches, setShowMatches] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -84,12 +86,14 @@ function Dashboard({ currentUser }) {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
-    return recentAttendance.filter(a => {
+
+    return recentAttendance.filter((a) => {
       const attendanceDate = new Date(a.date);
-      return attendanceDate.getMonth() === currentMonth && 
-             attendanceDate.getFullYear() === currentYear &&
-             a.status === 'ATTENDED';
+      return (
+        attendanceDate.getMonth() === currentMonth &&
+        attendanceDate.getFullYear() === currentYear &&
+        a.status === "ATTENDED"
+      );
     }).length;
   };
 
@@ -162,7 +166,10 @@ function Dashboard({ currentUser }) {
             color="tennis"
           />
         </div>
-        <div className="stagger-item">
+        <div
+          className="stagger-item cursor-pointer"
+          onClick={() => setShowMatches(true)}
+        >
           <StatCard
             icon={Trophy}
             label={t("dashboard.totalMatches")}
@@ -260,6 +267,14 @@ function Dashboard({ currentUser }) {
         <AttendanceCalendar
           attendances={allAttendances}
           onClose={() => setShowCalendar(false)}
+        />
+      )}
+
+      {/* My Matches Modal */}
+      {showMatches && (
+        <MyMatchesModal
+          userId={currentUser.id}
+          onClose={() => setShowMatches(false)}
         />
       )}
     </div>
