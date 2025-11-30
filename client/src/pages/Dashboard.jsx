@@ -169,7 +169,7 @@ function Dashboard({ currentUser }) {
           {/* New Match Button */}
           <button
             onClick={() => navigate("/matches")}
-            className="btn-secondary flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/25"
           >
             <Trophy size={18} />
             <span className="text-sm">새 경기</span>

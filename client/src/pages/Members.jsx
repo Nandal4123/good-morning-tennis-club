@@ -72,19 +72,22 @@ function Members({ currentUser }) {
     try {
       setLoading(true);
       let data;
-      
+
       // 관리자는 통계 포함된 데이터를 가져옴 (실패 시 기본 API로 폴백)
       if (isAdmin) {
         try {
           data = await userApi.getAllWithStats();
         } catch (statsError) {
-          console.warn("Stats API failed, falling back to basic API:", statsError);
+          console.warn(
+            "Stats API failed, falling back to basic API:",
+            statsError
+          );
           data = await userApi.getAll();
         }
       } else {
         data = await userApi.getAll();
       }
-      
+
       setMembers(data);
     } catch (error) {
       console.error("Failed to load members:", error);
