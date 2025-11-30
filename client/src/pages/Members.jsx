@@ -56,6 +56,7 @@ function Members({ currentUser }) {
 
   // 관리자용 상태
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
+  const [selectedMembers, setSelectedMembers] = useState([]); // 비교할 회원 선택
   const [sortConfig, setSortConfig] = useState({
     key: "name",
     direction: "asc",
@@ -169,6 +170,56 @@ function Members({ currentUser }) {
     } finally {
       setHeadToHeadLoading(false);
     }
+  };
+
+  // 관리자용: 회원 선택 토글
+  const handleSelectMember = (member) => {
+    setSelectedMembers((prev) => {
+      const isSelected = prev.find((m) => m.id === member.id);
+      if (isSelected) {
+        return prev.filter((m) => m.id !== member.id);
+      }
+      if (prev.length >= 2) {
+        // 이미 2명 선택됨 - 첫 번째 제거하고 새로 추가
+        return [prev[1], member];
+      }
+      return [...prev, member];
+    });
+  };
+
+  // 관리자용: 선택된 두 회원 비교
+  const handleCompareMembers = async () => {
+    if (selectedMembers.length !== 2) return;
+
+    const [member1, member2] = selectedMembers;
+    if (member1.id === member2.id) {
+      alert("같은 회원을 선택할 수 없습니다.");
+      return;
+    }
+
+    try {
+      setHeadToHeadLoading(true);
+      setShowHeadToHead(true);
+      const data = await userApi.getHeadToHead(member1.id, member2.id);
+      // 데이터에 선택된 회원 정보 추가
+      setHeadToHeadData({
+        ...data,
+        user1: member1,
+        user2: member2,
+        isAdminCompare: true,
+      });
+    } catch (error) {
+      console.error("Failed to load head-to-head:", error);
+      alert("상대전적을 불러오는데 실패했습니다.");
+      setShowHeadToHead(false);
+    } finally {
+      setHeadToHeadLoading(false);
+    }
+  };
+
+  // 선택 초기화
+  const clearSelection = () => {
+    setSelectedMembers([]);
   };
 
   // 필터링 및 정렬
@@ -292,6 +343,46 @@ function Members({ currentUser }) {
         />
       </div>
 
+      {/* Admin Compare Bar */}
+      {isAdmin && viewMode === "table" && selectedMembers.length > 0 && (
+        <div className="flex items-center justify-between p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 animate-slide-up">
+          <div className="flex items-center gap-3">
+            <Swords className="text-purple-400" size={20} />
+            <span className="text-white font-medium">
+              {selectedMembers.length === 1 ? (
+                <>
+                  <span className="text-purple-400">{selectedMembers[0].name}</span> 선택됨 - 비교할 회원을 한 명 더 선택하세요
+                </>
+              ) : (
+                <>
+                  <span className="text-purple-400">{selectedMembers[0].name}</span>
+                  <span className="text-slate-400 mx-2">VS</span>
+                  <span className="text-purple-400">{selectedMembers[1].name}</span>
+                </>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedMembers.length === 2 && (
+              <button
+                onClick={handleCompareMembers}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-xl transition-all"
+              >
+                <Swords size={16} />
+                상대전적 비교
+              </button>
+            )}
+            <button
+              onClick={clearSelection}
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+              title="선택 취소"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Members Grid or Table */}
       {viewMode === "grid" || !isAdmin ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -320,6 +411,9 @@ function Members({ currentUser }) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-700">
+                  <th className="px-3 py-3 text-center w-12">
+                    <span className="text-xs text-slate-500">비교</span>
+                  </th>
                   <th
                     className="px-4 py-3 text-left cursor-pointer hover:bg-slate-700/50 transition-colors"
                     onClick={() => handleSort("name")}
@@ -389,12 +483,42 @@ function Members({ currentUser }) {
                       ?.replace("NTRP_", "")
                       .replace("_", ".") || "-";
                   const stats = member.stats || {};
+                  const isSelected = selectedMembers.find((m) => m.id === member.id);
 
                   return (
                     <tr
                       key={member.id}
-                      className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors"
+                      className={`border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors ${
+                        isSelected ? "bg-purple-500/10" : ""
+                      }`}
                     >
+                      {/* 체크박스 */}
+                      <td className="px-3 py-3 text-center">
+                        <button
+                          onClick={() => handleSelectMember(member)}
+                          className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "bg-purple-500 border-purple-500 text-white"
+                              : "border-slate-600 hover:border-purple-400"
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </button>
+                      </td>
                       {/* 이름 */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
@@ -667,6 +791,9 @@ function Members({ currentUser }) {
                 onClick={() => {
                   setShowHeadToHead(false);
                   setHeadToHeadData(null);
+                  if (headToHeadData?.isAdminCompare) {
+                    clearSelection();
+                  }
                 }}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
               >
@@ -685,17 +812,27 @@ function Members({ currentUser }) {
                 <div className="flex items-center justify-center gap-4 py-4">
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-tennis-500 to-tennis-600 flex items-center justify-center text-2xl font-bold text-white">
-                      {currentUser.name?.charAt(0)}
+                      {headToHeadData.isAdminCompare
+                        ? headToHeadData.user1?.name?.charAt(0)
+                        : currentUser.name?.charAt(0)}
                     </div>
-                    <p className="text-white font-medium">{currentUser.name}</p>
+                    <p className="text-white font-medium">
+                      {headToHeadData.isAdminCompare
+                        ? headToHeadData.user1?.name
+                        : currentUser.name}
+                    </p>
                   </div>
                   <div className="text-3xl font-bold text-slate-500">VS</div>
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white">
-                      {headToHeadData.opponent?.name?.charAt(0)}
+                      {headToHeadData.isAdminCompare
+                        ? headToHeadData.user2?.name?.charAt(0)
+                        : headToHeadData.opponent?.name?.charAt(0)}
                     </div>
                     <p className="text-white font-medium">
-                      {headToHeadData.opponent?.name}
+                      {headToHeadData.isAdminCompare
+                        ? headToHeadData.user2?.name
+                        : headToHeadData.opponent?.name}
                     </p>
                   </div>
                 </div>
@@ -828,6 +965,9 @@ function Members({ currentUser }) {
             <button
               onClick={() => {
                 setShowHeadToHead(false);
+                if (headToHeadData?.isAdminCompare) {
+                  clearSelection();
+                }
                 setHeadToHeadData(null);
               }}
               className="btn-primary w-full mt-6"
