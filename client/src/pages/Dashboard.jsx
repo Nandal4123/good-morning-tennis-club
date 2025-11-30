@@ -143,8 +143,8 @@ function Dashboard({ currentUser }) {
         >
           <StatCard
             icon={CalendarCheck}
-            label={t("dashboard.attendanceRate")}
-            value={`${userStats?.stats?.attendanceRate || 0}%`}
+            label={t("dashboard.totalAttendance")}
+            value={userStats?.stats?.totalAttendance || 0}
             color="tennis"
           />
         </div>
@@ -162,8 +162,8 @@ function Dashboard({ currentUser }) {
         >
           <StatCard
             icon={TrendingUp}
-            label={t("dashboard.totalAttendance")}
-            value={userStats?.stats?.totalAttendance || 0}
+            label={t("dashboard.attendanceRate")}
+            value={`${userStats?.stats?.attendanceRate || 0}%`}
             color="purple"
           />
         </div>
