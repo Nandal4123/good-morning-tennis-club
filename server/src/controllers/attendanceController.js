@@ -1,3 +1,5 @@
+import { getKoreanTodayRange, getKoreanTodayStart, getKoreanDateString } from '../utils/timezone.js';
+
 // Get all attendances
 export const getAllAttendances = async (req, res) => {
   try {
@@ -130,16 +132,17 @@ export const deleteAttendance = async (req, res) => {
   }
 };
 
-// Quick check-in for current session
+// Quick check-in for current session (한국 시간대 기준)
 export const quickCheckIn = async (req, res) => {
   try {
     const { userId } = req.body;
     
-    // Get or create today's session
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // 한국 시간 기준 오늘의 범위
+    const { start: today, end: tomorrow } = getKoreanTodayRange();
+    const todayStart = getKoreanTodayStart();
+    const dateString = getKoreanDateString();
+    
+    console.log(`[KST] Quick check-in for today: ${today.toISOString()} ~ ${tomorrow.toISOString()}`);
     
     let session = await req.prisma.session.findFirst({
       where: {
@@ -153,8 +156,8 @@ export const quickCheckIn = async (req, res) => {
     if (!session) {
       session = await req.prisma.session.create({
         data: {
-          date: today,
-          description: `Morning Session - ${today.toLocaleDateString()}`
+          date: todayStart,
+          description: `Morning Session - ${dateString}`
         }
       });
     }

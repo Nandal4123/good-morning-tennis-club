@@ -7,25 +7,24 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }) {
   const date = new Date(match.date);
   const teamA = match.participants?.filter(p => p.team === 'A') || [];
   const teamB = match.participants?.filter(p => p.team === 'B') || [];
-  // 1게임 1경기: 팀의 첫 번째 선수 점수를 팀 점수로 사용
-  const scoreA = teamA[0]?.score || 0;
-  const scoreB = teamB[0]?.score || 0;
+  const scoreA = teamA.reduce((sum, p) => sum + p.score, 0);
+  const scoreB = teamB.reduce((sum, p) => sum + p.score, 0);
 
   return (
     <div className="card group relative">
       {/* Action Buttons - Only visible for admins */}
       {isAdmin && (
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
             onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-            className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border border-blue-500/30 transition-all duration-300"
+            className="p-2 rounded-lg bg-slate-700/80 text-slate-400 hover:text-tennis-400 hover:bg-slate-700 transition-all duration-300"
             title={t('common.edit')}
           >
             <Pencil size={16} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-            className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 transition-all duration-300"
+            className="p-2 rounded-lg bg-slate-700/80 text-slate-400 hover:text-red-400 hover:bg-slate-700 transition-all duration-300"
             title={t('common.delete')}
           >
             <Trash2 size={16} />
@@ -37,8 +36,8 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }) {
         <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">
           🎾 {t('matches.type.doubles')}
         </span>
-        <span className="text-sm text-slate-400">
-          {date.toLocaleDateString('ko-KR')}
+        <span className={`text-sm text-slate-400 transition-all duration-300 ${isAdmin ? 'mr-16 group-hover:mr-0' : ''}`}>
+          {date.toLocaleDateString()}
         </span>
       </div>
 

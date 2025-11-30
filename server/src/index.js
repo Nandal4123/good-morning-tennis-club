@@ -15,9 +15,9 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
-// Middleware - Allow all origins for deployment
+// Middleware
 app.use(cors({
-  origin: true,
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json());

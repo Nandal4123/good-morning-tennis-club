@@ -1,3 +1,5 @@
+import { getKoreanTodayRange, getKoreanTodayStart, getKoreanDateString } from '../utils/timezone.js';
+
 // Get all sessions
 export const getAllSessions = async (req, res) => {
   try {
@@ -102,13 +104,15 @@ export const deleteSession = async (req, res) => {
   }
 };
 
-// Get today's session
+// Get today's session (한국 시간대 기준)
 export const getTodaySession = async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // 한국 시간 기준 오늘의 범위
+    const { start: today, end: tomorrow } = getKoreanTodayRange();
+    const todayStart = getKoreanTodayStart();
+    const dateString = getKoreanDateString();
+    
+    console.log(`[KST] Today range: ${today.toISOString()} ~ ${tomorrow.toISOString()}`);
     
     let session = await req.prisma.session.findFirst({
       where: {
@@ -128,8 +132,8 @@ export const getTodaySession = async (req, res) => {
     if (!session) {
       session = await req.prisma.session.create({
         data: {
-          date: today,
-          description: `Morning Session - ${today.toLocaleDateString()}`
+          date: todayStart,
+          description: `Morning Session - ${dateString}`
         },
         include: {
           attendances: {
