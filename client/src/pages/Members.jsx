@@ -351,13 +351,20 @@ function Members({ currentUser }) {
             <span className="text-white font-medium">
               {selectedMembers.length === 1 ? (
                 <>
-                  <span className="text-purple-400">{selectedMembers[0].name}</span> 선택됨 - 비교할 회원을 한 명 더 선택하세요
+                  <span className="text-purple-400">
+                    {selectedMembers[0].name}
+                  </span>{" "}
+                  선택됨 - 비교할 회원을 한 명 더 선택하세요
                 </>
               ) : (
                 <>
-                  <span className="text-purple-400">{selectedMembers[0].name}</span>
+                  <span className="text-purple-400">
+                    {selectedMembers[0].name}
+                  </span>
                   <span className="text-slate-400 mx-2">VS</span>
-                  <span className="text-purple-400">{selectedMembers[1].name}</span>
+                  <span className="text-purple-400">
+                    {selectedMembers[1].name}
+                  </span>
                 </>
               )}
             </span>
@@ -483,7 +490,9 @@ function Members({ currentUser }) {
                       ?.replace("NTRP_", "")
                       .replace("_", ".") || "-";
                   const stats = member.stats || {};
-                  const isSelected = selectedMembers.find((m) => m.id === member.id);
+                  const isSelected = selectedMembers.find(
+                    (m) => m.id === member.id
+                  );
 
                   return (
                     <tr
