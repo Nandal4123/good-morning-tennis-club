@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>앱 아이콘 생성기</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #1e293b;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 { color: #22c55e; }
+        .icon-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        .icon-box {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px solid #22c55e;
+        }
+        canvas { 
+            border-radius: 20%;
+            margin: 10px 0;
+        }
+        button {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background: #16a34a; }
+        .instructions {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        code {
+            background: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎾 앱 아이콘 생성기</h1>
+    <p>홈 화면 바로가기에 사용될 아이콘입니다</p>
+    
+    <div class="icon-container">
+        <div class="icon-box">
+            <h3>192 x 192</h3>
+            <canvas id="icon192" width="192" height="192"></canvas>
+            <br>
+            <button onclick="downloadIcon(192)">📥 다운로드</button>
+        </div>
+        <div class="icon-box">
+            <h3>512 x 512</h3>
+            <canvas id="icon512" width="512" height="512"></canvas>
+            <br>
+            <button onclick="downloadIcon(512)">📥 다운로드</button>
+        </div>
+    </div>
+    
+    <button onclick="downloadIcon(192); setTimeout(() => downloadIcon(512), 500);">📥 둘 다 다운로드</button>
+    
+    <div class="instructions">
+        <h3>📋 다운로드 후 할 일:</h3>
+        <ol>
+            <li>다운로드된 <code>icon-192.png</code>와 <code>icon-512.png</code> 파일 확인</li>
+            <li>두 파일을 <code>club-attendance/client/public/</code> 폴더에 복사</li>
+            <li>완료되면 알려주세요!</li>
+        </ol>
+    </div>
+
+    <script>
+        function drawIcon(size) {
+            const canvas = document.getElementById('icon' + size);
+            const ctx = canvas.getContext('2d');
+            const scale = size / 192;
+            
+            // Background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#0f172a');
+            gradient.addColorStop(1, '#1e293b');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.2);
+            ctx.fill();
+            
+            // Tennis ball
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const ballRadius = size * 0.35;
+            
+            // Ball gradient
+            const ballGradient = ctx.createRadialGradient(
+                centerX - ballRadius * 0.3, centerY - ballRadius * 0.3, 0,
+                centerX, centerY, ballRadius
+            );
+            ballGradient.addColorStop(0, '#4ade80');
+            ballGradient.addColorStop(0.5, '#22c55e');
+            ballGradient.addColorStop(1, '#16a34a');
+            
+            // Glow effect
+            ctx.shadowColor = '#22c55e';
+            ctx.shadowBlur = size * 0.1;
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = ballGradient;
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+            
+            // Tennis ball lines
+            ctx.strokeStyle = '#15803d';
+            ctx.lineWidth = size * 0.025;
+            ctx.lineCap = 'round';
+            
+            // Top curve
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - ballRadius * 0.3, ballRadius * 0.7, 
+                    Math.PI * 0.15, Math.PI * 0.85, false);
+            ctx.stroke();
+            
+            // Bottom curve
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + ballRadius * 0.3, ballRadius * 0.7, 
+                    Math.PI * 1.15, Math.PI * 1.85, false);
+            ctx.stroke();
+        }
+        
+        function downloadIcon(size) {
+            const canvas = document.getElementById('icon' + size);
+            const link = document.createElement('a');
+            link.download = 'icon-' + size + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+        
+        // Draw both icons
+        drawIcon(192);
+        drawIcon(512);
+    </script>
+</body>
+</html>
+
