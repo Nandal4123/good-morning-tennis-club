@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Trophy, Plus, X, Trash2, AlertTriangle } from "lucide-react";
+import { Trophy, Plus, X, Trash2 } from "lucide-react";
 import { matchApi, userApi } from "../lib/api";
 import MatchCard from "../components/MatchCard";
 
@@ -662,22 +662,20 @@ function Matches({ currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
             <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                <AlertTriangle className="text-yellow-400" size={32} />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-tennis-500/20 flex items-center justify-center">
+                <span className="text-3xl">🎾</span>
               </div>
               <h2 className="text-xl font-bold text-white mb-2">
-                유사한 경기가 있습니다
+                재경기(설욕전) 기록인가요?
               </h2>
               <p className="text-slate-400 mb-4">
                 30분 이내에 같은 선수들로 기록된 경기가 있습니다.
-                <br />
-                중복 기록이 아닌지 확인해주세요.
               </p>
 
               {/* Existing Match Preview */}
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6 text-left">
-                <p className="text-sm text-yellow-400 mb-2 font-medium">
-                  기존 경기 ({new Date(duplicateMatch.date).toLocaleString("ko-KR", {
+              <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4 mb-6 text-left">
+                <p className="text-sm text-tennis-400 mb-2 font-medium">
+                  📋 기존 경기 ({new Date(duplicateMatch.date).toLocaleString("ko-KR", {
                     month: "long",
                     day: "numeric",
                     hour: "2-digit",
@@ -709,19 +707,15 @@ function Matches({ currentUser }) {
                 </div>
               </div>
 
-              <p className="text-sm text-slate-500 mb-4">
-                다른 경기라면 "그래도 기록하기"를 선택하세요.
-              </p>
-
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     setShowDuplicateWarning(false);
                     setDuplicateMatch(null);
                   }}
-                  className="btn-secondary flex-1"
+                  className="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 text-sm"
                 >
-                  취소
+                  아니오, 실수입니다
                 </button>
                 <button
                   onClick={async () => {
@@ -729,9 +723,9 @@ function Matches({ currentUser }) {
                     await createMatchDirectly();
                   }}
                   disabled={saving}
-                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+                  className="flex-1 bg-tennis-500 hover:bg-tennis-600 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 text-sm"
                 >
-                  {saving ? "저장 중..." : "그래도 기록하기"}
+                  {saving ? "저장 중..." : "네, 재경기입니다"}
                 </button>
               </div>
             </div>
