@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Trophy, Plus, X, Trash2 } from "lucide-react";
+import { Trophy, Plus, X, Trash2, AlertTriangle } from "lucide-react";
 import { matchApi, userApi } from "../lib/api";
 import MatchCard from "../components/MatchCard";
 
@@ -12,9 +12,12 @@ function Matches({ currentUser }) {
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [duplicateMatch, setDuplicateMatch] = useState(null);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   // Check if current user is admin
   const isAdmin = currentUser?.role === "ADMIN";
@@ -57,8 +60,52 @@ function Matches({ currentUser }) {
     }
   };
 
-  const handleCreateMatch = async (e) => {
+  // Check for duplicate match before creating
+  const checkAndCreateMatch = async (e) => {
     e.preventDefault();
+    
+    const playerIds = [
+      ...newMatch.teamA.filter((id) => id),
+      ...newMatch.teamB.filter((id) => id),
+    ];
+    
+    // Need exactly 4 players for doubles
+    if (playerIds.length !== 4) {
+      alert("복식 경기는 4명의 선수가 필요합니다.");
+      return;
+    }
+    
+    // Check for duplicate players
+    const uniquePlayerIds = [...new Set(playerIds)];
+    if (uniquePlayerIds.length !== 4) {
+      alert("같은 선수가 중복으로 선택되었습니다.");
+      return;
+    }
+    
+    try {
+      setChecking(true);
+      
+      // Check for duplicate match
+      const result = await matchApi.checkDuplicate(newMatch.date, playerIds);
+      
+      if (result.isDuplicate) {
+        setDuplicateMatch(result.existingMatch);
+        setShowDuplicateWarning(true);
+      } else {
+        // No duplicate, create directly
+        await createMatchDirectly();
+      }
+    } catch (error) {
+      console.error("Failed to check duplicate:", error);
+      // If check fails, proceed with creation
+      await createMatchDirectly();
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  // Create match directly without duplicate check
+  const createMatchDirectly = async () => {
     try {
       setSaving(true);
 
@@ -86,6 +133,8 @@ function Matches({ currentUser }) {
       });
 
       setShowModal(false);
+      setShowDuplicateWarning(false);
+      setDuplicateMatch(null);
       setNewMatch({
         type: "DOUBLES",
         date: new Date().toISOString().split("T")[0],
@@ -101,6 +150,9 @@ function Matches({ currentUser }) {
       setSaving(false);
     }
   };
+
+  // Legacy function name for compatibility
+  const handleCreateMatch = checkAndCreateMatch;
 
   const handleEditMatch = (match) => {
     const teamA = match.participants?.filter((p) => p.team === "A") || [];
@@ -408,10 +460,10 @@ function Matches({ currentUser }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || checking}
                   className="btn-primary flex-1"
                 >
-                  {saving ? t("common.loading") : t("common.save")}
+                  {checking ? "확인 중..." : saving ? t("common.loading") : t("common.save")}
                 </button>
               </div>
             </form>
@@ -598,6 +650,88 @@ function Matches({ currentUser }) {
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
                 >
                   {deleting ? t("common.loading") : t("common.delete")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate Warning Modal */}
+      {showDuplicateWarning && duplicateMatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                <AlertTriangle className="text-yellow-400" size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">
+                유사한 경기가 있습니다
+              </h2>
+              <p className="text-slate-400 mb-4">
+                30분 이내에 같은 선수들로 기록된 경기가 있습니다.
+                <br />
+                중복 기록이 아닌지 확인해주세요.
+              </p>
+
+              {/* Existing Match Preview */}
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6 text-left">
+                <p className="text-sm text-yellow-400 mb-2 font-medium">
+                  기존 경기 ({new Date(duplicateMatch.date).toLocaleString("ko-KR", {
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })})
+                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    {duplicateMatch.teamA?.map((p) => (
+                      <p key={p.id} className="text-white text-sm">
+                        {p.user?.name}
+                      </p>
+                    ))}
+                    <p className="text-blue-400 font-bold mt-1">
+                      {duplicateMatch.teamA?.[0]?.score || 0}
+                    </p>
+                  </div>
+                  <div className="text-lg font-bold text-slate-400">VS</div>
+                  <div className="text-right">
+                    {duplicateMatch.teamB?.map((p) => (
+                      <p key={p.id} className="text-white text-sm">
+                        {p.user?.name}
+                      </p>
+                    ))}
+                    <p className="text-purple-400 font-bold mt-1">
+                      {duplicateMatch.teamB?.[0]?.score || 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-500 mb-4">
+                다른 경기라면 "그래도 기록하기"를 선택하세요.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDuplicateWarning(false);
+                    setDuplicateMatch(null);
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowDuplicateWarning(false);
+                    await createMatchDirectly();
+                  }}
+                  disabled={saving}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-xl transition-all duration-300"
+                >
+                  {saving ? "저장 중..." : "그래도 기록하기"}
                 </button>
               </div>
             </div>

@@ -9,6 +9,9 @@ router.get('/', matchController.getAllMatches);
 // GET /api/matches/:id - Get match by ID
 router.get('/:id', matchController.getMatchById);
 
+// POST /api/matches/check-duplicate - Check for duplicate match
+router.post('/check-duplicate', matchController.checkDuplicateMatch);
+
 // POST /api/matches - Create new match
 router.post('/', matchController.createMatch);
 

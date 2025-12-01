@@ -93,6 +93,11 @@ export const matchApi = {
     const queryString = limit ? `?limit=${limit}` : "";
     return fetchApi(`/matches/user/${userId}${queryString}`);
   },
+  checkDuplicate: (date, playerIds) =>
+    fetchApi("/matches/check-duplicate", {
+      method: "POST",
+      body: JSON.stringify({ date, playerIds }),
+    }),
   create: (data) =>
     fetchApi("/matches", { method: "POST", body: JSON.stringify(data) }),
   update: (id, data) =>

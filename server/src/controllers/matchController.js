@@ -154,6 +154,65 @@ export const updateScore = async (req, res) => {
   }
 };
 
+// Check for duplicate match (same 4 players within 30 minutes)
+export const checkDuplicateMatch = async (req, res) => {
+  try {
+    const { date, playerIds } = req.body;
+    
+    if (!playerIds || playerIds.length !== 4) {
+      return res.json({ isDuplicate: false, existingMatch: null });
+    }
+    
+    // Sort player IDs for consistent comparison
+    const sortedPlayerIds = [...playerIds].sort();
+    
+    // Calculate time range (±30 minutes from the given date)
+    const matchDate = new Date(date);
+    const startTime = new Date(matchDate.getTime() - 30 * 60 * 1000);
+    const endTime = new Date(matchDate.getTime() + 30 * 60 * 1000);
+    
+    // Find matches within the time range
+    const recentMatches = await req.prisma.match.findMany({
+      where: {
+        date: {
+          gte: startTime,
+          lte: endTime
+        }
+      },
+      include: {
+        participants: {
+          include: { user: true }
+        }
+      }
+    });
+    
+    // Check if any match has the same 4 players
+    for (const match of recentMatches) {
+      const matchPlayerIds = match.participants.map(p => p.userId).sort();
+      
+      // Compare sorted player IDs
+      if (matchPlayerIds.length === sortedPlayerIds.length &&
+          matchPlayerIds.every((id, index) => id === sortedPlayerIds[index])) {
+        return res.json({
+          isDuplicate: true,
+          existingMatch: {
+            id: match.id,
+            date: match.date,
+            participants: match.participants,
+            teamA: match.participants.filter(p => p.team === 'A'),
+            teamB: match.participants.filter(p => p.team === 'B')
+          }
+        });
+      }
+    }
+    
+    res.json({ isDuplicate: false, existingMatch: null });
+  } catch (error) {
+    console.error('Error checking duplicate match:', error);
+    res.status(500).json({ error: 'Failed to check duplicate match' });
+  }
+};
+
 // Get matches by user
 export const getMatchesByUser = async (req, res) => {
   try {
