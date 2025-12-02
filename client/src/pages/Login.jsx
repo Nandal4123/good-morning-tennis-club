@@ -100,7 +100,7 @@ function Login({ onLogin }) {
       if (foundUser.role === "ADMIN") {
         setSelectedAdminUser(foundUser);
         setShowAdminModal(true);
-        
+
         // 저장된 비밀번호 불러오기
         const savedPassword = localStorage.getItem(`adminPw_${foundUser.id}`);
         if (savedPassword) {
@@ -126,7 +126,7 @@ function Login({ onLogin }) {
     // OWNER와 일반 ADMIN의 비밀번호 구분
     const isOwner = selectedAdminUser?.email === OWNER_EMAIL;
     const correctPassword = isOwner ? OWNER_PASSWORD : ADMIN_PASSWORD;
-    
+
     if (adminPassword === correctPassword) {
       // 비밀번호 저장/삭제
       if (rememberPassword) {
@@ -134,7 +134,7 @@ function Login({ onLogin }) {
       } else {
         localStorage.removeItem(`adminPw_${selectedAdminUser.id}`);
       }
-      
+
       onLogin(selectedAdminUser);
       setShowAdminModal(false);
       setSelectedAdminUser(null);
@@ -336,7 +336,9 @@ function Login({ onLogin }) {
                       setNewUser({ ...newUser, joinCode: e.target.value });
                       setJoinCodeError(false);
                     }}
-                    className={`input ${joinCodeError ? "border-red-500 focus:ring-red-500" : ""}`}
+                    className={`input ${
+                      joinCodeError ? "border-red-500 focus:ring-red-500" : ""
+                    }`}
                     placeholder="관리자에게 문의하세요"
                   />
                   {joinCodeError && (
