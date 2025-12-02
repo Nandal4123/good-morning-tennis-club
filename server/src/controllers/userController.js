@@ -90,19 +90,22 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, name, tennisLevel, goals, languagePref, profileMetadata } =
+    const { email, name, role, tennisLevel, goals, languagePref, profileMetadata } =
       req.body;
+
+    // 업데이트할 데이터 구성 (undefined가 아닌 값만 포함)
+    const updateData = {};
+    if (email !== undefined) updateData.email = email;
+    if (name !== undefined) updateData.name = name;
+    if (role !== undefined) updateData.role = role;
+    if (tennisLevel !== undefined) updateData.tennisLevel = tennisLevel;
+    if (goals !== undefined) updateData.goals = goals;
+    if (languagePref !== undefined) updateData.languagePref = languagePref;
+    if (profileMetadata !== undefined) updateData.profileMetadata = profileMetadata;
 
     const user = await req.prisma.user.update({
       where: { id },
-      data: {
-        email,
-        name,
-        tennisLevel,
-        goals,
-        languagePref,
-        profileMetadata,
-      },
+      data: updateData,
     });
 
     res.json(user);
