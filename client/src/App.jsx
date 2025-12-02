@@ -8,6 +8,7 @@ import Matches from "./pages/Matches";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import InstallPrompt from "./components/InstallPrompt";
+import LoadingScreen from "./components/LoadingScreen";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -33,14 +34,7 @@ function App() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-tennis-500 tennis-ball" />
-          <p className="text-slate-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!currentUser) {
