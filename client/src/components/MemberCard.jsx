@@ -1,5 +1,8 @@
 import { useTranslation } from "react-i18next";
-import { Trash2, Shield, Swords } from "lucide-react";
+import { Trash2, Shield, Swords, Crown } from "lucide-react";
+
+// OWNER 이메일 (절대 권한자)
+const OWNER_EMAIL = "nandal4123@gmail.com";
 
 function MemberCard({
   member,
@@ -28,6 +31,7 @@ function MemberCard({
   };
 
   const isCurrentUser = currentUser?.id === member.id;
+  const isOwnerMember = member.email === OWNER_EMAIL;
 
   return (
     <div
@@ -37,14 +41,18 @@ function MemberCard({
       <div className="flex items-center gap-4">
         <div
           className={`w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
-            member.role === "ADMIN"
+            isOwnerMember
+              ? "bg-gradient-to-br from-yellow-500 to-yellow-600"
+              : member.role === "ADMIN"
               ? "bg-gradient-to-br from-orange-500 to-orange-600"
               : isCurrentUser
               ? "bg-gradient-to-br from-tennis-500 to-tennis-600"
               : "bg-gradient-to-br from-slate-600 to-slate-700"
           }`}
         >
-          {member.role === "ADMIN" ? (
+          {isOwnerMember ? (
+            <Crown size={28} />
+          ) : member.role === "ADMIN" ? (
             <Shield size={28} />
           ) : (
             member.name?.charAt(0) || "?"
@@ -58,7 +66,12 @@ function MemberCard({
                 나
               </span>
             )}
-            {member.role === "ADMIN" && (
+            {isOwnerMember ? (
+              <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 flex items-center gap-1">
+                <Crown size={10} />
+                소유자
+              </span>
+            ) : member.role === "ADMIN" && (
               <span className="px-2 py-0.5 rounded-full text-xs bg-orange-500/20 text-orange-400 border border-orange-500/30">
                 {t("login.roleAdmin")}
               </span>
@@ -79,7 +92,7 @@ function MemberCard({
               <Swords size={18} />
             </button>
           )}
-          {isAdmin && (
+          {isAdmin && !isOwnerMember && (
             <button
               onClick={handleDelete}
               className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
