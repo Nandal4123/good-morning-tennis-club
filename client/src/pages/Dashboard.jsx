@@ -43,13 +43,14 @@ function Dashboard({ currentUser }) {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [session, stats, attendance, allMatches, allUsersWithStats] = await Promise.all([
-        sessionApi.getToday().catch(() => null),
-        userApi.getStats(currentUser.id).catch(() => null),
-        attendanceApi.getByUser(currentUser.id).catch(() => []),
-        matchApi.getAll().catch(() => []),
-        userApi.getAllWithStats().catch(() => []),
-      ]);
+      const [session, stats, attendance, allMatches, allUsersWithStats] =
+        await Promise.all([
+          sessionApi.getToday().catch(() => null),
+          userApi.getStats(currentUser.id).catch(() => null),
+          attendanceApi.getByUser(currentUser.id).catch(() => []),
+          matchApi.getAll().catch(() => []),
+          userApi.getAllWithStats().catch(() => []),
+        ]);
 
       setTodaySession(session);
       setUserStats(stats);
@@ -58,21 +59,21 @@ function Dashboard({ currentUser }) {
       // 오늘의 경기 필터링 (KST 기준 YYYY-MM-DD 비교)
       // 한국 시간대 기준 날짜를 YYYY-MM-DD 형식으로 변환
       const getKSTDateString = (date) => {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Asia/Seoul',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
+        const formatter = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Seoul",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         });
         return formatter.format(date); // 'en-CA' 로케일은 YYYY-MM-DD 형식 반환
       };
-      
+
       const todayStr = getKSTDateString(new Date());
-      console.log('Today KST:', todayStr); // 디버깅용
-      
+      console.log("Today KST:", todayStr); // 디버깅용
+
       const todayOnly = allMatches.filter((m) => {
         const matchStr = getKSTDateString(new Date(m.date));
-        console.log('Match date KST:', matchStr, 'Original:', m.date); // 디버깅용
+        console.log("Match date KST:", matchStr, "Original:", m.date); // 디버깅용
         return matchStr === todayStr;
       });
       setTodayMatches(todayOnly);
@@ -94,7 +95,10 @@ function Dashboard({ currentUser }) {
         // 출석왕 TOP 3
         const attendanceRanking = [...allUsersWithStats]
           .filter((u) => (u.stats?.totalAttendance || 0) > 0)
-          .sort((a, b) => (b.stats?.totalAttendance || 0) - (a.stats?.totalAttendance || 0))
+          .sort(
+            (a, b) =>
+              (b.stats?.totalAttendance || 0) - (a.stats?.totalAttendance || 0)
+          )
           .slice(0, 3);
 
         setRankings({
@@ -302,7 +306,9 @@ function Dashboard({ currentUser }) {
       </div>
 
       {/* Rankings */}
-      {(rankings.winRate.length > 0 || rankings.wins.length > 0 || rankings.attendance.length > 0) && (
+      {(rankings.winRate.length > 0 ||
+        rankings.wins.length > 0 ||
+        rankings.attendance.length > 0) && (
         <div className="card stagger-item">
           <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
             <Crown className="text-yellow-400" size={24} />
@@ -324,7 +330,9 @@ function Dashboard({ currentUser }) {
                         {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium truncate">{user.name}</p>
+                        <p className="text-white font-medium truncate">
+                          {user.name}
+                        </p>
                       </div>
                       <span className="text-yellow-400 font-bold">
                         {user.stats?.winRate || 0}%
@@ -351,7 +359,9 @@ function Dashboard({ currentUser }) {
                         {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium truncate">{user.name}</p>
+                        <p className="text-white font-medium truncate">
+                          {user.name}
+                        </p>
                       </div>
                       <span className="text-blue-400 font-bold">
                         {user.stats?.wins || 0}승
@@ -378,7 +388,9 @@ function Dashboard({ currentUser }) {
                         {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium truncate">{user.name}</p>
+                        <p className="text-white font-medium truncate">
+                          {user.name}
+                        </p>
                       </div>
                       <span className="text-tennis-400 font-bold">
                         {user.stats?.totalAttendance || 0}일
