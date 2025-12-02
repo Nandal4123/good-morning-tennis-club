@@ -18,9 +18,14 @@ import {
   ArrowUp,
   ArrowDown,
   CalendarCheck,
+  Shield,
+  Crown,
 } from "lucide-react";
 import { userApi } from "../lib/api";
 import MemberCard from "../components/MemberCard";
+
+// OWNER 이메일 (절대 권한자)
+const OWNER_EMAIL = "nandal4123@gmail.com";
 
 // NTRP 등급 목록
 const NTRP_LEVELS = [
@@ -66,6 +71,14 @@ function Members({ currentUser }) {
 
   // 관리자 여부 확인
   const isAdmin = currentUser?.role === "ADMIN";
+  
+  // OWNER 여부 확인 (이메일로 판별)
+  const isOwner = currentUser?.email === OWNER_EMAIL;
+  
+  // 권한 변경 상태
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [roleChangeMember, setRoleChangeMember] = useState(null);
+  const [changingRole, setChangingRole] = useState(false);
 
   useEffect(() => {
     loadMembers();
@@ -249,6 +262,36 @@ function Members({ currentUser }) {
       setSelectedMembers([]);
     } else {
       setSelectedMembers([...filteredMembers]);
+    }
+  };
+
+  // 권한 변경 클릭
+  const handleRoleChangeClick = (member) => {
+    // OWNER는 변경 불가
+    if (member.email === OWNER_EMAIL) {
+      alert("소유자(OWNER)의 권한은 변경할 수 없습니다.");
+      return;
+    }
+    setRoleChangeMember(member);
+    setShowRoleModal(true);
+  };
+
+  // 권한 변경 실행
+  const handleRoleChange = async () => {
+    if (!roleChangeMember) return;
+    
+    try {
+      setChangingRole(true);
+      const newRole = roleChangeMember.role === "ADMIN" ? "USER" : "ADMIN";
+      await userApi.update(roleChangeMember.id, { role: newRole });
+      setShowRoleModal(false);
+      setRoleChangeMember(null);
+      await loadMembers();
+    } catch (error) {
+      console.error("Failed to change role:", error);
+      alert("권한 변경에 실패했습니다: " + error.message);
+    } finally {
+      setChangingRole(false);
     }
   };
 
@@ -490,6 +533,9 @@ function Members({ currentUser }) {
                       NTRP {getSortIcon("tennisLevel")}
                     </div>
                   </th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold text-slate-400">
+                    역할
+                  </th>
                   <th
                     className="px-4 py-3 text-center cursor-pointer hover:bg-slate-700/50 transition-colors"
                     onClick={() => handleSort("totalAttendance")}
@@ -603,6 +649,24 @@ function Members({ currentUser }) {
                           {displayLevel}
                         </span>
                       </td>
+                      {/* 역할 */}
+                      <td className="px-4 py-3 text-center">
+                        {member.email === OWNER_EMAIL ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 flex items-center justify-center gap-1">
+                            <Crown size={12} />
+                            소유자
+                          </span>
+                        ) : member.role === "ADMIN" ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center gap-1">
+                            <Shield size={12} />
+                            관리자
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">
+                            회원
+                          </span>
+                        )}
+                      </td>
                       {/* 총출석 */}
                       <td className="px-4 py-3 text-center">
                         <span className="text-white font-semibold">
@@ -638,7 +702,7 @@ function Members({ currentUser }) {
                       </td>
                       {/* 관리 */}
                       <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => handleHeadToHead(member)}
                             className="p-2 rounded-lg text-purple-400 hover:bg-purple-500/20 transition-colors"
@@ -646,13 +710,30 @@ function Members({ currentUser }) {
                           >
                             <Swords size={16} />
                           </button>
-                          <button
-                            onClick={() => handleDeleteClick(member)}
-                            className="p-2 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
-                            title="삭제"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {/* OWNER만 권한 변경 가능, 자신과 OWNER는 변경 불가 */}
+                          {isOwner && member.email !== OWNER_EMAIL && (
+                            <button
+                              onClick={() => handleRoleChangeClick(member)}
+                              className={`p-2 rounded-lg transition-colors ${
+                                member.role === "ADMIN"
+                                  ? "text-orange-400 hover:bg-orange-500/20"
+                                  : "text-blue-400 hover:bg-blue-500/20"
+                              }`}
+                              title={member.role === "ADMIN" ? "관리자 해임" : "관리자 임명"}
+                            >
+                              <Shield size={16} />
+                            </button>
+                          )}
+                          {/* OWNER가 아니면 삭제 가능 */}
+                          {member.email !== OWNER_EMAIL && (
+                            <button
+                              onClick={() => handleDeleteClick(member)}
+                              className="p-2 rounded-lg text-red-400 hover:bg-red-500/20 transition-colors"
+                              title="삭제"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1087,6 +1168,86 @@ function Members({ currentUser }) {
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
                 >
                   {bulkDeleting ? t("common.loading") : `${selectedMembers.length}명 삭제`}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Change Modal */}
+      {showRoleModal && roleChangeMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
+            <div className="text-center">
+              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                roleChangeMember.role === "ADMIN" 
+                  ? "bg-slate-500/20" 
+                  : "bg-orange-500/20"
+              }`}>
+                <Shield className={roleChangeMember.role === "ADMIN" ? "text-slate-400" : "text-orange-400"} size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">
+                {roleChangeMember.role === "ADMIN" ? "관리자 해임" : "관리자 임명"}
+              </h2>
+              <p className="text-slate-400 mb-6">
+                <span className="text-white font-medium">{roleChangeMember.name}</span>님을
+                {roleChangeMember.role === "ADMIN" 
+                  ? " 일반 회원으로 변경하시겠습니까?" 
+                  : " 관리자로 임명하시겠습니까?"}
+              </p>
+
+              {/* Member Preview */}
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-lg font-bold text-white">
+                    {roleChangeMember.name?.charAt(0) || "?"}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white font-medium">{roleChangeMember.name}</p>
+                    <p className="text-sm text-slate-400">{roleChangeMember.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-500">현재 역할</p>
+                    <p className={`text-sm font-medium ${
+                      roleChangeMember.role === "ADMIN" ? "text-orange-400" : "text-slate-400"
+                    }`}>
+                      {roleChangeMember.role === "ADMIN" ? "관리자" : "일반회원"}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-600 flex items-center justify-center gap-2">
+                  <span className={roleChangeMember.role === "ADMIN" ? "text-orange-400" : "text-slate-400"}>
+                    {roleChangeMember.role === "ADMIN" ? "관리자" : "회원"}
+                  </span>
+                  <span className="text-slate-500">→</span>
+                  <span className={roleChangeMember.role === "ADMIN" ? "text-slate-400" : "text-orange-400"}>
+                    {roleChangeMember.role === "ADMIN" ? "회원" : "관리자"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowRoleModal(false);
+                    setRoleChangeMember(null);
+                  }}
+                  className="btn-secondary flex-1"
+                  disabled={changingRole}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleRoleChange}
+                  disabled={changingRole}
+                  className={`flex-1 font-semibold py-3 px-6 rounded-xl transition-all duration-300 ${
+                    roleChangeMember.role === "ADMIN"
+                      ? "bg-slate-500 hover:bg-slate-600 text-white"
+                      : "bg-orange-500 hover:bg-orange-600 text-white"
+                  }`}
+                >
+                  {changingRole ? "변경 중..." : roleChangeMember.role === "ADMIN" ? "해임하기" : "임명하기"}
                 </button>
               </div>
             </div>
