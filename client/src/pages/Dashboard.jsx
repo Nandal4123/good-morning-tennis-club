@@ -55,11 +55,15 @@ function Dashboard({ currentUser }) {
       setUserStats(stats);
       setRecentAttendance(attendance);
 
-      // 오늘의 경기 필터링
-      const today = new Date().toDateString();
-      const todayOnly = allMatches.filter(
-        (m) => new Date(m.date).toDateString() === today
-      );
+      // 오늘의 경기 필터링 (로컬 시간 기준 YYYY-MM-DD 비교)
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
+      const todayOnly = allMatches.filter((m) => {
+        const matchDate = new Date(m.date);
+        const matchStr = `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, '0')}-${String(matchDate.getDate()).padStart(2, '0')}`;
+        return matchStr === todayStr;
+      });
       setTodayMatches(todayOnly);
 
       // 랭킹 계산
