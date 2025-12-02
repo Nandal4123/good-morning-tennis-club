@@ -58,9 +58,13 @@ export const createMatch = async (req, res) => {
   try {
     const { date, type, participants } = req.body;
     
+    // KST 정오(12:00)로 설정하여 시간대 문제 방지
+    // "2025-12-02" → 2025-12-02T12:00:00+09:00 (KST) → 2025-12-02T03:00:00.000Z (UTC)
+    const kstDate = new Date(date + 'T12:00:00+09:00');
+    
     const match = await req.prisma.match.create({
       data: {
-        date: new Date(date),
+        date: kstDate,
         type: type || 'DOUBLES',
         participants: {
           create: participants.map(p => ({
@@ -90,10 +94,13 @@ export const updateMatch = async (req, res) => {
     const { id } = req.params;
     const { date, type } = req.body;
     
+    // KST 정오(12:00)로 설정하여 시간대 문제 방지
+    const kstDate = date ? new Date(date + 'T12:00:00+09:00') : undefined;
+    
     const match = await req.prisma.match.update({
       where: { id },
       data: {
-        date: date ? new Date(date) : undefined,
+        date: kstDate,
         type
       },
       include: {
@@ -167,7 +174,8 @@ export const checkDuplicateMatch = async (req, res) => {
     const sortedPlayerIds = [...playerIds].sort();
     
     // Calculate time range (±30 minutes from the given date)
-    const matchDate = new Date(date);
+    // KST 정오(12:00)로 설정
+    const matchDate = new Date(date + 'T12:00:00+09:00');
     const startTime = new Date(matchDate.getTime() - 30 * 60 * 1000);
     const endTime = new Date(matchDate.getTime() + 30 * 60 * 1000);
     
