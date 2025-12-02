@@ -34,12 +34,16 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }) {
       )}
 
       <div className="flex items-center justify-between mb-4">
-        <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">
-          🎾 {t('matches.type.doubles')}
-        </span>
-        <span className="text-sm text-slate-400">
-          {date.toLocaleDateString('ko-KR')}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30">
+            🎾 {t('matches.type.doubles')}
+          </span>
+          <span className="text-sm text-slate-400">
+            {date.toLocaleDateString('ko-KR')}
+          </span>
+        </div>
+        {/* 관리자 버튼 공간 확보 */}
+        {isAdmin && <div className="w-24" />}
       </div>
 
       <div className="flex items-center justify-between">
