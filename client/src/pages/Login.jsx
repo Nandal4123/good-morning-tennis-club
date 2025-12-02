@@ -12,7 +12,13 @@ import {
 } from "lucide-react";
 import { userApi } from "../lib/api";
 
-// 관리자 암호 (실제 운영시 환경변수로 관리 권장)
+// OWNER 이메일 (절대 권한자)
+const OWNER_EMAIL = "nandal4123@gmail.com";
+
+// 소유자 암호 (OWNER 전용)
+const OWNER_PASSWORD = "admin2347";
+
+// 관리자 암호 (일반 관리자용)
 const ADMIN_PASSWORD = "admin0405";
 
 // 회원가입 승인 코드
@@ -107,7 +113,11 @@ function Login({ onLogin }) {
   };
 
   const handleAdminLogin = () => {
-    if (adminPassword === ADMIN_PASSWORD) {
+    // OWNER와 일반 ADMIN의 비밀번호 구분
+    const isOwner = selectedAdminUser?.email === OWNER_EMAIL;
+    const correctPassword = isOwner ? OWNER_PASSWORD : ADMIN_PASSWORD;
+    
+    if (adminPassword === correctPassword) {
       onLogin(selectedAdminUser);
       setShowAdminModal(false);
       setSelectedAdminUser(null);
