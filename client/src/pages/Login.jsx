@@ -47,6 +47,7 @@ function Login({ onLogin }) {
   const [selectedAdminUser, setSelectedAdminUser] = useState(null);
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
+  const [rememberPassword, setRememberPassword] = useState(false);
   const [loginName, setLoginName] = useState("");
   const [loginError, setLoginError] = useState("");
   const [newUser, setNewUser] = useState({
@@ -99,7 +100,16 @@ function Login({ onLogin }) {
       if (foundUser.role === "ADMIN") {
         setSelectedAdminUser(foundUser);
         setShowAdminModal(true);
-        setAdminPassword("");
+        
+        // 저장된 비밀번호 불러오기
+        const savedPassword = localStorage.getItem(`adminPw_${foundUser.id}`);
+        if (savedPassword) {
+          setAdminPassword(savedPassword);
+          setRememberPassword(true);
+        } else {
+          setAdminPassword("");
+          setRememberPassword(false);
+        }
         setPasswordError(false);
       } else {
         onLogin(foundUser);
@@ -118,6 +128,13 @@ function Login({ onLogin }) {
     const correctPassword = isOwner ? OWNER_PASSWORD : ADMIN_PASSWORD;
     
     if (adminPassword === correctPassword) {
+      // 비밀번호 저장/삭제
+      if (rememberPassword) {
+        localStorage.setItem(`adminPw_${selectedAdminUser.id}`, adminPassword);
+      } else {
+        localStorage.removeItem(`adminPw_${selectedAdminUser.id}`);
+      }
+      
       onLogin(selectedAdminUser);
       setShowAdminModal(false);
       setSelectedAdminUser(null);
@@ -476,6 +493,7 @@ function Login({ onLogin }) {
                   setSelectedAdminUser(null);
                   setAdminPassword("");
                   setPasswordError(false);
+                  setRememberPassword(false);
                 }}
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
               >
@@ -516,6 +534,17 @@ function Login({ onLogin }) {
                   </p>
                 )}
               </div>
+
+              {/* 비밀번호 저장 체크박스 */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberPassword}
+                  onChange={(e) => setRememberPassword(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-orange-500 focus:ring-orange-500 focus:ring-offset-0"
+                />
+                <span className="text-sm text-slate-400">비밀번호 저장</span>
+              </label>
 
               <button onClick={handleAdminLogin} className="btn-primary w-full">
                 {t("login.loginTab")}
