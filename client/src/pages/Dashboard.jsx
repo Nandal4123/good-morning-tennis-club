@@ -55,13 +55,24 @@ function Dashboard({ currentUser }) {
       setUserStats(stats);
       setRecentAttendance(attendance);
 
-      // 오늘의 경기 필터링 (로컬 시간 기준 YYYY-MM-DD 비교)
-      const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      // 오늘의 경기 필터링 (KST 기준 YYYY-MM-DD 비교)
+      // 한국 시간대 기준 날짜를 YYYY-MM-DD 형식으로 변환
+      const getKSTDateString = (date) => {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Seoul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        return formatter.format(date); // 'en-CA' 로케일은 YYYY-MM-DD 형식 반환
+      };
+      
+      const todayStr = getKSTDateString(new Date());
+      console.log('Today KST:', todayStr); // 디버깅용
       
       const todayOnly = allMatches.filter((m) => {
-        const matchDate = new Date(m.date);
-        const matchStr = `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, '0')}-${String(matchDate.getDate()).padStart(2, '0')}`;
+        const matchStr = getKSTDateString(new Date(m.date));
+        console.log('Match date KST:', matchStr, 'Original:', m.date); // 디버깅용
         return matchStr === todayStr;
       });
       setTodayMatches(todayOnly);
