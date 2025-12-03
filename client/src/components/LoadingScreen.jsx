@@ -41,7 +41,7 @@ const getRandomIndex = (prevIndex, length) => {
 
 export default function LoadingScreen() {
   // 초기값도 랜덤으로 설정
-  const [messageIndex, setMessageIndex] = useState(() => 
+  const [messageIndex, setMessageIndex] = useState(() =>
     Math.floor(Math.random() * loadingMessages.length)
   );
   const [showTip, setShowTip] = useState(false);

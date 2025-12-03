@@ -5,6 +5,17 @@ import { matchApi, userApi } from "../lib/api";
 import MatchCard from "../components/MatchCard";
 import LoadingScreen from "../components/LoadingScreen";
 
+// KST 기준 오늘 날짜를 YYYY-MM-DD 형식으로 반환
+const getKSTDateString = (date = new Date()) => {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return formatter.format(date); // 'en-CA' 로케일은 YYYY-MM-DD 형식 반환
+};
+
 function Matches({ currentUser }) {
   const { t } = useTranslation();
   const [matches, setMatches] = useState([]);
@@ -25,7 +36,7 @@ function Matches({ currentUser }) {
 
   const [newMatch, setNewMatch] = useState({
     type: "DOUBLES",
-    date: new Date().toISOString().split("T")[0],
+    date: getKSTDateString(), // KST 기준 오늘 날짜
     teamA: ["", ""],
     teamB: ["", ""],
     scoreA: 0,
@@ -138,7 +149,7 @@ function Matches({ currentUser }) {
       setDuplicateMatch(null);
       setNewMatch({
         type: "DOUBLES",
-        date: new Date().toISOString().split("T")[0],
+        date: getKSTDateString(), // KST 기준 오늘 날짜
         teamA: ["", ""],
         teamB: ["", ""],
         scoreA: 0,
@@ -161,7 +172,7 @@ function Matches({ currentUser }) {
 
     setEditMatch({
       id: match.id,
-      date: new Date(match.date).toISOString().split("T")[0],
+      date: getKSTDateString(new Date(match.date)), // KST 기준 날짜
       scoreA: teamA[0]?.score || 0,
       scoreB: teamB[0]?.score || 0,
       participantsA: teamA,
