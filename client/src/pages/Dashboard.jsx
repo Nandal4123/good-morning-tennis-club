@@ -16,6 +16,7 @@ import AttendanceItem from "../components/AttendanceItem";
 import AttendanceCalendar from "../components/AttendanceCalendar";
 import MyMatchesModal from "../components/MyMatchesModal";
 import { sessionApi, attendanceApi, userApi, matchApi } from "../lib/api";
+import LoadingScreen from "../components/LoadingScreen";
 
 function Dashboard({ currentUser }) {
   const { t } = useTranslation();
@@ -83,7 +84,9 @@ function Dashboard({ currentUser }) {
         // 승률 TOP 3 (최소 3경기 이상)
         // 승률왕 TOP 3 (3경기 이상 + 최소 1승 이상)
         const winRateRanking = [...allUsersWithStats]
-          .filter((u) => (u.stats?.totalMatches || 0) >= 3 && (u.stats?.wins || 0) > 0)
+          .filter(
+            (u) => (u.stats?.totalMatches || 0) >= 3 && (u.stats?.wins || 0) > 0
+          )
           .sort((a, b) => (b.stats?.winRate || 0) - (a.stats?.winRate || 0))
           .slice(0, 3);
 
@@ -165,14 +168,7 @@ function Dashboard({ currentUser }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-tennis-500 tennis-ball" />
-          <p className="text-slate-400">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
