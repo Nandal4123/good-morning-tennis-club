@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Trophy, Plus, X, Trash2 } from "lucide-react";
 import { matchApi, userApi } from "../lib/api";
 import MatchCard from "../components/MatchCard";
+import LoadingScreen from "../components/LoadingScreen";
 
 function Matches({ currentUser }) {
   const { t } = useTranslation();
@@ -63,31 +64,31 @@ function Matches({ currentUser }) {
   // Check for duplicate match before creating
   const checkAndCreateMatch = async (e) => {
     e.preventDefault();
-    
+
     const playerIds = [
       ...newMatch.teamA.filter((id) => id),
       ...newMatch.teamB.filter((id) => id),
     ];
-    
+
     // Need exactly 4 players for doubles
     if (playerIds.length !== 4) {
       alert("복식 경기는 4명의 선수가 필요합니다.");
       return;
     }
-    
+
     // Check for duplicate players
     const uniquePlayerIds = [...new Set(playerIds)];
     if (uniquePlayerIds.length !== 4) {
       alert("같은 선수가 중복으로 선택되었습니다.");
       return;
     }
-    
+
     try {
       setChecking(true);
-      
+
       // Check for duplicate match
       const result = await matchApi.checkDuplicate(newMatch.date, playerIds);
-      
+
       if (result.isDuplicate) {
         setDuplicateMatch(result.existingMatch);
         setShowDuplicateWarning(true);
@@ -233,14 +234,7 @@ function Matches({ currentUser }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-tennis-500 tennis-ball" />
-          <p className="text-slate-400">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -463,7 +457,11 @@ function Matches({ currentUser }) {
                   disabled={saving || checking}
                   className="btn-primary flex-1"
                 >
-                  {checking ? "확인 중..." : saving ? t("common.loading") : t("common.save")}
+                  {checking
+                    ? "확인 중..."
+                    : saving
+                    ? t("common.loading")
+                    : t("common.save")}
                 </button>
               </div>
             </form>
@@ -675,12 +673,14 @@ function Matches({ currentUser }) {
               {/* Existing Match Preview */}
               <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4 mb-6 text-left">
                 <p className="text-sm text-tennis-400 mb-2 font-medium">
-                  📋 기존 경기 ({new Date(duplicateMatch.date).toLocaleString("ko-KR", {
+                  📋 기존 경기 (
+                  {new Date(duplicateMatch.date).toLocaleString("ko-KR", {
                     month: "long",
                     day: "numeric",
                     hour: "2-digit",
-                    minute: "2-digit"
-                  })})
+                    minute: "2-digit",
+                  })}
+                  )
                 </p>
                 <div className="flex items-center justify-between">
                   <div>

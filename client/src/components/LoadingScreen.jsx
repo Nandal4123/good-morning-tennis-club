@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
 
-// 테니스 명언들
+// 테니스 명언들 (출처 제외)
 const loadingMessages = [
-  "\"테니스는 마음의 게임이다\"\n- 빌리 진 킹",
-  "\"연습은 거짓말하지 않는다\"\n- 앙드레 애거시",
-  "\"승리는 준비된 자에게 온다\"\n- 라파엘 나달",
-  "\"포기하지 않으면 기회는 온다\"\n- 로저 페더러",
-  "\"자신을 믿어라, 그것이 시작이다\"\n- 세레나 윌리엄스",
-  "\"작은 진보가 큰 승리를 만든다\"",
-  "\"오늘의 땀이 내일의 실력이 된다\"",
-  "\"실패는 성공의 어머니다\"",
-  "\"즐기면 이미 이긴 것이다\"",
-  "\"최선을 다하면 후회는 없다\"",
-  "\"좋은 파트너가 좋은 경기를 만든다\"",
-  "\"꾸준함이 재능을 이긴다\"",
-  "\"오늘도 코트 위의 주인공은 나!\"",
-  "\"함께하면 더 즐겁다\"",
-  "\"테니스는 인생의 축소판이다\"",
+  "테니스는 마음의 게임이다",
+  "연습은 거짓말하지 않는다",
+  "승리는 준비된 자에게 온다",
+  "포기하지 않으면 기회는 온다",
+  "자신을 믿어라, 그것이 시작이다",
+  "작은 진보가 큰 승리를 만든다",
+  "오늘의 땀이 내일의 실력이 된다",
+  "실패는 성공의 어머니다",
+  "즐기면 이미 이긴 것이다",
+  "최선을 다하면 후회는 없다",
+  "좋은 파트너가 좋은 경기를 만든다",
+  "꾸준함이 재능을 이긴다",
+  "오늘도 코트 위의 주인공은 나!",
+  "함께하면 더 즐겁다",
+  "테니스는 인생의 축소판이다",
 ];
 
 // 테니스 팁
@@ -30,15 +30,27 @@ const tennisTips = [
   "💡 물을 자주 마시세요!",
 ];
 
+// 랜덤 인덱스 생성 (이전 인덱스와 다른 값)
+const getRandomIndex = (prevIndex, length) => {
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * length);
+  } while (newIndex === prevIndex && length > 1);
+  return newIndex;
+};
+
 export default function LoadingScreen() {
-  const [messageIndex, setMessageIndex] = useState(0);
+  // 초기값도 랜덤으로 설정
+  const [messageIndex, setMessageIndex] = useState(() => 
+    Math.floor(Math.random() * loadingMessages.length)
+  );
   const [showTip, setShowTip] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
 
   useEffect(() => {
-    // 3초마다 명언 변경 (읽을 시간 확보)
+    // 3초마다 랜덤 명언으로 변경
     const messageInterval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      setMessageIndex((prev) => getRandomIndex(prev, loadingMessages.length));
     }, 3000);
 
     // 5초 후 팁 표시
@@ -57,13 +69,16 @@ export default function LoadingScreen() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-4">
       {/* 테니스 코트 배경 패턴 */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
             linear-gradient(to right, #22c55e 1px, transparent 1px),
             linear-gradient(to bottom, #22c55e 1px, transparent 1px)
           `,
-          backgroundSize: '40px 40px'
-        }} />
+            backgroundSize: "40px 40px",
+          }}
+        />
       </div>
 
       {/* 메인 컨텐츠 */}
@@ -75,7 +90,7 @@ export default function LoadingScreen() {
               🎾
             </div>
           </div>
-          
+
           {/* 공 그림자 */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-3 bg-black/20 rounded-full blur-sm animate-shadow" />
         </div>
@@ -88,33 +103,41 @@ export default function LoadingScreen() {
 
         {/* 테니스 명언 */}
         <div className="h-16 mb-4 flex items-center justify-center">
-          <p className="text-white text-base md:text-lg text-center whitespace-pre-line italic animate-fade-in-out px-4" key={messageIndex}>
+          <p
+            className="text-white text-base md:text-lg text-center whitespace-pre-line italic animate-fade-in-out px-4"
+            key={messageIndex}
+          >
             {loadingMessages[messageIndex]}
           </p>
         </div>
 
         {/* 로딩 도트 애니메이션 */}
         <div className="flex justify-center gap-2 mb-6">
-          <div className="w-2 h-2 rounded-full bg-orange-400 animate-loading-dot" style={{ animationDelay: '0ms' }} />
-          <div className="w-2 h-2 rounded-full bg-orange-400 animate-loading-dot" style={{ animationDelay: '150ms' }} />
-          <div className="w-2 h-2 rounded-full bg-orange-400 animate-loading-dot" style={{ animationDelay: '300ms' }} />
+          <div
+            className="w-2 h-2 rounded-full bg-orange-400 animate-loading-dot"
+            style={{ animationDelay: "0ms" }}
+          />
+          <div
+            className="w-2 h-2 rounded-full bg-orange-400 animate-loading-dot"
+            style={{ animationDelay: "150ms" }}
+          />
+          <div
+            className="w-2 h-2 rounded-full bg-orange-400 animate-loading-dot"
+            style={{ animationDelay: "300ms" }}
+          />
         </div>
 
         {/* 팁 표시 (5초 후) */}
         {showTip && (
           <div className="mt-8 p-4 bg-slate-800/50 rounded-xl border border-slate-700 max-w-xs mx-auto animate-slide-up">
-            <p className="text-slate-300 text-sm">
-              {tennisTips[tipIndex]}
-            </p>
+            <p className="text-slate-300 text-sm">{tennisTips[tipIndex]}</p>
           </div>
         )}
       </div>
 
       {/* 하단 텍스트 */}
       <div className="absolute bottom-8 text-center">
-        <p className="text-slate-500 text-xs">
-          잠시만 기다려주세요...
-        </p>
+        <p className="text-slate-500 text-xs">잠시만 기다려주세요...</p>
       </div>
 
       {/* 커스텀 애니메이션 스타일 */}
@@ -186,4 +209,3 @@ export default function LoadingScreen() {
     </div>
   );
 }
-

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CalendarCheck, Check, X, History } from 'lucide-react';
 import { sessionApi, attendanceApi, userApi } from '../lib/api';
 import AttendanceItem from '../components/AttendanceItem';
+import LoadingScreen from '../components/LoadingScreen';
 
 function Attendance({ currentUser }) {
   const { t } = useTranslation();
@@ -56,14 +57,7 @@ function Attendance({ currentUser }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-tennis-500 tennis-ball" />
-          <p className="text-slate-400">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

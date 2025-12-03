@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { userApi } from "../lib/api";
 import MemberCard from "../components/MemberCard";
+import LoadingScreen from "../components/LoadingScreen";
 
 // OWNER 이메일 (절대 권한자)
 const OWNER_EMAIL = "nandal4123@gmail.com";
@@ -71,10 +72,10 @@ function Members({ currentUser }) {
 
   // 관리자 여부 확인
   const isAdmin = currentUser?.role === "ADMIN";
-  
+
   // OWNER 여부 확인 (이메일로 판별)
   const isOwner = currentUser?.email === OWNER_EMAIL;
-  
+
   // 권한 변경 상태
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleChangeMember, setRoleChangeMember] = useState(null);
@@ -279,7 +280,7 @@ function Members({ currentUser }) {
   // 권한 변경 실행
   const handleRoleChange = async () => {
     if (!roleChangeMember) return;
-    
+
     try {
       setChangingRole(true);
       const newRole = roleChangeMember.role === "ADMIN" ? "USER" : "ADMIN";
@@ -338,14 +339,7 @@ function Members({ currentUser }) {
     });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-tennis-500 tennis-ball" />
-          <p className="text-slate-400">{t("common.loading")}</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -492,13 +486,18 @@ function Members({ currentUser }) {
                     <button
                       onClick={handleSelectAll}
                       className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
-                        selectedMembers.length === filteredMembers.length && filteredMembers.length > 0
+                        selectedMembers.length === filteredMembers.length &&
+                        filteredMembers.length > 0
                           ? "bg-purple-500 border-purple-500 text-white"
                           : selectedMembers.length > 0
                           ? "bg-purple-500/50 border-purple-500 text-white"
                           : "border-slate-600 hover:border-purple-400"
                       }`}
-                      title={selectedMembers.length === filteredMembers.length ? "전체 해제" : "전체 선택"}
+                      title={
+                        selectedMembers.length === filteredMembers.length
+                          ? "전체 해제"
+                          : "전체 선택"
+                      }
                     >
                       {selectedMembers.length > 0 && (
                         <svg
@@ -511,7 +510,11 @@ function Members({ currentUser }) {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d={selectedMembers.length === filteredMembers.length ? "M5 13l4 4L19 7" : "M20 12H4"}
+                            d={
+                              selectedMembers.length === filteredMembers.length
+                                ? "M5 13l4 4L19 7"
+                                : "M20 12H4"
+                            }
                           />
                         </svg>
                       )}
@@ -719,7 +722,11 @@ function Members({ currentUser }) {
                                   ? "text-orange-400 hover:bg-orange-500/20"
                                   : "text-blue-400 hover:bg-blue-500/20"
                               }`}
-                              title={member.role === "ADMIN" ? "관리자 해임" : "관리자 임명"}
+                              title={
+                                member.role === "ADMIN"
+                                  ? "관리자 해임"
+                                  : "관리자 임명"
+                              }
                             >
                               <Shield size={16} />
                             </button>
@@ -1133,7 +1140,11 @@ function Members({ currentUser }) {
                 회원 일괄 삭제
               </h2>
               <p className="text-slate-400 mb-4">
-                선택한 <span className="text-red-400 font-bold">{selectedMembers.length}명</span>의 회원을 삭제하시겠습니까?
+                선택한{" "}
+                <span className="text-red-400 font-bold">
+                  {selectedMembers.length}명
+                </span>
+                의 회원을 삭제하시겠습니까?
               </p>
               <p className="text-sm text-red-400 mb-6">
                 ⚠️ 이 작업은 되돌릴 수 없습니다.
@@ -1167,7 +1178,9 @@ function Members({ currentUser }) {
                   disabled={bulkDeleting}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
                 >
-                  {bulkDeleting ? t("common.loading") : `${selectedMembers.length}명 삭제`}
+                  {bulkDeleting
+                    ? t("common.loading")
+                    : `${selectedMembers.length}명 삭제`}
                 </button>
               </div>
             </div>
@@ -1180,20 +1193,34 @@ function Members({ currentUser }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
             <div className="text-center">
-              <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                roleChangeMember.role === "ADMIN" 
-                  ? "bg-slate-500/20" 
-                  : "bg-orange-500/20"
-              }`}>
-                <Shield className={roleChangeMember.role === "ADMIN" ? "text-slate-400" : "text-orange-400"} size={32} />
+              <div
+                className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  roleChangeMember.role === "ADMIN"
+                    ? "bg-slate-500/20"
+                    : "bg-orange-500/20"
+                }`}
+              >
+                <Shield
+                  className={
+                    roleChangeMember.role === "ADMIN"
+                      ? "text-slate-400"
+                      : "text-orange-400"
+                  }
+                  size={32}
+                />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">
-                {roleChangeMember.role === "ADMIN" ? "관리자 해임" : "관리자 임명"}
+                {roleChangeMember.role === "ADMIN"
+                  ? "관리자 해임"
+                  : "관리자 임명"}
               </h2>
               <p className="text-slate-400 mb-6">
-                <span className="text-white font-medium">{roleChangeMember.name}</span>님을
-                {roleChangeMember.role === "ADMIN" 
-                  ? " 일반 회원으로 변경하시겠습니까?" 
+                <span className="text-white font-medium">
+                  {roleChangeMember.name}
+                </span>
+                님을
+                {roleChangeMember.role === "ADMIN"
+                  ? " 일반 회원으로 변경하시겠습니까?"
                   : " 관리자로 임명하시겠습니까?"}
               </p>
 
@@ -1204,24 +1231,46 @@ function Members({ currentUser }) {
                     {roleChangeMember.name?.charAt(0) || "?"}
                   </div>
                   <div className="flex-1">
-                    <p className="text-white font-medium">{roleChangeMember.name}</p>
-                    <p className="text-sm text-slate-400">{roleChangeMember.email}</p>
+                    <p className="text-white font-medium">
+                      {roleChangeMember.name}
+                    </p>
+                    <p className="text-sm text-slate-400">
+                      {roleChangeMember.email}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-500">현재 역할</p>
-                    <p className={`text-sm font-medium ${
-                      roleChangeMember.role === "ADMIN" ? "text-orange-400" : "text-slate-400"
-                    }`}>
-                      {roleChangeMember.role === "ADMIN" ? "관리자" : "일반회원"}
+                    <p
+                      className={`text-sm font-medium ${
+                        roleChangeMember.role === "ADMIN"
+                          ? "text-orange-400"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {roleChangeMember.role === "ADMIN"
+                        ? "관리자"
+                        : "일반회원"}
                     </p>
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-slate-600 flex items-center justify-center gap-2">
-                  <span className={roleChangeMember.role === "ADMIN" ? "text-orange-400" : "text-slate-400"}>
+                  <span
+                    className={
+                      roleChangeMember.role === "ADMIN"
+                        ? "text-orange-400"
+                        : "text-slate-400"
+                    }
+                  >
                     {roleChangeMember.role === "ADMIN" ? "관리자" : "회원"}
                   </span>
                   <span className="text-slate-500">→</span>
-                  <span className={roleChangeMember.role === "ADMIN" ? "text-slate-400" : "text-orange-400"}>
+                  <span
+                    className={
+                      roleChangeMember.role === "ADMIN"
+                        ? "text-slate-400"
+                        : "text-orange-400"
+                    }
+                  >
                     {roleChangeMember.role === "ADMIN" ? "회원" : "관리자"}
                   </span>
                 </div>
@@ -1247,7 +1296,11 @@ function Members({ currentUser }) {
                       : "bg-orange-500 hover:bg-orange-600 text-white"
                   }`}
                 >
-                  {changingRole ? "변경 중..." : roleChangeMember.role === "ADMIN" ? "해임하기" : "임명하기"}
+                  {changingRole
+                    ? "변경 중..."
+                    : roleChangeMember.role === "ADMIN"
+                    ? "해임하기"
+                    : "임명하기"}
                 </button>
               </div>
             </div>
