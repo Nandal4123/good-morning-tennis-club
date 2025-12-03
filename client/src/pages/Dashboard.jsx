@@ -81,8 +81,9 @@ function Dashboard({ currentUser }) {
       // 랭킹 계산
       if (allUsersWithStats.length > 0) {
         // 승률 TOP 3 (최소 3경기 이상)
+        // 승률왕 TOP 3 (3경기 이상 + 최소 1승 이상)
         const winRateRanking = [...allUsersWithStats]
-          .filter((u) => (u.stats?.totalMatches || 0) >= 3)
+          .filter((u) => (u.stats?.totalMatches || 0) >= 3 && (u.stats?.wins || 0) > 0)
           .sort((a, b) => (b.stats?.winRate || 0) - (a.stats?.winRate || 0))
           .slice(0, 3);
 
