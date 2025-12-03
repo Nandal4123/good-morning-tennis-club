@@ -15,12 +15,17 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 최소 로딩 시간 (로딩 화면 표시용)
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+    
     // Check for saved user in localStorage
     const savedUser = localStorage.getItem("clubUser");
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
     }
-    setLoading(false);
+    
+    // 최소 2초 후 로딩 완료
+    minLoadTime.then(() => setLoading(false));
   }, []);
 
   const handleLogin = (user) => {
