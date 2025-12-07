@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Trophy, Plus, X, Trash2 } from "lucide-react";
+import { Trophy, Plus, X, Trash2, UserPlus } from "lucide-react";
 import { matchApi, userApi } from "../lib/api";
 import MatchCard from "../components/MatchCard";
 import LoadingScreen from "../components/LoadingScreen";
@@ -30,6 +30,12 @@ function Matches({ currentUser }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [checking, setChecking] = useState(false);
+  
+  // Guest player states
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestTarget, setGuestTarget] = useState({ team: "", index: 0 });
+  const [creatingGuest, setCreatingGuest] = useState(false);
 
   // Check if current user is admin
   const isAdmin = currentUser?.role === "ADMIN";
@@ -238,10 +244,59 @@ function Matches({ currentUser }) {
   };
 
   const updateTeamPlayer = (team, index, value) => {
+    // "ADD_GUEST" 선택 시 게스트 추가 모달 열기
+    if (value === "ADD_GUEST") {
+      setGuestTarget({ team, index });
+      setGuestName("");
+      setShowGuestModal(true);
+      return;
+    }
+    
     const key = team === "A" ? "teamA" : "teamB";
     const updated = [...newMatch[key]];
     updated[index] = value;
     setNewMatch({ ...newMatch, [key]: updated });
+  };
+
+  // 게스트 선수 생성
+  const handleCreateGuest = async () => {
+    if (!guestName.trim()) {
+      alert("게스트 이름을 입력해주세요.");
+      return;
+    }
+
+    try {
+      setCreatingGuest(true);
+      
+      // 게스트용 고유 이메일 생성
+      const guestEmail = `guest_${Date.now()}@guest.local`;
+      
+      // 게스트 사용자 생성
+      const newGuest = await userApi.create({
+        email: guestEmail,
+        name: `👤 ${guestName.trim()}`, // 👤 아이콘으로 게스트 구분
+        role: "USER",
+        tennisLevel: "NTRP_3_0",
+      });
+
+      // users 목록에 추가
+      setUsers([...users, newGuest]);
+      
+      // 선택한 팀/위치에 게스트 설정
+      const key = guestTarget.team === "A" ? "teamA" : "teamB";
+      const updated = [...newMatch[key]];
+      updated[guestTarget.index] = newGuest.id;
+      setNewMatch({ ...newMatch, [key]: updated });
+
+      // 모달 닫기
+      setShowGuestModal(false);
+      setGuestName("");
+    } catch (error) {
+      console.error("Failed to create guest:", error);
+      alert("게스트 추가에 실패했습니다.");
+    } finally {
+      setCreatingGuest(false);
+    }
   };
 
   if (loading) {
@@ -348,6 +403,9 @@ function Matches({ currentUser }) {
                       required
                     >
                       <option value="">{t("matches.selectPlayer")}</option>
+                      <option value="ADD_GUEST" className="text-tennis-400 font-medium">
+                        ➕ 게스트 추가
+                      </option>
                       {users.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.name}
@@ -366,6 +424,9 @@ function Matches({ currentUser }) {
                       required
                     >
                       <option value="">{t("matches.selectPlayer")}</option>
+                      <option value="ADD_GUEST" className="text-tennis-400 font-medium">
+                        ➕ 게스트 추가
+                      </option>
                       {users.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.name}
@@ -410,6 +471,9 @@ function Matches({ currentUser }) {
                       required
                     >
                       <option value="">{t("matches.selectPlayer")}</option>
+                      <option value="ADD_GUEST" className="text-tennis-400 font-medium">
+                        ➕ 게스트 추가
+                      </option>
                       {users.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.name}
@@ -428,6 +492,9 @@ function Matches({ currentUser }) {
                       required
                     >
                       <option value="">{t("matches.selectPlayer")}</option>
+                      <option value="ADD_GUEST" className="text-tennis-400 font-medium">
+                        ➕ 게스트 추가
+                      </option>
                       {users.map((user) => (
                         <option key={user.id} value={user.id}>
                           {user.name}
@@ -659,6 +726,59 @@ function Matches({ currentUser }) {
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300"
                 >
                   {deleting ? t("common.loading") : t("common.delete")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guest Add Modal */}
+      {showGuestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-sm p-6 animate-slide-up">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-tennis-500/20 flex items-center justify-center">
+                <UserPlus className="text-tennis-400" size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">
+                게스트 선수 추가
+              </h2>
+              <p className="text-slate-400 text-sm mb-6">
+                회원가입하지 않은 선수를 추가합니다
+              </p>
+
+              <input
+                type="text"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="이름을 입력하세요"
+                className="input w-full mb-6 text-center"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleCreateGuest();
+                  }
+                }}
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowGuestModal(false);
+                    setGuestName("");
+                  }}
+                  className="btn-secondary flex-1"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleCreateGuest}
+                  disabled={creatingGuest || !guestName.trim()}
+                  className="btn-primary flex-1"
+                >
+                  {creatingGuest ? "추가 중..." : "추가"}
                 </button>
               </div>
             </div>
