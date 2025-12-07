@@ -20,6 +20,7 @@ import {
   CalendarCheck,
   Shield,
   Crown,
+  UserCheck,
 } from "lucide-react";
 import { userApi } from "../lib/api";
 import MemberCard from "../components/MemberCard";
@@ -80,6 +81,16 @@ function Members({ currentUser }) {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleChangeMember, setRoleChangeMember] = useState(null);
   const [changingRole, setChangingRole] = useState(false);
+
+  // 게스트 → 정회원 전환 상태
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [convertMember, setConvertMember] = useState(null);
+  const [convertEmail, setConvertEmail] = useState("");
+  const [convertName, setConvertName] = useState("");
+  const [converting, setConverting] = useState(false);
+
+  // 게스트 여부 확인 함수
+  const isGuestUser = (member) => member?.email?.endsWith("@guest.local");
 
   useEffect(() => {
     loadMembers();
@@ -293,6 +304,54 @@ function Members({ currentUser }) {
       alert("권한 변경에 실패했습니다: " + error.message);
     } finally {
       setChangingRole(false);
+    }
+  };
+
+  // 게스트 → 정회원 전환 클릭
+  const handleConvertClick = (member) => {
+    setConvertMember(member);
+    // 이름에서 👤 아이콘 제거
+    const cleanName = member.name?.replace(/^👤\s*/, "") || "";
+    setConvertName(cleanName);
+    setConvertEmail("");
+    setShowConvertModal(true);
+  };
+
+  // 게스트 → 정회원 전환 실행
+  const handleConvertGuest = async () => {
+    if (!convertMember || !convertEmail.trim()) {
+      alert("이메일을 입력해주세요.");
+      return;
+    }
+
+    // 간단한 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(convertEmail.trim())) {
+      alert("올바른 이메일 형식을 입력해주세요.");
+      return;
+    }
+
+    try {
+      setConverting(true);
+      await userApi.update(convertMember.id, {
+        email: convertEmail.trim(),
+        name: convertName.trim() || convertMember.name?.replace(/^👤\s*/, ""),
+      });
+      setShowConvertModal(false);
+      setConvertMember(null);
+      setConvertEmail("");
+      setConvertName("");
+      alert("정회원으로 전환되었습니다! 이제 해당 이메일로 로그인할 수 있습니다.");
+      await loadMembers();
+    } catch (error) {
+      console.error("Failed to convert guest:", error);
+      if (error.message?.includes("already exists")) {
+        alert("이미 사용 중인 이메일입니다.");
+      } else {
+        alert("전환에 실패했습니다: " + error.message);
+      }
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -659,6 +718,10 @@ function Members({ currentUser }) {
                             <Crown size={12} />
                             소유자
                           </span>
+                        ) : isGuestUser(member) ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+                            👤 게스트
+                          </span>
                         ) : member.role === "ADMIN" ? (
                           <span className="px-2 py-1 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center gap-1">
                             <Shield size={12} />
@@ -713,8 +776,18 @@ function Members({ currentUser }) {
                           >
                             <Swords size={16} />
                           </button>
+                          {/* 게스트 → 정회원 전환 (관리자만) */}
+                          {isAdmin && isGuestUser(member) && (
+                            <button
+                              onClick={() => handleConvertClick(member)}
+                              className="p-2 rounded-lg text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+                              title="정회원 전환"
+                            >
+                              <UserCheck size={16} />
+                            </button>
+                          )}
                           {/* OWNER만 권한 변경 가능, 자신과 OWNER는 변경 불가 */}
-                          {isOwner && member.email !== OWNER_EMAIL && (
+                          {isOwner && member.email !== OWNER_EMAIL && !isGuestUser(member) && (
                             <button
                               onClick={() => handleRoleChangeClick(member)}
                               className={`p-2 rounded-lg transition-colors ${
@@ -1301,6 +1374,101 @@ function Members({ currentUser }) {
                     : roleChangeMember.role === "ADMIN"
                     ? "해임하기"
                     : "임명하기"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guest to Member Convert Modal */}
+      {showConvertModal && convertMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md p-6 animate-slide-up">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                <UserCheck className="text-cyan-400" size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">
+                정회원 전환
+              </h2>
+              <p className="text-slate-400 mb-6">
+                게스트를 정회원으로 전환합니다.
+                <br />
+                <span className="text-sm text-cyan-400">
+                  기존 경기 기록이 모두 유지됩니다!
+                </span>
+              </p>
+
+              {/* Current Guest Info */}
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-6 text-left">
+                <p className="text-xs text-slate-500 mb-2">현재 게스트 정보</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white font-bold">
+                    {convertMember.name?.replace(/^👤\s*/, "").charAt(0) || "?"}
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">
+                      {convertMember.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {convertMember.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Convert Form */}
+              <div className="space-y-4 text-left">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
+                    이름 (수정 가능)
+                  </label>
+                  <input
+                    type="text"
+                    value={convertName}
+                    onChange={(e) => setConvertName(e.target.value)}
+                    className="input w-full"
+                    placeholder="홍길동"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-2">
+                    이메일 주소 <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={convertEmail}
+                    onChange={(e) => setConvertEmail(e.target.value)}
+                    className="input w-full"
+                    placeholder="example@email.com"
+                    required
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    이 이메일로 로그인할 수 있습니다
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowConvertModal(false);
+                    setConvertMember(null);
+                    setConvertEmail("");
+                    setConvertName("");
+                  }}
+                  className="btn-secondary flex-1"
+                  disabled={converting}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleConvertGuest}
+                  disabled={converting || !convertEmail.trim()}
+                  className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50"
+                >
+                  {converting ? "전환 중..." : "정회원 전환"}
                 </button>
               </div>
             </div>
