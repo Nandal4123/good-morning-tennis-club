@@ -12,13 +12,41 @@ import feedbackRoutes from "./routes/feedbackRoutes.js";
 dotenv.config();
 
 const app = express();
+
 // Prisma 클라이언트 생성 (연결 풀 최적화)
-const prisma = new PrismaClient({
-  log:
-    process.env.NODE_ENV === "development"
-      ? ["query", "error", "warn"]
-      : ["error"],
-});
+let prisma;
+try {
+  // DATABASE_URL에서 connection_limit 파라미터 추가
+  const databaseUrl = process.env.DATABASE_URL;
+  let optimizedUrl = databaseUrl;
+  
+  // connection_limit 파라미터가 없으면 추가 (Supabase Transaction Mode 최적화)
+  if (databaseUrl && !databaseUrl.includes("connection_limit")) {
+    const separator = databaseUrl.includes("?") ? "&" : "?";
+    optimizedUrl = `${databaseUrl}${separator}connection_limit=5&pool_timeout=10`;
+    console.log("🔧 DATABASE_URL에 connection_limit 파라미터 추가됨");
+  }
+  
+  // 환경 변수 임시 설정 (Prisma가 사용)
+  if (optimizedUrl !== databaseUrl) {
+    process.env.DATABASE_URL = optimizedUrl;
+  }
+  
+  prisma = new PrismaClient({
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
+  });
+  
+  console.log("✅ Prisma Client initialized successfully");
+  console.log("DATABASE_URL:", databaseUrl ? "Set" : "Not set");
+} catch (error) {
+  console.error("❌ Failed to initialize Prisma Client:", error);
+  console.error("DATABASE_URL:", process.env.DATABASE_URL ? "Set" : "Not set");
+  process.exit(1);
+}
+
 const PORT = process.env.PORT || 3001;
 
 // Middleware - Allow all origins for deployment
