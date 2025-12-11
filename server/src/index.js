@@ -50,8 +50,22 @@ app.get("/api/health", (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+  console.error("❌ Error:", err);
+  console.error("Stack:", err.stack);
+  
+  // Prisma 초기화 오류 처리
+  if (err.name === "PrismaClientInitializationError") {
+    return res.status(500).json({ 
+      error: "Database connection failed",
+      details: "Please check DATABASE_URL environment variable",
+      message: err.message 
+    });
+  }
+  
+  res.status(500).json({ 
+    error: "Something went wrong!",
+    message: err.message 
+  });
 });
 
 // Graceful shutdown
