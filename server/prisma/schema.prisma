@@ -5,6 +5,9 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  // Supabase Transaction Mode 연결 풀 최적화
+  // connection_limit을 낮춰서 연결 풀 제한 문제 방지
+  // Transaction Mode는 최대 15개 연결 허용
 }
 
 enum TennisLevel {
