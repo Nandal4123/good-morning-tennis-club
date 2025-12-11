@@ -285,17 +285,20 @@ function Dashboard({ currentUser }) {
       });
       setTodayMatches(todayOnly);
 
-      // 초기 랭킹 데이터 로드 (현재 선택된 월)
+      // 초기 로드 완료 표시 (개인 통계는 즉시 표시)
+      setInitialLoadDone(true);
+
+      // 랭킹 데이터는 백그라운드에서 로드 (사용자 경험 개선)
       // selectedYear와 selectedMonth는 이미 초기화되어 있음
       const currentYear = selectedYear || now.getFullYear();
       const currentMonth = selectedMonth || now.getMonth() + 1;
       console.log(
-        `[Dashboard] Initial load - loading ranking for ${currentYear}-${currentMonth}`
+        `[Dashboard] Initial load - loading ranking in background for ${currentYear}-${currentMonth}`
       );
-      await loadRankingData(currentYear, currentMonth);
-
-      // 초기 로드 완료 표시
-      setInitialLoadDone(true);
+      // await 제거: 백그라운드에서 로드하여 개인 통계를 먼저 표시
+      loadRankingData(currentYear, currentMonth).catch((err) => {
+        console.error("[Dashboard] Failed to load ranking in background:", err);
+      });
     } catch (error) {
       console.error("Failed to load dashboard:", error);
     } finally {
