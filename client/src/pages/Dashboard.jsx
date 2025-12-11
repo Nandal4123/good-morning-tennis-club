@@ -544,36 +544,6 @@ function Dashboard({ currentUser }) {
             🏆 월별 랭킹
           </h2>
 
-          {/* 테스트 버튼 - 디버깅용 */}
-          <button
-            onClick={async () => {
-              console.log("[TEST] 버튼 클릭됨");
-              console.log(
-                "[TEST] selectedYear:",
-                selectedYear,
-                "selectedMonth:",
-                selectedMonth
-              );
-              try {
-                console.log("[TEST] API 호출 시작...");
-                const result = await userApi.getAllWithMonthlyStats(
-                  selectedYear,
-                  selectedMonth
-                );
-                console.log("[TEST] ✅ API 응답:", result);
-                alert(
-                  `API 호출 성공! 사용자 수: ${result.users?.length || 0}명`
-                );
-              } catch (error) {
-                console.error("[TEST] ❌ API 에러:", error);
-                alert(`API 에러: ${error.message}`);
-              }
-            }}
-            className="px-3 py-1 bg-red-500/20 text-red-400 text-xs rounded border border-red-500/30 hover:bg-red-500/30"
-          >
-            🔧 API 테스트
-          </button>
-
           {/* 월 선택 UI */}
           <div className="flex items-center gap-2">
             <button
