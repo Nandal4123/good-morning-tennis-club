@@ -12,7 +12,15 @@ import feedbackRoutes from './routes/feedbackRoutes.js';
 dotenv.config();
 
 const app = express();
-const prisma = new PrismaClient();
+// Prisma 클라이언트 생성 (연결 풀 최적화)
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 const PORT = process.env.PORT || 3001;
 
 // Middleware - Allow all origins for deployment
