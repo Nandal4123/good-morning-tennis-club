@@ -567,23 +567,26 @@ export const getAllUsersWithMonthlyStats = async (req, res) => {
     console.error("Error name:", error.name);
     console.error("Error message:", error.message);
     console.error("Error stack:", error.stack);
-    
+
     // 더 자세한 에러 정보 반환
     const errorResponse = {
       error: "Failed to fetch users with monthly stats",
       details: error.message || "Unknown error",
       type: error.name || "Error",
     };
-    
+
     // Prisma 관련 오류인 경우 추가 정보
-    if (error.name === "PrismaClientKnownRequestError" || 
-        error.name === "PrismaClientInitializationError" ||
-        error.message?.includes("MaxClientsInSessionMode") ||
-        error.message?.includes("connection")) {
+    if (
+      error.name === "PrismaClientKnownRequestError" ||
+      error.name === "PrismaClientInitializationError" ||
+      error.message?.includes("MaxClientsInSessionMode") ||
+      error.message?.includes("connection")
+    ) {
       errorResponse.databaseError = true;
-      errorResponse.suggestion = "Database connection pool limit reached. Please try again in a moment.";
+      errorResponse.suggestion =
+        "Database connection pool limit reached. Please try again in a moment.";
     }
-    
+
     res.status(500).json(errorResponse);
   }
 };
