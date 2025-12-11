@@ -20,13 +20,15 @@ try {
   const databaseUrl = process.env.DATABASE_URL;
   let optimizedUrl = databaseUrl;
 
-  // connection_limit 파라미터가 없으면 추가 (Supabase Transaction Mode 최적화)
-  // Supabase Transaction Mode 연결 제한을 고려하여 더 낮은 값 사용
+  // connection_limit 파라미터가 없으면 추가
+  // Supabase Transaction Mode: 연결 제한이 매우 엄격 (1-2개)
+  // Direct Connection은 IPv4 호환되지 않아 Render에서 사용 불가
+  // 따라서 Session Pooler 사용 + connection_limit=1로 최소화
   if (databaseUrl && !databaseUrl.includes("connection_limit")) {
     const separator = databaseUrl.includes("?") ? "&" : "?";
-    optimizedUrl = `${databaseUrl}${separator}connection_limit=2&pool_timeout=10`;
+    optimizedUrl = `${databaseUrl}${separator}connection_limit=1&pool_timeout=10`;
     console.log(
-      "🔧 DATABASE_URL에 connection_limit=2 파라미터 추가됨 (연결 풀 제한 방지)"
+      "🔧 DATABASE_URL에 connection_limit=1 파라미터 추가됨 (Transaction Mode 최적화)"
     );
   }
 
