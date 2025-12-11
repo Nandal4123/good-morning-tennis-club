@@ -202,7 +202,12 @@ function Dashboard({ currentUser }) {
       );
       const [stats, attendance, allMatches] = await Promise.all([
         userApi.getStats(currentUser.id).catch((err) => {
-          console.error("[Dashboard] Failed to get stats:", err);
+          console.error("[Dashboard] ❌ Failed to get stats:", err);
+          console.error("[Dashboard] ❌ Error details:", {
+            message: err?.message,
+            stack: err?.stack,
+            currentUser: currentUser?.id,
+          });
           return null;
         }),
         attendanceApi.getByUser(currentUser.id).catch((err) => {
@@ -229,6 +234,14 @@ function Dashboard({ currentUser }) {
 
       // stats 설정 (null이어도 설정하여 에러 상태 표시)
       console.log("[Dashboard] ✅ Setting userStats:", stats);
+      console.log("[Dashboard] 📋 Stats 상세:", {
+        hasStats: !!stats,
+        hasStatsProperty: !!(stats && stats.stats),
+        statsValue: stats?.stats,
+        totalAttendance: stats?.stats?.totalAttendance,
+        totalMatches: stats?.stats?.totalMatches,
+        wins: stats?.stats?.wins,
+      });
       setUserStats(stats);
 
       // attendance 설정
