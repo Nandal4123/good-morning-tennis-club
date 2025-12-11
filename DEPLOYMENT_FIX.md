@@ -28,18 +28,21 @@ Error: Circuit breaker open: Too many authentication errors
 3. Environment 탭 클릭
 4. `DATABASE_URL` 환경 변수 찾기
 5. **새로운 연결 문자열로 업데이트**:
-   
+
    **옵션 1: Direct Connection (권장 - 연결 풀 제한 없음)**
+
    ```
    postgresql://postgres.tzulmmiudjcoghipoynq:rjgkqeh12dlfdl@aws-1-ap-northeast-2.connect.psdb.cloud:5432/postgres?sslmode=require
    ```
-   
+
    **옵션 2: Transaction Mode (연결 풀 사용, 제한 있음)**
+
    ```
    postgresql://postgres.tzulmmiudjcoghipoynq:rjgkqeh12dlfdl@aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres?pgbouncer=true&connect_timeout=15
    ```
-   
-   ⚠️ **중요**: 
+
+   ⚠️ **중요**:
+
    - **옵션 1 (Direct)을 먼저 시도하세요** - 연결 풀 제한 문제 해결
    - project-ref: `tzulmmiudjcoghipoynq`
    - password: `rjgkqeh12dlfdl`
