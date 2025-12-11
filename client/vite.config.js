@@ -11,6 +11,18 @@ export default defineConfig({
         changeOrigin: true
       }
     }
-  }
+  },
+  build: {
+    // CSP 호환성을 위해 sourcemap 비활성화 (eval 사용 방지)
+    sourcemap: false,
+    // esbuild minify 사용 (eval 사용 방지)
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        // eval 사용 방지
+        format: 'es',
+      },
+    },
+  },
 });
 
