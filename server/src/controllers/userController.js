@@ -458,18 +458,12 @@ export const getAllUsersWithMonthlyStats = async (req, res) => {
       },
     });
 
-    // 각 사용자의 월별 통계 계산 (배치 처리로 연결 풀 제한 방지)
-    // Supabase Transaction Mode 연결 제한을 고려하여 배치 크기를 더 줄임
-    const BATCH_SIZE = 3; // 한 번에 3명씩 처리 (연결 풀 제한 방지)
+    // 각 사용자의 월별 통계 계산 (순차 처리로 연결 풀 제한 방지)
+    // Supabase Transaction Mode 연결 제한을 피하기 위해 순차 처리 사용
     const usersWithStats = [];
-    
-    // 배치 간 대기 시간 추가 (연결 해제 시간 확보)
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    for (let i = 0; i < users.length; i += BATCH_SIZE) {
-      const batch = users.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(
-        batch.map(async (user) => {
+    // 순차 처리: 한 번에 한 명씩 처리하여 연결 풀 제한 방지
+    for (const user of users) {
           // 해당 월 출석 수
           const attendanceCount = await req.prisma.attendance.count({
             where: {
@@ -606,25 +600,13 @@ export const getAllUsersWithStats = async (req, res) => {
     // 모든 세션 수 (출석률 계산용)
     const totalSessions = await req.prisma.session.count();
 
-    // 각 사용자의 통계 계산 (배치 처리로 연결 풀 제한 방지)
-    // Supabase Transaction Mode 연결 제한을 고려하여 배치 크기를 더 줄임
-    const BATCH_SIZE = 3; // 한 번에 3명씩 처리 (연결 풀 제한 방지)
+    // 각 사용자의 통계 계산 (순차 처리로 연결 풀 제한 방지)
+    // Supabase Transaction Mode 연결 제한을 피하기 위해 순차 처리 사용
+    // Promise.all 대신 for...of 루프로 한 번에 한 명씩 처리
     const usersWithStats = [];
-    
-    // 배치 간 대기 시간 추가 (연결 해제 시간 확보)
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    for (let i = 0; i < users.length; i += BATCH_SIZE) {
-      const batch = users.slice(i, i + BATCH_SIZE);
-      
-      // 배치 처리 전에 이전 배치의 연결이 해제될 시간 확보
-      if (i > 0) {
-        await delay(100); // 100ms 대기
-      }
-      
-      const batchResults = await Promise.all(
-        batch.map(async (user) => {
-          // 출석 수
+    for (const user of users) {
+      // 출석 수
           const attendanceCount = await req.prisma.attendance.count({
             where: { userId: user.id, status: "ATTENDED" },
           });

@@ -5,13 +5,16 @@
 ### 방법 1: Manual Deploy (권장)
 
 1. **Render 대시보드 접속**
+
    - https://dashboard.render.com 접속
    - 로그인
 
 2. **서비스 선택**
+
    - `tennis-club-server` 서비스 클릭
 
 3. **Manual Deploy 실행**
+
    - 상단 메뉴에서 **"Manual Deploy"** 버튼 클릭
    - **"Clear build cache & deploy"** 옵션 선택
    - **"Deploy"** 버튼 클릭
@@ -43,20 +46,24 @@ git push
 ## ✅ 재시작 확인
 
 ### 1. 배포 상태 확인
+
 - Render 대시보드에서 서비스 상태가 **"Live"** (초록색)인지 확인
 - **Last Deploy** 시간이 방금 전인지 확인
 
 ### 2. Health Check
+
 ```bash
 curl https://tennis-club-server.onrender.com/api/health
 ```
 
 **예상 응답**:
+
 ```json
-{"status":"ok","timestamp":"2025-12-11T..."}
+{ "status": "ok", "timestamp": "2025-12-11T..." }
 ```
 
 ### 3. 로그 확인
+
 - Render 대시보드 → **Logs** 탭
 - 다음 메시지 확인:
   - ✅ `✅ Prisma Client initialized successfully`
@@ -64,6 +71,7 @@ curl https://tennis-club-server.onrender.com/api/health
   - ❌ 에러 메시지가 없는지 확인
 
 ### 4. API 테스트
+
 ```bash
 # Users API
 curl https://tennis-club-server.onrender.com/api/users
@@ -83,10 +91,12 @@ curl https://tennis-club-server.onrender.com/api/users/with-monthly-stats?year=2
 ### 배포가 실패하는 경우
 
 1. **로그 확인**
+
    - Logs 탭에서 에러 메시지 확인
    - 빌드 오류인지, 런타임 오류인지 확인
 
 2. **환경 변수 확인**
+
    - Environment 탭에서 `DATABASE_URL` 확인
    - 올바른 형식인지 확인
 
@@ -97,10 +107,12 @@ curl https://tennis-club-server.onrender.com/api/users/with-monthly-stats?year=2
 ### 서버가 시작되지 않는 경우
 
 1. **Prisma 초기화 오류**
+
    - `DATABASE_URL` 환경 변수 확인
    - Supabase 연결 정보 확인
 
 2. **포트 충돌**
+
    - Render는 자동으로 포트를 할당하므로 문제 없음
 
 3. **의존성 설치 실패**
@@ -112,4 +124,3 @@ curl https://tennis-club-server.onrender.com/api/users/with-monthly-stats?year=2
 - Render 무료 플랜은 **Cold Start**가 있을 수 있습니다 (첫 요청 시 지연)
 - 배포 후 첫 요청은 느릴 수 있습니다
 - 서버가 15분 이상 비활성 상태면 자동으로 sleep 모드로 전환됩니다
-
