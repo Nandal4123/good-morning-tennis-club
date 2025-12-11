@@ -62,6 +62,7 @@ export const createMatch = async (req, res) => {
     // "2025-12-02" → 2025-12-02T12:00:00+09:00 (KST) → 2025-12-02T03:00:00.000Z (UTC)
     const kstDate = new Date(date + 'T12:00:00+09:00');
     
+    // 경기 생성
     const match = await req.prisma.match.create({
       data: {
         date: kstDate,
@@ -80,6 +81,50 @@ export const createMatch = async (req, res) => {
         }
       }
     });
+    
+    // 자동 출석 생성: 해당 날짜의 세션 찾기 또는 생성
+    const dayStart = new Date(date + 'T00:00:00+09:00');
+    const dayEnd = new Date(date + 'T23:59:59+09:00');
+    
+    let session = await req.prisma.session.findFirst({
+      where: {
+        date: {
+          gte: dayStart,
+          lte: dayEnd
+        }
+      }
+    });
+    
+    // 세션이 없으면 생성
+    if (!session) {
+      session = await req.prisma.session.create({
+        data: {
+          date: kstDate,
+          description: `Morning Session - ${date}`
+        }
+      });
+      console.log(`[Auto Attendance] Created new session for ${date}`);
+    }
+    
+    // 각 참가자에 대해 출석 기록 생성 (이미 있으면 스킵)
+    const participantUserIds = participants.map(p => p.userId);
+    
+    for (const userId of participantUserIds) {
+      await req.prisma.attendance.upsert({
+        where: {
+          userId_sessionId: { userId, sessionId: session.id }
+        },
+        update: {}, // 이미 있으면 변경하지 않음
+        create: {
+          userId,
+          sessionId: session.id,
+          status: 'ATTENDED',
+          date: kstDate
+        }
+      });
+    }
+    
+    console.log(`[Auto Attendance] Created attendance for ${participantUserIds.length} participants`);
     
     res.status(201).json(match);
   } catch (error) {

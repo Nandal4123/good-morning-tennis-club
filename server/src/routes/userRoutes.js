@@ -9,6 +9,9 @@ router.get('/', userController.getAllUsers);
 // GET /api/users/with-stats - Get all users with stats (admin)
 router.get('/with-stats', userController.getAllUsersWithStats);
 
+// GET /api/users/with-monthly-stats - Get all users with monthly stats (for rankings)
+router.get('/with-monthly-stats', userController.getAllUsersWithMonthlyStats);
+
 // GET /api/users/:id - Get user by ID
 router.get('/:id', userController.getUserById);
 

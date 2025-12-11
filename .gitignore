@@ -29,5 +29,10 @@ Thumbs.db
 prisma/*.db
 prisma/*.db-journal
 
+# Database backups
+server/backups/
+*.backup
+*.sql
+
 .vercel
 .env*.local

@@ -1,33 +1,100 @@
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD
-    ? "https://tennis-club-server.onrender.com/api"
-    : "/api");
+// API Base URL 설정
+// 로컬 개발: 항상 http://localhost:5001/api 사용
+// 프로덕션: 환경 변수 또는 기본 배포 서버 URL 사용
+const API_BASE = (() => {
+  // 개발 모드 확인: Vite의 import.meta.env.DEV 사용 (가장 안정적)
+  // import.meta.env.DEV는 개발 모드에서 true, 프로덕션 빌드에서 false
+  const isDevelopment = import.meta.env.DEV;
+
+  if (isDevelopment) {
+    // 로컬 개발 환경: 항상 localhost 사용 (환경 변수 무시)
+    // .env, .env.local, .env.development 파일의 VITE_API_URL 설정을 무시
+    // 이렇게 하면 어떤 환경 변수가 설정되어 있어도 로컬에서는 항상 localhost 사용
+    const localApiUrl = "http://localhost:5001/api";
+    console.log("[API] 🔧 개발 모드 감지: API_BASE =", localApiUrl);
+    console.log(
+      "[API] 📝 참고: .env 파일의 VITE_API_URL은 무시됩니다 (로컬 개발용)"
+    );
+    return localApiUrl;
+  }
+
+  // 프로덕션 환경
+  // 1순위: 환경 변수 VITE_API_URL (배포 플랫폼에서 설정)
+  // 2순위: 기본 배포 서버 URL
+  const prodApiUrl =
+    import.meta.env.VITE_API_URL ||
+    "https://tennis-club-server.onrender.com/api";
+  console.log("[API] 🚀 프로덕션 모드: API_BASE =", prodApiUrl);
+  if (import.meta.env.VITE_API_URL) {
+    console.log("[API] ✅ 환경 변수 VITE_API_URL 사용");
+  } else {
+    console.log("[API] ⚠️ 환경 변수 없음, 기본 배포 서버 URL 사용");
+  }
+  return prodApiUrl;
+})();
 
 // Helper function for API calls
 async function fetchApi(endpoint, options = {}) {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    ...options,
-  });
+  const url = `${API_BASE}${endpoint}`;
+  console.log(
+    `[API] 📞 Calling: ${url}`,
+    options.method ? `(${options.method})` : ""
+  );
 
-  if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ error: "Request failed" }));
-    throw new Error(error.error || "Request failed");
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+      ...options,
+    });
+
+    if (!response.ok) {
+      let errorMessage = "Request failed";
+      try {
+        const error = await response.json();
+        errorMessage =
+          error.error ||
+          error.message ||
+          `HTTP ${response.status}: ${response.statusText}`;
+      } catch (e) {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      console.error(
+        `[API] ❌ Error ${response.status} from ${url}:`,
+        errorMessage
+      );
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.log(`[API] ✅ Success from ${url}:`, data);
+    return data;
+  } catch (error) {
+    // 네트워크 에러나 기타 에러 처리
+    if (error.name === "TypeError" && error.message.includes("fetch")) {
+      console.error(`[API] ❌ Network error: Failed to fetch ${url}`, error);
+      throw new Error(
+        `네트워크 오류: 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.`
+      );
+    }
+    console.error(`[API] ❌ Unexpected error from ${url}:`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 // User API
 export const userApi = {
   getAll: () => fetchApi("/users"),
   getAllWithStats: () => fetchApi("/users/with-stats"),
+  getAllWithMonthlyStats: (year, month) => {
+    const params = new URLSearchParams();
+    if (year) params.append("year", year);
+    if (month) params.append("month", month);
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return fetchApi(`/users/with-monthly-stats${queryString}`);
+  },
   getById: (id) => fetchApi(`/users/${id}`),
   create: (data) =>
     fetchApi("/users", { method: "POST", body: JSON.stringify(data) }),
