@@ -508,9 +508,7 @@ export const getAllUsersWithMonthlyStats = async (req, res) => {
         if (participants.length === 0) continue;
 
         const myTeamPlayers = participants.filter((p) => p.team === myTeam);
-        const opponentPlayers = participants.filter(
-          (p) => p.team !== myTeam
-        );
+        const opponentPlayers = participants.filter((p) => p.team !== myTeam);
 
         const myTeamScore =
           myTeamPlayers.length > 0
@@ -632,9 +630,7 @@ export const getAllUsersWithStats = async (req, res) => {
         if (participants.length === 0) continue;
 
         const myTeamPlayers = participants.filter((p) => p.team === myTeam);
-        const opponentPlayers = participants.filter(
-          (p) => p.team !== myTeam
-        );
+        const opponentPlayers = participants.filter((p) => p.team !== myTeam);
 
         const myTeamScore =
           myTeamPlayers.length > 0

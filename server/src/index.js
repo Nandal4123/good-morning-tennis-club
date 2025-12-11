@@ -21,10 +21,11 @@ try {
   let optimizedUrl = databaseUrl;
 
   // connection_limit 파라미터가 없으면 추가 (Supabase Transaction Mode 최적화)
+  // Supabase Transaction Mode 연결 제한을 고려하여 더 낮은 값 사용
   if (databaseUrl && !databaseUrl.includes("connection_limit")) {
     const separator = databaseUrl.includes("?") ? "&" : "?";
-    optimizedUrl = `${databaseUrl}${separator}connection_limit=5&pool_timeout=10`;
-    console.log("🔧 DATABASE_URL에 connection_limit 파라미터 추가됨");
+    optimizedUrl = `${databaseUrl}${separator}connection_limit=2&pool_timeout=10`;
+    console.log("🔧 DATABASE_URL에 connection_limit=2 파라미터 추가됨 (연결 풀 제한 방지)");
   }
 
   // 환경 변수 임시 설정 (Prisma가 사용)
@@ -37,6 +38,12 @@ try {
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]
         : ["error"],
+    // 연결 풀 최적화: Supabase Transaction Mode 제한 고려
+    datasources: {
+      db: {
+        url: optimizedUrl,
+      },
+    },
   });
 
   console.log("✅ Prisma Client initialized successfully");
