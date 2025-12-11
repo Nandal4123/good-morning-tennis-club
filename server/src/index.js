@@ -25,7 +25,9 @@ try {
   if (databaseUrl && !databaseUrl.includes("connection_limit")) {
     const separator = databaseUrl.includes("?") ? "&" : "?";
     optimizedUrl = `${databaseUrl}${separator}connection_limit=2&pool_timeout=10`;
-    console.log("🔧 DATABASE_URL에 connection_limit=2 파라미터 추가됨 (연결 풀 제한 방지)");
+    console.log(
+      "🔧 DATABASE_URL에 connection_limit=2 파라미터 추가됨 (연결 풀 제한 방지)"
+    );
   }
 
   // 환경 변수 임시 설정 (Prisma가 사용)
