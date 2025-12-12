@@ -11,7 +11,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:backup": "node scripts/backup-database.js"
+    "db:backup": "node scripts/backup-database.js",
+    "db:cleanup-duplicates": "node scripts/cleanup-duplicate-attendances.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
