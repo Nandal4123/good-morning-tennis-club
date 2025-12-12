@@ -5,9 +5,9 @@
  * 가장 이른 세션의 출석만 남기고 나머지를 삭제합니다.
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./create-prisma-client.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 /**
  * 날짜를 KST 기준으로 하루 범위로 변환

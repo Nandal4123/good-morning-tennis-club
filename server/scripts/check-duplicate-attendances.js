@@ -4,9 +4,9 @@
  * 실제 데이터를 확인하여 중복 출석이 있는지 상세히 분석합니다.
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./create-prisma-client.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 /**
  * 날짜를 KST 기준으로 하루 범위로 변환

@@ -4,9 +4,9 @@
  * 게스트 사용자(@guest.local 이메일 또는 👤 이름)의 출석 기록을 모두 삭제합니다.
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./create-prisma-client.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 async function cleanupGuestAttendances() {
   try {

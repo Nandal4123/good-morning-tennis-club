@@ -2,9 +2,9 @@
  * 2025-12-12 날짜의 출석 및 경기 데이터 상세 확인
  */
 
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "./create-prisma-client.js";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 /**
  * 날짜를 YYYY-MM-DD 형식으로 변환 (KST 기준)
