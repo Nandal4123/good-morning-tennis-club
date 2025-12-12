@@ -1,6 +1,6 @@
 /**
  * 중복 출석 데이터 정리 스크립트
- * 
+ *
  * 같은 사용자가 같은 날짜에 여러 출석 기록이 있는 경우,
  * 가장 이른 세션의 출석만 남기고 나머지를 삭제합니다.
  */
@@ -17,11 +17,11 @@ function getDayRange(date) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const dateString = `${year}-${month}-${day}`;
-  
+
   const dayStart = new Date(dateString + "T00:00:00+09:00");
   const nextDayStart = new Date(dayStart);
   nextDayStart.setDate(nextDayStart.getDate() + 1);
-  
+
   return { dayStart, nextDayStart };
 }
 
@@ -42,11 +42,7 @@ async function cleanupDuplicateAttendances() {
           select: { id: true, date: true },
         },
       },
-      orderBy: [
-        { userId: "asc" },
-        { date: "asc" },
-        { createdAt: "asc" },
-      ],
+      orderBy: [{ userId: "asc" }, { date: "asc" }, { createdAt: "asc" }],
     });
 
     console.log(`📊 총 출석 기록 수: ${allAttendances.length}`);
@@ -57,9 +53,11 @@ async function cleanupDuplicateAttendances() {
     for (const attendance of allAttendances) {
       const date = new Date(attendance.date);
       const { dayStart, nextDayStart } = getDayRange(date);
-      
+
       // 날짜 키 생성 (YYYY-MM-DD)
-      const dateKey = `${dayStart.getFullYear()}-${String(dayStart.getMonth() + 1).padStart(2, "0")}-${String(dayStart.getDate()).padStart(2, "0")}`;
+      const dateKey = `${dayStart.getFullYear()}-${String(
+        dayStart.getMonth() + 1
+      ).padStart(2, "0")}-${String(dayStart.getDate()).padStart(2, "0")}`;
       const key = `${attendance.userId}_${dateKey}`;
 
       if (!groupedByUserAndDate[key]) {
@@ -105,7 +103,9 @@ async function cleanupDuplicateAttendances() {
         `\n👤 사용자: ${keepAttendance.user.name} (${keepAttendance.user.id})`
       );
       console.log(`📅 날짜: ${key.split("_")[1]}`);
-      console.log(`✅ 유지할 출석: ${keepAttendance.id} (세션: ${keepAttendance.session.id}, 날짜: ${keepAttendance.session.date})`);
+      console.log(
+        `✅ 유지할 출석: ${keepAttendance.id} (세션: ${keepAttendance.session.id}, 날짜: ${keepAttendance.session.date})`
+      );
       console.log(`❌ 삭제할 출석: ${deleteAttendances.length}개`);
 
       // 중복 출석 삭제
@@ -113,7 +113,9 @@ async function cleanupDuplicateAttendances() {
         await prisma.attendance.delete({
           where: { id: attendance.id },
         });
-        console.log(`   - 삭제: ${attendance.id} (세션: ${attendance.session.id})`);
+        console.log(
+          `   - 삭제: ${attendance.id} (세션: ${attendance.session.id})`
+        );
         totalDeleted++;
       }
 
@@ -124,7 +126,6 @@ async function cleanupDuplicateAttendances() {
     console.log(`✅ 유지된 그룹: ${totalKept}개`);
     console.log(`❌ 삭제된 출석: ${totalDeleted}개`);
     console.log("✅ 중복 출석 정리 완료!");
-
   } catch (error) {
     console.error("❌ 오류 발생:", error);
     throw error;
@@ -143,4 +144,3 @@ cleanupDuplicateAttendances()
     console.error("\n❌ 스크립트 실행 실패:", error);
     process.exit(1);
   });
-
