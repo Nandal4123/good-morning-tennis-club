@@ -208,7 +208,15 @@ function Dashboard({ currentUser }) {
             stack: err?.stack,
             currentUser: currentUser?.id,
           });
-          return null;
+          // 에러 발생 시 기본값 반환 (UI가 깨지지 않도록)
+          return {
+            stats: {
+              totalAttendance: 0,
+              totalMatches: 0,
+              wins: 0,
+              attendanceRate: 0,
+            },
+          };
         }),
         attendanceApi.getByUser(currentUser.id).catch((err) => {
           console.error("[Dashboard] Failed to get attendance:", err);
