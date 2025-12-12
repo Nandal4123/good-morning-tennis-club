@@ -124,8 +124,7 @@ export const createMatch = async (req, res) => {
 
       // 게스트 사용자 체크: 이메일이 @guest.local로 끝나거나 이름에 👤가 포함된 경우
       const isGuest =
-        user?.email?.endsWith("@guest.local") ||
-        user?.name?.startsWith("👤");
+        user?.email?.endsWith("@guest.local") || user?.name?.startsWith("👤");
 
       if (isGuest) {
         console.log(

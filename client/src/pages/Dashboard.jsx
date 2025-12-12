@@ -712,16 +712,31 @@ function Dashboard({ currentUser }) {
         })()}
       </div>
 
-      {/* Today's Participants - 오늘 경기 참가자 (중복 제거) */}
+      {/* Today's Participants - 오늘 경기 참가자 (중복 제거, 게스트 제외) */}
       {(() => {
-        // 오늘 경기 참가자 중복 제거
+        // 게스트 사용자 확인 함수
+        const isGuestUser = (user) => {
+          if (!user) return false;
+          return (
+            user.email?.endsWith("@guest.local") ||
+            user.name?.startsWith("👤")
+          );
+        };
+
+        // 오늘 경기 참가자 중복 제거 및 게스트 제외
         const uniqueParticipants = [];
         const seenIds = new Set();
         todayMatches.forEach((match) => {
           match.participants?.forEach((p) => {
-            if (!seenIds.has(p.user?.id)) {
-              seenIds.add(p.user?.id);
-              uniqueParticipants.push(p.user);
+            const user = p.user;
+            // 게스트가 아니고, 중복이 아닌 경우만 추가
+            if (
+              user &&
+              !isGuestUser(user) &&
+              !seenIds.has(user.id)
+            ) {
+              seenIds.add(user.id);
+              uniqueParticipants.push(user);
             }
           });
         });

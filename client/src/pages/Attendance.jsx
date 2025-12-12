@@ -89,7 +89,15 @@ function Attendance({ currentUser }) {
           </p>
 
           <div className="space-y-3">
-            {allUsers.map((user) => {
+            {allUsers
+              .filter((user) => {
+                // 게스트 사용자 제외
+                return (
+                  !user.email?.endsWith("@guest.local") &&
+                  !user.name?.startsWith("👤")
+                );
+              })
+              .map((user) => {
               const status = getUserAttendanceStatus(user.id);
               const isMarking = marking === user.id;
 
