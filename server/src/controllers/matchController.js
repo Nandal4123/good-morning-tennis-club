@@ -112,9 +112,28 @@ export const createMatch = async (req, res) => {
     }
 
     // 각 참가자에 대해 출석 기록 생성 (중복 방지)
+    // 게스트 사용자는 출석 기록을 생성하지 않음
     const participantUserIds = participants.map((p) => p.userId);
 
     for (const userId of participantUserIds) {
+      // 🚫 게스트 사용자 확인: 게스트는 출석 기록 생성하지 않음
+      const user = await req.prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, name: true },
+      });
+
+      // 게스트 사용자 체크: 이메일이 @guest.local로 끝나거나 이름에 👤가 포함된 경우
+      const isGuest =
+        user?.email?.endsWith("@guest.local") ||
+        user?.name?.startsWith("👤");
+
+      if (isGuest) {
+        console.log(
+          `[Auto Attendance] Guest user ${userId} (${user?.name}) - skipping attendance creation`
+        );
+        continue;
+      }
+
       // 🔒 중복 방지: 해당 날짜에 이미 출석이 있는지 확인
       const existingAttendance = await req.prisma.attendance.findFirst({
         where: {
@@ -144,7 +163,7 @@ export const createMatch = async (req, res) => {
         },
       });
       console.log(
-        `[Auto Attendance] Created attendance for user ${userId} on ${date}`
+        `[Auto Attendance] Created attendance for user ${userId} (${user?.name}) on ${date}`
       );
     }
 
