@@ -718,8 +718,7 @@ function Dashboard({ currentUser }) {
         const isGuestUser = (user) => {
           if (!user) return false;
           return (
-            user.email?.endsWith("@guest.local") ||
-            user.name?.startsWith("👤")
+            user.email?.endsWith("@guest.local") || user.name?.startsWith("👤")
           );
         };
 
@@ -730,11 +729,7 @@ function Dashboard({ currentUser }) {
           match.participants?.forEach((p) => {
             const user = p.user;
             // 게스트가 아니고, 중복이 아닌 경우만 추가
-            if (
-              user &&
-              !isGuestUser(user) &&
-              !seenIds.has(user.id)
-            ) {
+            if (user && !isGuestUser(user) && !seenIds.has(user.id)) {
               seenIds.add(user.id);
               uniqueParticipants.push(user);
             }
@@ -827,9 +822,16 @@ function Dashboard({ currentUser }) {
                   className="p-4 bg-slate-700/30 border border-slate-600/50 rounded-xl"
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-lg">
-                      🎾 복식
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-lg">
+                        🎾 복식
+                      </span>
+                      {match.creator && (
+                        <span className="text-xs text-slate-500">
+                          등록: {match.creator.name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     {/* Team A */}

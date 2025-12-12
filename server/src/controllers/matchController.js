@@ -17,6 +17,9 @@ export const getAllMatches = async (req, res) => {
         participants: {
           include: { user: true },
         },
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
       },
       orderBy: { date: "desc" },
     });
@@ -39,6 +42,9 @@ export const getMatchById = async (req, res) => {
         participants: {
           include: { user: true },
         },
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
       },
     });
 
@@ -56,7 +62,7 @@ export const getMatchById = async (req, res) => {
 // Create new match
 export const createMatch = async (req, res) => {
   try {
-    const { date, type, participants } = req.body;
+    const { date, type, participants, createdBy } = req.body;
 
     // KST 정오(12:00)로 설정하여 시간대 문제 방지
     // "2025-12-02" → 2025-12-02T12:00:00+09:00 (KST) → 2025-12-02T03:00:00.000Z (UTC)
@@ -67,6 +73,7 @@ export const createMatch = async (req, res) => {
       data: {
         date: kstDate,
         type: type || "DOUBLES",
+        createdBy: createdBy || null, // 등록자 ID 저장
         participants: {
           create: participants.map((p) => ({
             userId: p.userId,
@@ -78,6 +85,9 @@ export const createMatch = async (req, res) => {
       include: {
         participants: {
           include: { user: true },
+        },
+        creator: {
+          select: { id: true, name: true, email: true },
         },
       },
     });
@@ -196,6 +206,9 @@ export const updateMatch = async (req, res) => {
         participants: {
           include: { user: true },
         },
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
       },
     });
 
@@ -280,6 +293,9 @@ export const checkDuplicateMatch = async (req, res) => {
         participants: {
           include: { user: true },
         },
+        creator: {
+          select: { id: true, name: true, email: true },
+        },
       },
     });
 
@@ -327,6 +343,9 @@ export const getMatchesByUser = async (req, res) => {
       include: {
         participants: {
           include: { user: true },
+        },
+        creator: {
+          select: { id: true, name: true, email: true },
         },
       },
       orderBy: { date: "desc" },

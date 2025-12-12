@@ -148,6 +148,7 @@ function Matches({ currentUser }) {
         date: newMatch.date,
         type: newMatch.type,
         participants,
+        createdBy: currentUser?.id, // 등록자 ID 전달
       });
 
       setShowModal(false);

@@ -41,6 +41,11 @@ function MatchCard({ match, isAdmin, onEdit, onDelete }) {
           <span className="text-sm text-slate-400">
             {date.toLocaleDateString('ko-KR')}
           </span>
+          {match.creator && (
+            <span className="text-xs text-slate-500">
+              · 등록: {match.creator.name}
+            </span>
+          )}
         </div>
         {/* 관리자 버튼 공간 확보 */}
         {isAdmin && <div className="w-24" />}

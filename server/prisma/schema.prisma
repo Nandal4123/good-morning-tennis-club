@@ -55,6 +55,7 @@ model User {
   attendances      Attendance[]
   matchParticipants MatchParticipant[]
   feedbacks        Feedback[]
+  createdMatches   Match[] @relation("MatchCreator")
 
   @@map("users")
 }
@@ -92,8 +93,10 @@ model Match {
   date      DateTime
   type      MatchType @default(DOUBLES)
   createdAt DateTime  @default(now())
+  createdBy String?   // 등록자 ID
 
   participants MatchParticipant[]
+  creator      User?   @relation("MatchCreator", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@map("matches")
 }
