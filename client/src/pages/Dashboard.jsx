@@ -792,10 +792,24 @@ function Dashboard({ currentUser }) {
         {todayMatches.length > 0 ? (
           <div className="space-y-3">
             {todayMatches.map((match) => {
+              // 게스트 사용자 확인 함수
+              const isGuestUser = (user) => {
+                if (!user) return false;
+                return (
+                  user.email?.endsWith("@guest.local") ||
+                  user.name?.startsWith("👤")
+                );
+              };
+
+              // 게스트 제외하고 팀별 필터링
               const teamA =
-                match.participants?.filter((p) => p.team === "A") || [];
+                match.participants?.filter(
+                  (p) => p.team === "A" && !isGuestUser(p.user)
+                ) || [];
               const teamB =
-                match.participants?.filter((p) => p.team === "B") || [];
+                match.participants?.filter(
+                  (p) => p.team === "B" && !isGuestUser(p.user)
+                ) || [];
               const scoreA =
                 teamA.length > 0
                   ? Math.max(...teamA.map((p) => p.score || 0))
