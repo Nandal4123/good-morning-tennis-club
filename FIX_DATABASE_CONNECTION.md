@@ -70,3 +70,4 @@ DATABASE_URL="postgresql://postgres.tzulmmiudjcoghipoynq:rjgkqeh12dlfdl@aws-1-ap
 - `connection_limit=1` 설정으로 연결 풀 제한 준수
 - 데이터 정상 로드
 
+

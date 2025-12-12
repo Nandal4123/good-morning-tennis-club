@@ -126,3 +126,4 @@ node scripts/test-connection.js
 - 연결 풀이 초기화되면 정상 작동
 - 코드는 이미 최적화되어 있음
 
+

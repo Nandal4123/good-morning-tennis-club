@@ -100,3 +100,4 @@ postgresql://postgres.tzulmmiudjcoghipoynq:rjgkqeh12dlfdl@[SUPABASE_DIRECT_HOST]
 2. Render Environment에서 `DATABASE_URL` 업데이트
 3. 변경 완료 후 알려주시면 API 테스트 진행
 
+

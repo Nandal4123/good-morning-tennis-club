@@ -84,3 +84,4 @@ curl https://tennis-club-server.onrender.com/api/users/1/stats
 
 정상 응답이 오면 성공!
 
+

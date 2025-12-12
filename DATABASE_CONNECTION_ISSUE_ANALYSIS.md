@@ -143,3 +143,4 @@ await prisma.$disconnect();
 - MaxClientsInSessionMode 오류 방지
 - 다만 쿼리는 순차 실행 (약간 느려질 수 있음)
 
+

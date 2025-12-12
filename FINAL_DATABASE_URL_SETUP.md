@@ -66,3 +66,4 @@ postgresql://postgres.tzulmmiudjcoghipoynq:rjgkqeh12dlfdl@aws-1-ap-northeast-2.p
 1. Render Environment에서 위 DATABASE_URL 설정
 2. 변경 완료 후 알려주시면 API 테스트 진행
 
+
