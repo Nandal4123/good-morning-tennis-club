@@ -163,7 +163,17 @@ function Attendance({ currentUser }) {
           </h2>
           {attendanceHistory.length > 0 ? (
             <div className="space-y-1 max-h-[600px] overflow-y-auto">
-              {attendanceHistory.map((attendance) => (
+              {attendanceHistory
+                .filter((attendance) => {
+                  // 게스트 사용자 출석 기록 제외
+                  const user = attendance.user;
+                  return (
+                    user &&
+                    !user.email?.endsWith("@guest.local") &&
+                    !user.name?.startsWith("👤")
+                  );
+                })
+                .map((attendance) => (
                 <AttendanceItem 
                   key={attendance.id} 
                   attendance={attendance}
