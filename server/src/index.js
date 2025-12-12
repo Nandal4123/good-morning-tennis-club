@@ -34,17 +34,14 @@ try {
     console.log("✅ DATABASE_URL already has connection_limit parameter");
   }
 
+  // Prisma Client 생성
+  // connection_limit은 DATABASE_URL의 파라미터로 설정됨
+  // Prisma는 이를 자동으로 인식하여 연결 풀을 제한함
   prisma = new PrismaClient({
     log:
       process.env.NODE_ENV === "development"
-        ? ["query", "error", "warn"]
+        ? ["error", "warn"]
         : ["error"],
-    // 명시적으로 datasources 설정 (추가 안전장치)
-    datasources: {
-      db: {
-        url: optimizedUrl,
-      },
-    },
   });
 
   console.log("✅ Prisma Client initialized successfully");
