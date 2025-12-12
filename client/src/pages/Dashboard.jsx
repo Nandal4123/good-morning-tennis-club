@@ -296,8 +296,11 @@ function Dashboard({ currentUser }) {
         `[Dashboard] Initial load - loading ranking in background for ${currentYear}-${currentMonth}`
       );
       // await 제거: 백그라운드에서 로드하여 개인 통계를 먼저 표시
+      // 에러가 발생해도 UI는 계속 표시되도록 catch 처리
       loadRankingData(currentYear, currentMonth).catch((err) => {
         console.error("[Dashboard] Failed to load ranking in background:", err);
+        // 에러 발생 시 빈 랭킹으로 설정하여 UI가 깨지지 않도록 함
+        setRankings({ winRate: [], wins: [], attendance: [] });
       });
     } catch (error) {
       console.error("Failed to load dashboard:", error);

@@ -30,7 +30,10 @@ try {
     // 환경 변수 업데이트 (Prisma가 사용하도록)
     process.env.DATABASE_URL = optimizedUrl;
     console.log("🔧 DATABASE_URL optimized with connection_limit=1");
-    console.log("🔧 Optimized URL:", optimizedUrl.replace(/:[^:@]+@/, ":****@"));
+    console.log(
+      "🔧 Optimized URL:",
+      optimizedUrl.replace(/:[^:@]+@/, ":****@")
+    );
   } else if (databaseUrl && databaseUrl.includes("connection_limit")) {
     console.log("✅ DATABASE_URL already has connection_limit parameter");
   }
