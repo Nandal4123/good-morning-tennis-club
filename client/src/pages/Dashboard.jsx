@@ -286,6 +286,7 @@ function Dashboard({ currentUser }) {
       const todayStr = getKSTDateString(new Date());
       console.log("Today KST:", todayStr); // 디버깅용
 
+      // 오늘 날짜의 경기 필터링 (게스트 포함)
       const todayOnly = allMatches.filter((m) => {
         const matchStr = getKSTDateString(new Date(m.date));
         console.log("Match date KST:", matchStr, "Original:", m.date); // 디버깅용
@@ -798,24 +799,11 @@ function Dashboard({ currentUser }) {
         {todayMatches.length > 0 ? (
           <div className="space-y-3">
             {todayMatches.map((match) => {
-              // 게스트 사용자 확인 함수
-              const isGuestUser = (user) => {
-                if (!user) return false;
-                return (
-                  user.email?.endsWith("@guest.local") ||
-                  user.name?.startsWith("👤")
-                );
-              };
-
-              // 게스트 제외하고 팀별 필터링
+              // 팀별 필터링 (게스트 포함)
               const teamA =
-                match.participants?.filter(
-                  (p) => p.team === "A" && !isGuestUser(p.user)
-                ) || [];
+                match.participants?.filter((p) => p.team === "A") || [];
               const teamB =
-                match.participants?.filter(
-                  (p) => p.team === "B" && !isGuestUser(p.user)
-                ) || [];
+                match.participants?.filter((p) => p.team === "B") || [];
               const scoreA =
                 teamA.length > 0
                   ? Math.max(...teamA.map((p) => p.score || 0))
