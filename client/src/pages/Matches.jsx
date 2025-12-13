@@ -440,25 +440,22 @@ function Matches({ currentUser }) {
                   <label className="block text-xs text-slate-500 mb-1">
                     {t("matches.score")}
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={newMatch.scoreA === 0 ? "" : newMatch.scoreA}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                  <select
+                    value={newMatch.scoreA}
+                    onChange={(e) =>
                       setNewMatch({
                         ...newMatch,
-                        scoreA: value === "" ? 0 : parseInt(value) || 0,
-                      });
-                    }}
-                    onFocus={(e) => {
-                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
-                      if (newMatch.scoreA === 0) {
-                        e.target.select();
-                      }
-                    }}
+                        scoreA: parseInt(e.target.value),
+                      })
+                    }
                     className="input w-24"
-                  />
+                  >
+                    {[...Array(8)].map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -515,25 +512,22 @@ function Matches({ currentUser }) {
                   <label className="block text-xs text-slate-500 mb-1">
                     {t("matches.score")}
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={newMatch.scoreB === 0 ? "" : newMatch.scoreB}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                  <select
+                    value={newMatch.scoreB}
+                    onChange={(e) =>
                       setNewMatch({
                         ...newMatch,
-                        scoreB: value === "" ? 0 : parseInt(value) || 0,
-                      });
-                    }}
-                    onFocus={(e) => {
-                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
-                      if (newMatch.scoreB === 0) {
-                        e.target.select();
-                      }
-                    }}
+                        scoreB: parseInt(e.target.value),
+                      })
+                    }
                     className="input w-24"
-                  />
+                  >
+                    {[...Array(8)].map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -612,25 +606,22 @@ function Matches({ currentUser }) {
                   <label className="block text-xs text-slate-500 mb-1">
                     {t("matches.score")}
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editMatch.scoreA === 0 ? "" : editMatch.scoreA}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                  <select
+                    value={editMatch.scoreA}
+                    onChange={(e) =>
                       setEditMatch({
                         ...editMatch,
-                        scoreA: value === "" ? 0 : parseInt(value) || 0,
-                      });
-                    }}
-                    onFocus={(e) => {
-                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
-                      if (editMatch.scoreA === 0) {
-                        e.target.select();
-                      }
-                    }}
+                        scoreA: parseInt(e.target.value),
+                      })
+                    }
                     className="input w-24"
-                  />
+                  >
+                    {[...Array(8)].map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -650,25 +641,22 @@ function Matches({ currentUser }) {
                   <label className="block text-xs text-slate-500 mb-1">
                     {t("matches.score")}
                   </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editMatch.scoreB === 0 ? "" : editMatch.scoreB}
-                    onChange={(e) => {
-                      const value = e.target.value;
+                  <select
+                    value={editMatch.scoreB}
+                    onChange={(e) =>
                       setEditMatch({
                         ...editMatch,
-                        scoreB: value === "" ? 0 : parseInt(value) || 0,
-                      });
-                    }}
-                    onFocus={(e) => {
-                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
-                      if (editMatch.scoreB === 0) {
-                        e.target.select();
-                      }
-                    }}
+                        scoreB: parseInt(e.target.value),
+                      })
+                    }
                     className="input w-24"
-                  />
+                  >
+                    {[...Array(8)].map((_, i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
