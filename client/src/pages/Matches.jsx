@@ -443,13 +443,20 @@ function Matches({ currentUser }) {
                   <input
                     type="number"
                     min="0"
-                    value={newMatch.scoreA}
-                    onChange={(e) =>
+                    value={newMatch.scoreA === 0 ? "" : newMatch.scoreA}
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setNewMatch({
                         ...newMatch,
-                        scoreA: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        scoreA: value === "" ? 0 : parseInt(value) || 0,
+                      });
+                    }}
+                    onFocus={(e) => {
+                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
+                      if (newMatch.scoreA === 0) {
+                        e.target.select();
+                      }
+                    }}
                     className="input w-24"
                   />
                 </div>
@@ -511,13 +518,20 @@ function Matches({ currentUser }) {
                   <input
                     type="number"
                     min="0"
-                    value={newMatch.scoreB}
-                    onChange={(e) =>
+                    value={newMatch.scoreB === 0 ? "" : newMatch.scoreB}
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setNewMatch({
                         ...newMatch,
-                        scoreB: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        scoreB: value === "" ? 0 : parseInt(value) || 0,
+                      });
+                    }}
+                    onFocus={(e) => {
+                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
+                      if (newMatch.scoreB === 0) {
+                        e.target.select();
+                      }
+                    }}
                     className="input w-24"
                   />
                 </div>
@@ -601,13 +615,20 @@ function Matches({ currentUser }) {
                   <input
                     type="number"
                     min="0"
-                    value={editMatch.scoreA}
-                    onChange={(e) =>
+                    value={editMatch.scoreA === 0 ? "" : editMatch.scoreA}
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setEditMatch({
                         ...editMatch,
-                        scoreA: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        scoreA: value === "" ? 0 : parseInt(value) || 0,
+                      });
+                    }}
+                    onFocus={(e) => {
+                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
+                      if (editMatch.scoreA === 0) {
+                        e.target.select();
+                      }
+                    }}
                     className="input w-24"
                   />
                 </div>
@@ -632,13 +653,20 @@ function Matches({ currentUser }) {
                   <input
                     type="number"
                     min="0"
-                    value={editMatch.scoreB}
-                    onChange={(e) =>
+                    value={editMatch.scoreB === 0 ? "" : editMatch.scoreB}
+                    onChange={(e) => {
+                      const value = e.target.value;
                       setEditMatch({
                         ...editMatch,
-                        scoreB: parseInt(e.target.value) || 0,
-                      })
-                    }
+                        scoreB: value === "" ? 0 : parseInt(value) || 0,
+                      });
+                    }}
+                    onFocus={(e) => {
+                      // 0일 때 포커스하면 전체 선택하여 쉽게 지울 수 있게 함
+                      if (editMatch.scoreB === 0) {
+                        e.target.select();
+                      }
+                    }}
                     className="input w-24"
                   />
                 </div>
