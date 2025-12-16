@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "db:backup": "node scripts/backup-database.js",
     "db:cleanup-duplicates": "node scripts/cleanup-duplicate-attendances.js",
-    "db:cleanup-guests": "node scripts/cleanup-guest-attendances.js"
+    "db:cleanup-guests": "node scripts/cleanup-guest-attendances.js",
+    "db:prepare-multi-tenant": "node scripts/prepare-multi-tenant-migration.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

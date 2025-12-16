@@ -40,6 +40,21 @@ enum UserRole {
   ADMIN
 }
 
+// 멀티 테넌트 전환을 위한 Club 모델 (현재는 주석 처리, 전환 시 활성화)
+// model Club {
+//   id              String    @id @default(cuid())
+//   name            String
+//   subdomain       String    @unique
+//   createdAt       DateTime  @default(now())
+//   updatedAt       DateTime  @updatedAt
+//   
+//   users           User[]
+//   sessions        Session[]
+//   matches         Match[]
+//   
+//   @@map("clubs")
+// }
+
 model User {
   id              String    @id @default(cuid())
   email           String    @unique
@@ -49,6 +64,8 @@ model User {
   goals           String?
   languagePref    String    @default("en")
   profileMetadata Json?
+  // 멀티 테넌트 전환을 위한 clubId 필드 (현재는 옵셔널, 전환 시 필수로 변경)
+  clubId          String?   // MVP: null, 전환 후: Club ID
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -56,19 +73,30 @@ model User {
   matchParticipants MatchParticipant[]
   feedbacks        Feedback[]
   createdMatches   Match[] @relation("MatchCreator")
+  // 멀티 테넌트 전환 시 활성화
+  // club            Club?     @relation(fields: [clubId], references: [id], onDelete: SetNull)
 
   @@map("users")
+  // 멀티 테넌트 전환 시 unique 제약조건 변경
+  // @@unique([clubId, email])
+  // @@index([clubId])
 }
 
 model Session {
   id          String   @id @default(cuid())
   date        DateTime
   description String?
+  // 멀티 테넌트 전환을 위한 clubId 필드 (현재는 옵셔널, 전환 시 필수로 변경)
+  clubId      String?   // MVP: null, 전환 후: Club ID
   createdAt   DateTime @default(now())
 
   attendances Attendance[]
+  // 멀티 테넌트 전환 시 활성화
+  // club        Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+  // 멀티 테넌트 전환 시 인덱스 추가
+  // @@index([clubId])
 }
 
 model Attendance {
@@ -94,11 +122,17 @@ model Match {
   type      MatchType @default(DOUBLES)
   createdAt DateTime  @default(now())
   createdBy String?   // 등록자 ID
+  // 멀티 테넌트 전환을 위한 clubId 필드 (현재는 옵셔널, 전환 시 필수로 변경)
+  clubId    String?   // MVP: null, 전환 후: Club ID
 
   participants MatchParticipant[]
   creator      User?   @relation("MatchCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  // 멀티 테넌트 전환 시 활성화
+  // club        Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
   @@map("matches")
+  // 멀티 테넌트 전환 시 인덱스 추가
+  // @@index([clubId])
 }
 
 model MatchParticipant {
