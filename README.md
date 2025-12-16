@@ -1,6 +1,18 @@
-# 🎾 Good Morning Club - Tennis Club Attendance System
+# 🎾 Tennis Club Attendance System
 
 테니스 클럽 출석 관리 시스템입니다. 회원 관리, 출석 체크, 경기 기록 등을 관리할 수 있습니다.
+
+## 🚀 다른 클럽에서 사용하기
+
+이 프로젝트를 여러분의 클럽에서도 사용할 수 있습니다!
+
+### 빠른 시작 (5분)
+1. **저장소 사용**: GitHub에서 "Use this template" 버튼 클릭 또는 Fork
+2. **가이드 따라하기**: [`QUICK_START.md`](./QUICK_START.md) 참고
+3. **상세 가이드**: [`SETUP_GUIDE.md`](./SETUP_GUIDE.md) 참고
+
+### 배포 옵션
+다양한 배포 방식을 비교하고 선택하려면 [`DEPLOYMENT_OPTIONS.md`](./DEPLOYMENT_OPTIONS.md)를 확인하세요.
 
 ## ✨ 주요 기능
 
