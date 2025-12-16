@@ -116,3 +116,5 @@ const prisma = createPrismaClient();
 **이제 데이터베이스 연결이 안정적으로 작동합니다!**
 
 
+
+
