@@ -2,11 +2,13 @@ import {
   getKoreanTodayStart,
   getKoreanTomorrowStart,
 } from "../utils/timezone.js";
+import { buildClubWhere, getClubFilter, getClubInfo } from "../utils/clubInfo.js";
 
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
     const users = await req.prisma.user.findMany({
+      where: buildClubWhere(req),
       orderBy: { name: "asc" },
     });
     res.json(users);
@@ -62,6 +64,24 @@ export const createUser = async (req, res) => {
 
     console.log("Creating user with data:", { email, name, role, tennisLevel });
 
+    // 멀티 테넌트: clubId 자동 할당
+    let clubId = getClubFilter(req);
+    if (!clubId) {
+      // MVP 모드: 기본 클럽 ID 사용
+      const clubInfo = getClubInfo(req);
+      const defaultClubId = clubInfo.id;
+      
+      // 기본 클럽이 실제 Club 레코드인지 확인
+      if (defaultClubId && defaultClubId !== 'default-club') {
+        const club = await req.prisma.club.findUnique({
+          where: { id: defaultClubId },
+        });
+        if (club) {
+          clubId = club.id;
+        }
+      }
+    }
+
     const user = await req.prisma.user.create({
       data: {
         email,
@@ -71,6 +91,7 @@ export const createUser = async (req, res) => {
         goals,
         languagePref: languagePref || "ko",
         profileMetadata,
+        clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
       },
     });
 

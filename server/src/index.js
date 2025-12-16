@@ -8,6 +8,7 @@ import sessionRoutes from "./routes/sessionRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
+import { resolveClub } from "./middleware/clubResolver.js";
 
 dotenv.config();
 
@@ -69,6 +70,13 @@ app.use((req, res, next) => {
   req.prisma = prisma;
   next();
 });
+
+// 멀티 테넌트: 클럽 해석 미들웨어
+// Health check는 클럽 해석 없이 접근 가능
+app.use("/api/health", (req, res, next) => next());
+
+// 모든 API에 클럽 해석 미들웨어 적용
+app.use("/api", resolveClub);
 
 // Routes
 app.use("/api/users", userRoutes);
