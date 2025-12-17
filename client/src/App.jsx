@@ -11,7 +11,16 @@ import OwnerDashboard from "./pages/OwnerDashboard";
 import InstallPrompt from "./components/InstallPrompt";
 import LoadingScreen from "./components/LoadingScreen";
 import { clubApi, metricsApi } from "./lib/api";
-import { getOrCreateVisitorId } from "./lib/clubContext";
+import { getOrCreateVisitorId, getClubIdentifier } from "./lib/clubContext";
+
+const humanizeClubIdentifier = (identifier) => {
+  if (!identifier || identifier === "default") return "Good Morning Club";
+  return identifier
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
 
 function AppContent() {
   const location = useLocation();
@@ -64,8 +73,16 @@ function AppContent() {
     const loadClubInfo = async () => {
       try {
         setClubInfoLoading(true);
+        // 탭 제목 플래시 방지: 우선 URL 기반 힌트로 세팅
+        const hint = humanizeClubIdentifier(getClubIdentifier());
+        if (typeof document !== "undefined" && hint) {
+          document.title = hint;
+        }
         const info = await clubApi.getInfo();
         setCurrentClubInfo(info);
+        if (typeof document !== "undefined" && info?.name) {
+          document.title = info.name;
+        }
         console.log("[App] 클럽 정보 로드 완료:", info.name);
       } catch (error) {
         console.error("Failed to load club info:", error);
@@ -76,6 +93,15 @@ function AppContent() {
     };
     loadClubInfo();
   }, [location.search]);
+
+  // 라우트 이동 시에도 탭 제목이 항상 "현재 클럽명"으로 유지되도록 보정
+  useEffect(() => {
+    const name =
+      currentClubInfo?.name || humanizeClubIdentifier(getClubIdentifier());
+    if (typeof document !== "undefined" && name) {
+      document.title = name;
+    }
+  }, [location.pathname, currentClubInfo?.name]);
 
   // URL 파라미터 변경 시 클럽 확인 및 사용자 검증
   useEffect(() => {
