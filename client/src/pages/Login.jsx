@@ -43,6 +43,7 @@ function Login({ onLogin }) {
   const [selectedAdminUser, setSelectedAdminUser] = useState(null);
   const [adminPassword, setAdminPassword] = useState("");
   const [passwordError, setPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState("");
   const [rememberPassword, setRememberPassword] = useState(false);
   const [loginName, setLoginName] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -206,6 +207,7 @@ function Login({ onLogin }) {
     // Owner는 서버에서 비밀번호 검증 후 토큰 발급(클라이언트에 비밀번호 하드코딩 금지)
     if (isOwner) {
       setPasswordError(false);
+      setPasswordErrorMessage("");
       ownerApi
         .login(adminPassword)
         .then((res) => {
@@ -219,8 +221,11 @@ function Login({ onLogin }) {
           setAdminPassword("");
           setLoginName("");
         })
-        .catch(() => {
+        .catch((e) => {
           setPasswordError(true);
+          setPasswordErrorMessage(
+            e?.message || "오너 비밀번호가 올바르지 않습니다."
+          );
         });
       return;
     }
@@ -245,8 +250,10 @@ function Login({ onLogin }) {
         setAdminPassword("");
         setLoginName("");
       })
-      .catch(() => {
+      .catch((e) => {
         setPasswordError(true);
+        // 서버에서 "설정되지 않음(409)" 메시지가 오면 그대로 보여주기
+        setPasswordErrorMessage(e?.message || "비밀번호가 올바르지 않습니다.");
       });
   };
 
@@ -660,6 +667,7 @@ function Login({ onLogin }) {
                   onChange={(e) => {
                     setAdminPassword(e.target.value);
                     setPasswordError(false);
+                    setPasswordErrorMessage("");
                   }}
                   onKeyPress={(e) => e.key === "Enter" && handleAdminLogin()}
                   className={`input ${passwordError ? "border-red-500" : ""}`}
@@ -668,7 +676,7 @@ function Login({ onLogin }) {
                 />
                 {passwordError && (
                   <p className="text-red-400 text-sm mt-2">
-                    {t("login.wrongPassword")}
+                    {passwordErrorMessage || t("login.wrongPassword")}
                   </p>
                 )}
               </div>

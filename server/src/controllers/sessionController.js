@@ -1,5 +1,10 @@
 import { getKoreanTodayRange, getKoreanTodayStart, getKoreanDateString } from '../utils/timezone.js';
-import { buildClubWhere, getClubFilter, getClubInfo } from '../utils/clubInfo.js';
+import {
+  buildClubWhere,
+  getClubFilter,
+  getClubInfo,
+  shouldIncludeNullClubIdForDefault,
+} from '../utils/clubInfo.js';
 
 // Get all sessions
 export const getAllSessions = async (req, res) => {
@@ -25,14 +30,10 @@ export const getSessionById = async (req, res) => {
   try {
     const { id } = req.params;
     const clubId = getClubFilter(req);
-    
-    const where = { id };
-    if (clubId) {
-      where.clubId = clubId;
-    }
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     const session = await req.prisma.session.findUnique({
-      where,
+      where: { id },
       include: {
         attendances: {
           include: { user: true }
@@ -42,6 +43,16 @@ export const getSessionById = async (req, res) => {
     
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // 멀티 테넌트: 클럽 검증 (default 클럽은 clubId NULL도 허용)
+    if (clubId) {
+      const ok =
+        session.clubId === clubId ||
+        (allowNull && (session.clubId === null || session.clubId === undefined));
+      if (!ok) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
     }
     
     res.json(session);
@@ -174,6 +185,7 @@ export const getTodaySession = async (req, res) => {
     const todayStart = getKoreanTodayStart();
     const dateString = getKoreanDateString();
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     console.log(`[KST] Today range: ${today.toISOString()} ~ ${tomorrow.toISOString()}`);
     
@@ -185,7 +197,11 @@ export const getTodaySession = async (req, res) => {
       }
     };
     if (clubId) {
-      where.clubId = clubId;
+      if (allowNull) {
+        where.OR = [{ clubId }, { clubId: null }];
+      } else {
+        where.clubId = clubId;
+      }
     }
     
     let session = await req.prisma.session.findFirst({

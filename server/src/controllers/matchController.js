@@ -2,6 +2,7 @@ import {
   buildClubWhere,
   getClubFilter,
   getClubInfo,
+  shouldIncludeNullClubIdForDefault,
 } from "../utils/clubInfo.js";
 
 // Get all matches
@@ -43,14 +44,10 @@ export const getMatchById = async (req, res) => {
   try {
     const { id } = req.params;
     const clubId = getClubFilter(req);
-
-    const where = { id };
-    if (clubId) {
-      where.clubId = clubId;
-    }
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
 
     const match = await req.prisma.match.findUnique({
-      where,
+      where: { id },
       include: {
         participants: {
           include: { user: true },
@@ -63,6 +60,15 @@ export const getMatchById = async (req, res) => {
 
     if (!match) {
       return res.status(404).json({ error: "Match not found" });
+    }
+
+    if (clubId) {
+      const ok =
+        match.clubId === clubId ||
+        (allowNull && (match.clubId === null || match.clubId === undefined));
+      if (!ok) {
+        return res.status(404).json({ error: "Match not found" });
+      }
     }
 
     res.json(match);
@@ -236,6 +242,7 @@ export const updateMatch = async (req, res) => {
     const { id } = req.params;
     const { date, type } = req.body;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
 
     // 멀티 테넌트: 경기가 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -248,7 +255,11 @@ export const updateMatch = async (req, res) => {
         return res.status(404).json({ error: "Match not found" });
       }
 
-      if (existingMatch.clubId !== clubId) {
+      const ok =
+        existingMatch.clubId === clubId ||
+        (allowNull &&
+          (existingMatch.clubId === null || existingMatch.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: "Access denied" });
       }
     }
@@ -287,6 +298,7 @@ export const deleteMatch = async (req, res) => {
   try {
     const { id } = req.params;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
 
     // 멀티 테넌트: 경기가 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -299,7 +311,11 @@ export const deleteMatch = async (req, res) => {
         return res.status(404).json({ error: "Match not found" });
       }
 
-      if (existingMatch.clubId !== clubId) {
+      const ok =
+        existingMatch.clubId === clubId ||
+        (allowNull &&
+          (existingMatch.clubId === null || existingMatch.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: "Access denied" });
       }
     }
@@ -324,6 +340,7 @@ export const updateScore = async (req, res) => {
     const { id } = req.params;
     const { participantId, score } = req.body;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
 
     // 멀티 테넌트: 경기가 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -340,7 +357,12 @@ export const updateScore = async (req, res) => {
         return res.status(404).json({ error: "Participant not found" });
       }
 
-      if (participant.match.clubId !== clubId) {
+      const ok =
+        participant.match.clubId === clubId ||
+        (allowNull &&
+          (participant.match.clubId === null ||
+            participant.match.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: "Access denied" });
       }
     }
@@ -366,6 +388,7 @@ export const checkDuplicateMatch = async (req, res) => {
   try {
     const { date, playerIds } = req.body;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
 
     if (!playerIds || playerIds.length !== 4) {
       return res.json({ isDuplicate: false, existingMatch: null });
@@ -388,7 +411,11 @@ export const checkDuplicateMatch = async (req, res) => {
       },
     };
     if (clubId) {
-      where.clubId = clubId;
+      if (allowNull) {
+        where.OR = [{ clubId }, { clubId: null }];
+      } else {
+        where.clubId = clubId;
+      }
     }
 
     const recentMatches = await req.prisma.match.findMany({
@@ -438,6 +465,7 @@ export const getMatchesByUser = async (req, res) => {
     const { userId } = req.params;
     const { limit } = req.query;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
 
     // 멀티 테넌트: 사용자가 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -450,7 +478,9 @@ export const getMatchesByUser = async (req, res) => {
         return res.status(404).json({ error: "User not found" });
       }
 
-      if (user.clubId !== clubId) {
+      const ok =
+        user.clubId === clubId || (allowNull && (user.clubId === null || user.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: "Access denied" });
       }
     }
@@ -461,7 +491,11 @@ export const getMatchesByUser = async (req, res) => {
       },
     };
     if (clubId) {
-      where.clubId = clubId;
+      if (allowNull) {
+        where.OR = [{ clubId }, { clubId: null }];
+      } else {
+        where.clubId = clubId;
+      }
     }
 
     const matches = await req.prisma.match.findMany({

@@ -8,8 +8,9 @@ const router = express.Router();
 // body: { password }
 router.post("/login", async (req, res) => {
   try {
-    const inputPassword = (req.body?.password || "").toString();
-    const ownerPassword = process.env.OWNER_PASSWORD || "";
+    // Render UI에서 복사/붙여넣기 시 공백이 섞이는 실수를 방지하기 위해 trim 처리
+    const inputPassword = (req.body?.password || "").toString().trim();
+    const ownerPassword = (process.env.OWNER_PASSWORD || "").toString().trim();
     const secret = process.env.OWNER_TOKEN_SECRET;
 
     if (!ownerPassword) {
@@ -30,7 +31,10 @@ router.post("/login", async (req, res) => {
     const b = Buffer.from(inputPassword);
     const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
     if (!ok) {
-      return res.status(401).json({ error: "Invalid password" });
+      return res.status(401).json({
+        error: "Invalid password",
+        message: "오너 비밀번호가 올바르지 않습니다.",
+      });
     }
 
     const token = signOwnerToken({ sub: "owner" }, secret, 60 * 60 * 12);

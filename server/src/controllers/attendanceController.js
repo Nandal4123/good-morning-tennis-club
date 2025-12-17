@@ -1,11 +1,17 @@
 import { getKoreanTodayRange, getKoreanTodayStart, getKoreanDateString } from '../utils/timezone.js';
-import { buildClubWhere, getClubFilter, getClubInfo } from '../utils/clubInfo.js';
+import {
+  buildClubWhere,
+  getClubFilter,
+  getClubInfo,
+  shouldIncludeNullClubIdForDefault,
+} from '../utils/clubInfo.js';
 
 // Get all attendances
 export const getAllAttendances = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     const where = {};
     if (startDate || endDate) {
@@ -16,7 +22,9 @@ export const getAllAttendances = async (req, res) => {
     
     // 클럽 필터 적용
     if (clubId) {
-      where.user = { clubId };
+      where.user = allowNull
+        ? { OR: [{ clubId }, { clubId: null }] }
+        : { clubId };
     }
     
     const attendances = await req.prisma.attendance.findMany({
@@ -40,6 +48,7 @@ export const getAttendancesBySession = async (req, res) => {
   try {
     const { sessionId } = req.params;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     // 멀티 테넌트: 세션이 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -52,7 +61,10 @@ export const getAttendancesBySession = async (req, res) => {
         return res.status(404).json({ error: 'Session not found' });
       }
 
-      if (session.clubId !== clubId) {
+      const ok =
+        session.clubId === clubId ||
+        (allowNull && (session.clubId === null || session.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
@@ -76,6 +88,7 @@ export const getAttendancesByUser = async (req, res) => {
     const { userId } = req.params;
     const { limit } = req.query;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     // 멀티 테넌트: 사용자가 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -88,7 +101,9 @@ export const getAttendancesByUser = async (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      if (user.clubId !== clubId) {
+      const ok =
+        user.clubId === clubId || (allowNull && (user.clubId === null || user.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
@@ -112,6 +127,7 @@ export const markAttendance = async (req, res) => {
   try {
     const { userId, sessionId, status } = req.body;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     // 멀티 테넌트: 사용자와 세션이 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -130,7 +146,12 @@ export const markAttendance = async (req, res) => {
         return res.status(404).json({ error: 'User or session not found' });
       }
 
-      if (user.clubId !== clubId || session.clubId !== clubId) {
+      const okUser =
+        user.clubId === clubId || (allowNull && (user.clubId === null || user.clubId === undefined));
+      const okSession =
+        session.clubId === clubId ||
+        (allowNull && (session.clubId === null || session.clubId === undefined));
+      if (!okUser || !okSession) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
@@ -161,6 +182,7 @@ export const updateAttendance = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     // 멀티 테넌트: 출석이 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -175,7 +197,10 @@ export const updateAttendance = async (req, res) => {
         return res.status(404).json({ error: 'Attendance not found' });
       }
 
-      if (attendance.user.clubId !== clubId) {
+      const ok =
+        attendance.user.clubId === clubId ||
+        (allowNull && (attendance.user.clubId === null || attendance.user.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
@@ -201,6 +226,7 @@ export const deleteAttendance = async (req, res) => {
   try {
     const { id } = req.params;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     // 멀티 테넌트: 출석이 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -215,7 +241,10 @@ export const deleteAttendance = async (req, res) => {
         return res.status(404).json({ error: 'Attendance not found' });
       }
 
-      if (attendance.user.clubId !== clubId) {
+      const ok =
+        attendance.user.clubId === clubId ||
+        (allowNull && (attendance.user.clubId === null || attendance.user.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
@@ -239,6 +268,7 @@ export const quickCheckIn = async (req, res) => {
   try {
     const { userId } = req.body;
     const clubId = getClubFilter(req);
+    const allowNull = shouldIncludeNullClubIdForDefault(req);
     
     // 멀티 테넌트: 사용자가 해당 클럽에 속하는지 확인
     if (clubId) {
@@ -251,7 +281,9 @@ export const quickCheckIn = async (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      if (user.clubId !== clubId) {
+      const ok =
+        user.clubId === clubId || (allowNull && (user.clubId === null || user.clubId === undefined));
+      if (!ok) {
         return res.status(403).json({ error: 'Access denied' });
       }
     }
@@ -271,7 +303,11 @@ export const quickCheckIn = async (req, res) => {
       }
     };
     if (clubId) {
-      where.clubId = clubId;
+      if (allowNull) {
+        where.OR = [{ clubId }, { clubId: null }];
+      } else {
+        where.clubId = clubId;
+      }
     }
     
     let session = await req.prisma.session.findFirst({
