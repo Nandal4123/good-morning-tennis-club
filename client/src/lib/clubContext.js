@@ -13,11 +13,18 @@ export function getSubdomain() {
     return null;
   }
 
-  const host = window.location.hostname;
+  const host = (window.location.hostname || "").toLowerCase();
   const parts = host.split(".");
 
-  // localhost나 IP 주소가 아닌 경우 서브도메인 추출
-  if (parts.length >= 3 && !parts[0].match(/^\d+$/)) {
+  // localhost / IP는 서브도메인 기반 멀티테넌트가 아님
+  const isIp = host.match(/^\d{1,3}(\.\d{1,3}){3}$/);
+  const isLocalhost = host === "localhost" || host.endsWith(".localhost") || isIp;
+
+  // Render/Vercel 같은 호스팅 도메인의 서브도메인은 "클럽"이 아님
+  const isHostingDomain = host.endsWith(".onrender.com") || host.endsWith(".vercel.app");
+
+  // 커스텀 도메인에서만 서브도메인 추출
+  if (!isLocalhost && !isHostingDomain && parts.length >= 3 && parts[0] && !parts[0].match(/^\d+$/)) {
     return parts[0];
   }
 
@@ -72,8 +79,15 @@ export function getClubIdentifier() {
       return subdomain;
     }
 
-    // 3순위: 마지막으로 선택된 클럽(로컬 개발에서 탭 이동 시 쿼리 유실 대응)
-    if (canUseStorage) {
+    // 3순위: 마지막으로 선택된 클럽
+    // - 로컬 개발(localhost)에서만 허용 (탭 이동/리로드 시 ?club=... 유실 대응)
+    // - 프로덕션/호스팅 도메인에서는 "기본 도메인(굿모닝)이 다른 클럽으로 바뀌는" 문제를 막기 위해 사용하지 않음
+    const host = (typeof window !== "undefined" && window.location?.hostname
+      ? window.location.hostname
+      : "").toLowerCase();
+    const isIp = host.match(/^\d{1,3}(\.\d{1,3}){3}$/);
+    const isLocalhost = host === "localhost" || host.endsWith(".localhost") || isIp;
+    if (canUseStorage && isLocalhost) {
       try {
         const lastClub = window.localStorage.getItem("lastClubIdentifier");
         if (lastClub) {
@@ -86,7 +100,8 @@ export function getClubIdentifier() {
     }
 
     // 4순위: 환경 변수에서 기본값
-    const defaultSubdomain = import.meta.env.VITE_CLUB_SUBDOMAIN || null;
+    // 굿모닝(기본 도메인)은 항상 default를 기본값으로 사용
+    const defaultSubdomain = import.meta.env.VITE_CLUB_SUBDOMAIN || "default";
     console.log("[ClubContext] 클럽 식별자 (환경 변수):", defaultSubdomain);
     return defaultSubdomain;
   }
