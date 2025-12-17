@@ -89,11 +89,24 @@ export default async function handler(req, res) {
     "출석(경기 등록 시 자동 기록), 경기 결과/상대전적/월별 랭킹을 간편하게 확인하세요.";
 
   // 기본 OG 이미지: 클럽별 설정이 있으면 우선 사용
-  // - 설정이 없으면 /og/<subdomain>.svg 가 있으면 자동 사용
+  // - 설정이 없으면 /og/<subdomain>.(png|jpg|jpeg|webp|svg) 를 자동 탐색
   // - 없으면 공용 PNG로 폴백
-  const candidateSvg = `${origin}/og/${encodeURIComponent(club)}.svg`;
-  const candidateSvgExists = await urlExists(candidateSvg);
-  const fallbackImage = candidateSvgExists ? candidateSvg : `${origin}/og-image.png`;
+  const base = `${origin}/og/${encodeURIComponent(club)}`;
+  const candidates = [
+    `${base}.png`,
+    `${base}.jpg`,
+    `${base}.jpeg`,
+    `${base}.webp`,
+    `${base}.svg`,
+  ];
+  let fallbackImage = `${origin}/og-image.png`;
+  for (const c of candidates) {
+    // eslint-disable-next-line no-await-in-loop
+    if (await urlExists(c)) {
+      fallbackImage = c;
+      break;
+    }
+  }
 
   const ogImage = normalizeImageUrl({
     origin,

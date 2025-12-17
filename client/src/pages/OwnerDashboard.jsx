@@ -207,6 +207,10 @@ function OwnerDashboard({ currentUser }) {
     navigate({ pathname: "/", search }, { replace: false });
   };
 
+  const recommendedShareImageUrl = selected
+    ? `/og/${selected.subdomain}.svg`
+    : "";
+
   if (!isOwner) {
     return (
       <div className="max-w-3xl mx-auto">
@@ -514,6 +518,21 @@ function OwnerDashboard({ currentUser }) {
                     value={shareImageUrl}
                     onChange={(e) => setShareImageUrl(e.target.value)}
                   />
+                  <div className="flex items-center justify-between gap-3 text-slate-500 text-xs">
+                    <div className="truncate">
+                      추천 경로:{" "}
+                      <span className="font-mono">{recommendedShareImageUrl}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-secondary px-3 py-2 shrink-0"
+                      onClick={() => setShareImageUrl(recommendedShareImageUrl)}
+                      disabled={!recommendedShareImageUrl}
+                      title="추천 경로로 자동 입력"
+                    >
+                      추천값 적용
+                    </button>
+                  </div>
                   <button
                     className="btn-secondary w-full"
                     onClick={handleSaveBranding}

@@ -134,7 +134,8 @@ function AppContent() {
 
   // 라우트 이동 시에도 탭 제목이 항상 "현재 클럽명"으로 유지되도록 보정
   useEffect(() => {
-    const name = currentClubInfo?.name || humanizeClubIdentifier(getClubIdentifier());
+    const name =
+      currentClubInfo?.name || humanizeClubIdentifier(getClubIdentifier());
     const page = getPageLabel({
       pathname: location.pathname,
       hasUser: !!currentUser,
@@ -144,7 +145,13 @@ function AppContent() {
     if (typeof document !== "undefined" && name) {
       document.title = page ? `${name} · ${page}` : name;
     }
-  }, [location.pathname, currentClubInfo?.name, currentUser?.isOwner, currentUser?.id, t]);
+  }, [
+    location.pathname,
+    currentClubInfo?.name,
+    currentUser?.isOwner,
+    currentUser?.id,
+    t,
+  ]);
 
   // URL 파라미터 변경 시 클럽 확인 및 사용자 검증
   useEffect(() => {
