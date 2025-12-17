@@ -44,11 +44,30 @@ function normalizeImageUrl({ origin, value, fallback }) {
   return `${origin}/${v}`;
 }
 
+async function urlExists(url) {
+  try {
+    // 정적 파일은 HEAD로 빠르게 확인 (일부 CDN에서 HEAD가 막히면 GET로 폴백)
+    let r = await fetch(url, { method: "HEAD" });
+    if (r.ok) return true;
+    r = await fetch(url, { method: "GET" });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(req, res) {
   const club = (req.query?.club || "default").toString().trim() || "default";
   const pathname = (req.query?.path || "/").toString().trim() || "/";
+  const v = (req.query?.v || "").toString().trim(); // 카톡 캐시 무력화용(선택)
 
   const origin = `https://${req.headers.host}`;
+  const shareUrl =
+    club && club !== "default"
+      ? `${origin}/share?club=${encodeURIComponent(club)}${
+          pathname && pathname !== "/" ? `&path=${encodeURIComponent(pathname)}` : ""
+        }${v ? `&v=${encodeURIComponent(v)}` : ""}`
+      : `${origin}/share${v ? `?v=${encodeURIComponent(v)}` : ""}`;
   const targetUrl =
     club && club !== "default"
       ? `${origin}${pathname}?club=${encodeURIComponent(club)}`
@@ -70,13 +89,11 @@ export default async function handler(req, res) {
     "출석(경기 등록 시 자동 기록), 경기 결과/상대전적/월별 랭킹을 간편하게 확인하세요.";
 
   // 기본 OG 이미지: 클럽별 설정이 있으면 우선 사용
-  // - 설정이 없으면 default/ace는 SVG 샘플, 그 외는 공용 PNG
-  const fallbackImage =
-    club === "default"
-      ? `${origin}/og/default.svg`
-      : club === "ace-club"
-      ? `${origin}/og/ace-club.svg`
-      : `${origin}/og-image.png`;
+  // - 설정이 없으면 /og/<subdomain>.svg 가 있으면 자동 사용
+  // - 없으면 공용 PNG로 폴백
+  const candidateSvg = `${origin}/og/${encodeURIComponent(club)}.svg`;
+  const candidateSvgExists = await urlExists(candidateSvg);
+  const fallbackImage = candidateSvgExists ? candidateSvg : `${origin}/og-image.png`;
 
   const ogImage = normalizeImageUrl({
     origin,
@@ -85,8 +102,8 @@ export default async function handler(req, res) {
   });
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  // 메신저 캐시가 너무 오래 남지 않도록 짧게
-  res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300");
+  // 메신저/브라우저 캐시가 오래 남지 않도록 최소화 (카톡 자체 캐시는 URL을 바꾸는 게 가장 확실)
+  res.setHeader("Cache-Control", "no-store, max-age=0");
 
   res.status(200).send(`<!doctype html>
 <html lang="ko">
@@ -100,7 +117,9 @@ export default async function handler(req, res) {
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${escapeHtml(ogImage)}" />
-    <meta property="og:url" content="${escapeHtml(targetUrl)}" />
+    <!-- og:url은 공유 URL로 고정: 카톡 캐시/미리보기 일관성을 위해 -->
+    <meta property="og:url" content="${escapeHtml(shareUrl)}" />
+    <link rel="canonical" href="${escapeHtml(shareUrl)}" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
