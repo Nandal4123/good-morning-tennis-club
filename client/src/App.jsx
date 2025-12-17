@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
@@ -22,8 +23,32 @@ const humanizeClubIdentifier = (identifier) => {
     .join(" ");
 };
 
+const getPageLabel = ({ pathname, hasUser, isOwner, t }) => {
+  // 로그인 전
+  if (!hasUser) return "로그인";
+
+  // Owner 전용
+  if (isOwner && pathname === "/owner") return "Owner";
+
+  switch (pathname) {
+    case "/":
+      return t("nav.dashboard");
+    case "/attendance":
+      return t("nav.attendance");
+    case "/members":
+      return t("nav.members");
+    case "/matches":
+      return t("nav.matches");
+    case "/profile":
+      return t("nav.profile");
+    default:
+      return "";
+  }
+};
+
 function AppContent() {
   const location = useLocation();
+  const { t } = useTranslation();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentClubInfo, setCurrentClubInfo] = useState(null);
@@ -76,12 +101,24 @@ function AppContent() {
         // 탭 제목 플래시 방지: 우선 URL 기반 힌트로 세팅
         const hint = humanizeClubIdentifier(getClubIdentifier());
         if (typeof document !== "undefined" && hint) {
-          document.title = hint;
+          const page = getPageLabel({
+            pathname: location.pathname,
+            hasUser: !!currentUser,
+            isOwner: !!currentUser?.isOwner,
+            t,
+          });
+          document.title = page ? `${hint} · ${page}` : hint;
         }
         const info = await clubApi.getInfo();
         setCurrentClubInfo(info);
         if (typeof document !== "undefined" && info?.name) {
-          document.title = info.name;
+          const page = getPageLabel({
+            pathname: location.pathname,
+            hasUser: !!currentUser,
+            isOwner: !!currentUser?.isOwner,
+            t,
+          });
+          document.title = page ? `${info.name} · ${page}` : info.name;
         }
         console.log("[App] 클럽 정보 로드 완료:", info.name);
       } catch (error) {
@@ -92,16 +129,22 @@ function AppContent() {
       }
     };
     loadClubInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
   // 라우트 이동 시에도 탭 제목이 항상 "현재 클럽명"으로 유지되도록 보정
   useEffect(() => {
-    const name =
-      currentClubInfo?.name || humanizeClubIdentifier(getClubIdentifier());
+    const name = currentClubInfo?.name || humanizeClubIdentifier(getClubIdentifier());
+    const page = getPageLabel({
+      pathname: location.pathname,
+      hasUser: !!currentUser,
+      isOwner: !!currentUser?.isOwner,
+      t,
+    });
     if (typeof document !== "undefined" && name) {
-      document.title = name;
+      document.title = page ? `${name} · ${page}` : name;
     }
-  }, [location.pathname, currentClubInfo?.name]);
+  }, [location.pathname, currentClubInfo?.name, currentUser?.isOwner, currentUser?.id, t]);
 
   // URL 파라미터 변경 시 클럽 확인 및 사용자 검증
   useEffect(() => {
