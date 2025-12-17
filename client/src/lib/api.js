@@ -1,3 +1,11 @@
+// 클럽 컨텍스트 유틸리티 import
+import {
+  getClubHeaders,
+  addClubQueryParam,
+  isMultiTenantMode,
+  getClubIdentifier,
+} from "./clubContext.js";
+
 // API Base URL 설정
 // 로컬 개발: 항상 http://localhost:5001/api 사용
 // 프로덕션: 환경 변수 또는 기본 배포 서버 URL 사용
@@ -35,16 +43,56 @@ const API_BASE = (() => {
 
 // Helper function for API calls
 async function fetchApi(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
+  // 멀티 테넌트 모드일 때 클럽 쿼리 파라미터 추가
+  const clubIdentifier = getClubIdentifier();
+  const endpointWithClub = addClubQueryParam(endpoint);
+  const url = `${API_BASE}${endpointWithClub}`;
+
+  // 멀티 테넌트 모드일 때 클럽 헤더 추가
+  const clubHeaders = getClubHeaders();
+
   console.log(
     `[API] 📞 Calling: ${url}`,
-    options.method ? `(${options.method})` : ""
+    options.method ? `(${options.method})` : "",
+    isMultiTenantMode() ? "[멀티 테넌트 모드]" : "[MVP 모드]",
+    clubIdentifier ? `[클럽: ${clubIdentifier}]` : "[클럽: 없음]"
   );
+
+  // 디버깅: 실제 URL에 클럽 파라미터가 포함되었는지 확인
+  if (isMultiTenantMode() && clubIdentifier) {
+    const urlHasClub =
+      url.includes(`club=${encodeURIComponent(clubIdentifier)}`) ||
+      url.includes(`club=${clubIdentifier}`);
+    if (!urlHasClub && !clubHeaders["X-Club-Subdomain"]) {
+      console.warn("[API] ⚠️ 클럽 파라미터가 URL에 포함되지 않았습니다!");
+      console.warn("[API]   endpoint:", endpoint);
+      console.warn("[API]   endpointWithClub:", endpointWithClub);
+      console.warn("[API]   clubIdentifier:", clubIdentifier);
+    }
+  }
+
+  // Owner 운영 기능 보호용 토큰 (브라우저 localStorage에만 저장)
+  // NOTE: 일반 사용자 API에는 필요 없고, /owner /clubs 같은 운영 API에만 사용
+  let ownerToken = null;
+  try {
+    if (typeof window !== "undefined") {
+      ownerToken = window.localStorage.getItem("ownerToken");
+    }
+  } catch {
+    ownerToken = null;
+  }
+
+  const shouldAttachOwnerToken =
+    endpoint.startsWith("/clubs") || endpoint.startsWith("/owner");
 
   try {
     const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
+        ...clubHeaders, // 클럽 헤더 추가
+        ...(shouldAttachOwnerToken && ownerToken
+          ? { "X-Owner-Token": ownerToken }
+          : {}),
         ...options.headers,
       },
       ...options,
@@ -55,8 +103,8 @@ async function fetchApi(endpoint, options = {}) {
       try {
         const error = await response.json();
         errorMessage =
-          error.error ||
           error.message ||
+          error.error ||
           `HTTP ${response.status}: ${response.statusText}`;
       } catch (e) {
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -197,3 +245,57 @@ export const feedbackApi = {
 
 // Health check
 export const healthCheck = () => fetchApi("/health");
+
+// Club API
+export const clubApi = {
+  getInfo: () => fetchApi("/club/info"),
+};
+
+// Clubs API (Owner 대시보드용)
+export const clubsApi = {
+  list: (q = "") => {
+    const params = new URLSearchParams();
+    if (q) params.append("q", q);
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return fetchApi(`/clubs${queryString}`);
+  },
+  getSummary: (subdomain) =>
+    fetchApi(`/clubs/${encodeURIComponent(subdomain)}/summary`),
+  create: ({ name, subdomain }) =>
+    fetchApi("/clubs", {
+      method: "POST",
+      body: JSON.stringify({ name, subdomain }),
+    }),
+  setCredentials: (subdomain, { joinCode, adminPassword }) =>
+    fetchApi(`/clubs/${encodeURIComponent(subdomain)}/credentials`, {
+      method: "PUT",
+      body: JSON.stringify({ joinCode, adminPassword }),
+    }),
+};
+
+// Owner API (운영자 1인 운영: 서버에서 비밀번호 검증 후 토큰 발급)
+export const ownerApi = {
+  login: (password) =>
+    fetchApi("/owner/login", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
+};
+
+// Auth API (클럽별 관리자 비밀번호 검증 등)
+export const authApi = {
+  verifyAdminPassword: (password) =>
+    fetchApi("/auth/admin/verify", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
+};
+
+// Metrics API (오늘 접속자 수 집계용)
+export const metricsApi = {
+  trackVisit: ({ visitorId, userId }) =>
+    fetchApi("/metrics/visit", {
+      method: "POST",
+      body: JSON.stringify({ visitorId, userId }),
+    }),
+};

@@ -1,9 +1,16 @@
+import {
+  buildClubWhere,
+  getClubFilter,
+  getClubInfo,
+} from "../utils/clubInfo.js";
+
 // Get all matches
 export const getAllMatches = async (req, res) => {
   try {
     const { type, startDate, endDate } = req.query;
+    const clubId = getClubFilter(req);
 
-    const where = {};
+    const where = buildClubWhere(req);
     if (type) where.type = type;
     if (startDate || endDate) {
       where.date = {};
@@ -35,9 +42,15 @@ export const getAllMatches = async (req, res) => {
 export const getMatchById = async (req, res) => {
   try {
     const { id } = req.params;
+    const clubId = getClubFilter(req);
+
+    const where = { id };
+    if (clubId) {
+      where.clubId = clubId;
+    }
 
     const match = await req.prisma.match.findUnique({
-      where: { id },
+      where,
       include: {
         participants: {
           include: { user: true },
@@ -64,6 +77,24 @@ export const createMatch = async (req, res) => {
   try {
     const { date, type, participants, createdBy } = req.body;
 
+    // 멀티 테넌트: clubId 자동 할당
+    let clubId = getClubFilter(req);
+    if (!clubId) {
+      // MVP 모드: 기본 클럽 ID 사용
+      const clubInfo = getClubInfo(req);
+      const defaultClubId = clubInfo.id;
+
+      // 기본 클럽이 실제 Club 레코드인지 확인
+      if (defaultClubId && defaultClubId !== "default-club") {
+        const club = await req.prisma.club.findUnique({
+          where: { id: defaultClubId },
+        });
+        if (club) {
+          clubId = club.id;
+        }
+      }
+    }
+
     // KST 정오(12:00)로 설정하여 시간대 문제 방지
     // "2025-12-02" → 2025-12-02T12:00:00+09:00 (KST) → 2025-12-02T03:00:00.000Z (UTC)
     const kstDate = new Date(date + "T12:00:00+09:00");
@@ -74,6 +105,7 @@ export const createMatch = async (req, res) => {
         date: kstDate,
         type: type || "DOUBLES",
         createdBy: createdBy || null, // 등록자 ID 저장
+        clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
         participants: {
           create: participants.map((p) => ({
             userId: p.userId,
@@ -99,14 +131,19 @@ export const createMatch = async (req, res) => {
     const nextDayStart = new Date(dayStart);
     nextDayStart.setDate(nextDayStart.getDate() + 1);
 
-    // 해당 날짜의 세션 찾기 (하루 범위 내)
-    let session = await req.prisma.session.findFirst({
-      where: {
-        date: {
-          gte: dayStart,
-          lt: nextDayStart, // 다음 날 시작 전까지
-        },
+    // 해당 날짜의 세션 찾기 (하루 범위 내, 클럽 필터 적용)
+    const sessionWhere = {
+      date: {
+        gte: dayStart,
+        lt: nextDayStart, // 다음 날 시작 전까지
       },
+    };
+    if (clubId) {
+      sessionWhere.clubId = clubId;
+    }
+
+    let session = await req.prisma.session.findFirst({
+      where: sessionWhere,
       orderBy: { date: "asc" }, // 가장 이른 세션 사용
     });
 
@@ -116,6 +153,7 @@ export const createMatch = async (req, res) => {
         data: {
           date: kstDate,
           description: `Morning Session - ${date}`,
+          clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
         },
       });
       console.log(`[Auto Attendance] Created new session for ${date}`);
@@ -143,15 +181,20 @@ export const createMatch = async (req, res) => {
         continue;
       }
 
-      // 🔒 중복 방지: 해당 날짜에 이미 출석이 있는지 확인
-      const existingAttendance = await req.prisma.attendance.findFirst({
-        where: {
-          userId,
-          date: {
-            gte: dayStart,
-            lt: nextDayStart, // 다음 날 시작 전까지
-          },
+      // 🔒 중복 방지: 해당 날짜에 이미 출석이 있는지 확인 (클럽 필터 적용)
+      const attendanceWhere = {
+        userId,
+        date: {
+          gte: dayStart,
+          lt: nextDayStart, // 다음 날 시작 전까지
         },
+      };
+      if (clubId) {
+        attendanceWhere.user = { clubId };
+      }
+
+      const existingAttendance = await req.prisma.attendance.findFirst({
+        where: attendanceWhere,
       });
 
       // 이미 해당 날짜에 출석이 있으면 스킵 (하루에 한 번만 출석 가능)
@@ -192,6 +235,23 @@ export const updateMatch = async (req, res) => {
   try {
     const { id } = req.params;
     const { date, type } = req.body;
+    const clubId = getClubFilter(req);
+
+    // 멀티 테넌트: 경기가 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const existingMatch = await req.prisma.match.findUnique({
+        where: { id },
+        select: { clubId: true },
+      });
+
+      if (!existingMatch) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+
+      if (existingMatch.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
 
     // KST 정오(12:00)로 설정하여 시간대 문제 방지
     const kstDate = date ? new Date(date + "T12:00:00+09:00") : undefined;
@@ -226,6 +286,23 @@ export const updateMatch = async (req, res) => {
 export const deleteMatch = async (req, res) => {
   try {
     const { id } = req.params;
+    const clubId = getClubFilter(req);
+
+    // 멀티 테넌트: 경기가 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const existingMatch = await req.prisma.match.findUnique({
+        where: { id },
+        select: { clubId: true },
+      });
+
+      if (!existingMatch) {
+        return res.status(404).json({ error: "Match not found" });
+      }
+
+      if (existingMatch.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
 
     await req.prisma.match.delete({
       where: { id },
@@ -246,14 +323,35 @@ export const updateScore = async (req, res) => {
   try {
     const { id } = req.params;
     const { participantId, score } = req.body;
+    const clubId = getClubFilter(req);
 
-    const participant = await req.prisma.matchParticipant.update({
+    // 멀티 테넌트: 경기가 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const participant = await req.prisma.matchParticipant.findUnique({
+        where: { id: participantId },
+        include: {
+          match: {
+            select: { clubId: true },
+          },
+        },
+      });
+
+      if (!participant) {
+        return res.status(404).json({ error: "Participant not found" });
+      }
+
+      if (participant.match.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
+    const updatedParticipant = await req.prisma.matchParticipant.update({
       where: { id: participantId },
       data: { score },
       include: { user: true, match: true },
     });
 
-    res.json(participant);
+    res.json(updatedParticipant);
   } catch (error) {
     console.error("Error updating score:", error);
     if (error.code === "P2025") {
@@ -267,6 +365,7 @@ export const updateScore = async (req, res) => {
 export const checkDuplicateMatch = async (req, res) => {
   try {
     const { date, playerIds } = req.body;
+    const clubId = getClubFilter(req);
 
     if (!playerIds || playerIds.length !== 4) {
       return res.json({ isDuplicate: false, existingMatch: null });
@@ -281,14 +380,19 @@ export const checkDuplicateMatch = async (req, res) => {
     const startTime = new Date(matchDate.getTime() - 30 * 60 * 1000);
     const endTime = new Date(matchDate.getTime() + 30 * 60 * 1000);
 
-    // Find matches within the time range
-    const recentMatches = await req.prisma.match.findMany({
-      where: {
-        date: {
-          gte: startTime,
-          lte: endTime,
-        },
+    // Find matches within the time range (클럽 필터 적용)
+    const where = {
+      date: {
+        gte: startTime,
+        lte: endTime,
       },
+    };
+    if (clubId) {
+      where.clubId = clubId;
+    }
+
+    const recentMatches = await req.prisma.match.findMany({
+      where,
       include: {
         participants: {
           include: { user: true },
@@ -333,13 +437,35 @@ export const getMatchesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const { limit } = req.query;
+    const clubId = getClubFilter(req);
+
+    // 멀티 테넌트: 사용자가 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const user = await req.prisma.user.findUnique({
+        where: { id: userId },
+        select: { clubId: true },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
+    const where = {
+      participants: {
+        some: { userId },
+      },
+    };
+    if (clubId) {
+      where.clubId = clubId;
+    }
 
     const matches = await req.prisma.match.findMany({
-      where: {
-        participants: {
-          some: { userId },
-        },
-      },
+      where,
       include: {
         participants: {
           include: { user: true },

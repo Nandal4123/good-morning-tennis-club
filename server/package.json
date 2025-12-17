@@ -12,6 +12,13 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:backup": "node scripts/backup-database.js",
+    "db:snapshot": "node scripts/create-snapshot.js",
+    "db:restore-snapshot": "node scripts/restore-snapshot.js",
+    "snapshot:list": "node scripts/list-snapshots.js",
+    "snapshot:verify": "node scripts/verify-snapshot.js",
+    "snapshot:bundle": "node scripts/bundle-snapshot.js",
+    "code:restore-snapshot": "node scripts/restore-code-snapshot.js",
+    "db:seed-credentials": "node scripts/seed-club-credentials.js",
     "db:cleanup-duplicates": "node scripts/cleanup-duplicate-attendances.js",
     "db:cleanup-guests": "node scripts/cleanup-guest-attendances.js",
     "db:prepare-multi-tenant": "node scripts/prepare-multi-tenant-migration.js"

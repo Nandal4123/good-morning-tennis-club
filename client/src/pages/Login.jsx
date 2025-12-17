@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import {
   Shield,
   User,
@@ -10,19 +11,13 @@ import {
   HelpCircle,
   Search,
 } from "lucide-react";
-import { userApi } from "../lib/api";
+import { userApi, clubApi, ownerApi, authApi } from "../lib/api";
 
 // OWNER 이메일 (절대 권한자)
 const OWNER_EMAIL = "nandal4123@gmail.com";
 
-// 소유자 암호 (OWNER 전용)
-const OWNER_PASSWORD = "admin2347";
-
-// 관리자 암호 (일반 관리자용)
-const ADMIN_PASSWORD = "admin0405";
-
-// 회원가입 승인 코드
-const JOIN_CODE = "good morning 0405";
+// 기본값 (클럽 정보를 가져오지 못한 경우)
+// (과거 하드코딩 방식 제거: 이제 서버/DB에서 검증)
 
 // NTRP 등급 목록
 const NTRP_LEVELS = [
@@ -37,6 +32,7 @@ const NTRP_LEVELS = [
 
 function Login({ onLogin }) {
   const { t } = useTranslation();
+  const location = useLocation();
   const [users, setUsers] = useState([]);
   const [activeTab, setActiveTab] = useState("login");
   const [loading, setLoading] = useState(true);
@@ -50,6 +46,7 @@ function Login({ onLogin }) {
   const [rememberPassword, setRememberPassword] = useState(false);
   const [loginName, setLoginName] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [clubInfo, setClubInfo] = useState(null);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
@@ -58,15 +55,94 @@ function Login({ onLogin }) {
     joinCode: "",
   });
   const [joinCodeError, setJoinCodeError] = useState(false);
+  // Owner 진입 UI는 URL로만 노출: ?owner=1
+  const [showOwnerEntry, setShowOwnerEntry] = useState(false);
 
+  // 초기 로드: 클럽 정보 먼저 로드
   useEffect(() => {
-    loadUsers();
-  }, []);
+    loadClubInfo();
+  }, [location.search]);
+
+  // owner 진입 노출 조건: 쿼리스트링 (?owner=1) 일 때만
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ownerParam = params.get("owner");
+      setShowOwnerEntry(ownerParam === "1");
+    } catch {
+      setShowOwnerEntry(false);
+    }
+  }, [location.search]);
+
+  // 클럽 정보가 로드되면 사용자 목록 로드
+  useEffect(() => {
+    if (clubInfo) {
+      console.log(
+        "[Login] 클럽 정보 확인됨, 사용자 목록 로드 시작:",
+        clubInfo.name
+      );
+      loadUsers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubInfo]);
+
+  const loadClubInfo = async () => {
+    try {
+      const info = await clubApi.getInfo();
+      setClubInfo(info);
+      console.log("[Login] 클럽 정보 로드 완료:", info.name, info.subdomain);
+    } catch (error) {
+      console.error("Failed to load club info:", error);
+      // 기본값 설정
+      setClubInfo({
+        name: "Good Morning Club",
+        subdomain: "default",
+      });
+    }
+  };
 
   const loadUsers = async () => {
     try {
       setLoading(true);
+
+      console.log("[Login] 사용자 목록 로드 시작");
+      console.log(
+        "[Login] 현재 클럽 정보:",
+        clubInfo?.name || "없음",
+        clubInfo?.subdomain || "없음"
+      );
+
+      // URL에서 직접 클럽 파라미터 확인 (디버깅용)
+      const urlParams = new URLSearchParams(window.location.search);
+      const clubParam = urlParams.get("club");
+      console.log("[Login] URL 파라미터에서 클럽:", clubParam || "없음");
+
       const data = await userApi.getAll();
+      console.log("[Login] 사용자 목록 로드 완료:", data.length, "명");
+      console.log(
+        "[Login] 사용자 목록:",
+        data.map((u) => `${u.name} (clubId: ${u.clubId || "없음"})`)
+      );
+
+      // 클럽 정보와 사용자 목록 일치 확인
+      if (clubInfo && data.length > 0) {
+        const usersInCurrentClub = data.filter((u) => u.clubId === clubInfo.id);
+        console.log(
+          "[Login] 현재 클럽 사용자:",
+          usersInCurrentClub.length,
+          "명"
+        );
+        if (usersInCurrentClub.length === 0 && data.length > 0) {
+          console.warn(
+            "[Login] ⚠️ 경고: 다른 클럽의 사용자가 로드되었을 수 있습니다!"
+          );
+          console.warn("[Login]   현재 클럽 ID:", clubInfo.id);
+          console.warn("[Login]   로드된 사용자들의 clubId:", [
+            ...new Set(data.map((u) => u.clubId)),
+          ]);
+        }
+      }
+
       setUsers(data);
       if (data.length === 0) {
         setActiveTab("register");
@@ -112,6 +188,7 @@ function Login({ onLogin }) {
         }
         setPasswordError(false);
       } else {
+        // 일반 사용자 로그인 시 클럽 정보와 함께 전달
         onLogin(foundUser);
       }
     } catch (error) {
@@ -125,44 +202,69 @@ function Login({ onLogin }) {
   const handleAdminLogin = () => {
     // OWNER와 일반 ADMIN의 비밀번호 구분
     const isOwner = selectedAdminUser?.email === OWNER_EMAIL;
-    const correctPassword = isOwner ? OWNER_PASSWORD : ADMIN_PASSWORD;
 
-    if (adminPassword === correctPassword) {
-      // 비밀번호 저장/삭제
-      if (rememberPassword) {
-        localStorage.setItem(`adminPw_${selectedAdminUser.id}`, adminPassword);
-      } else {
-        localStorage.removeItem(`adminPw_${selectedAdminUser.id}`);
-      }
-
-      onLogin(selectedAdminUser);
-      setShowAdminModal(false);
-      setSelectedAdminUser(null);
-      setAdminPassword("");
-      setLoginName("");
-    } else {
-      setPasswordError(true);
+    // Owner는 서버에서 비밀번호 검증 후 토큰 발급(클라이언트에 비밀번호 하드코딩 금지)
+    if (isOwner) {
+      setPasswordError(false);
+      ownerApi
+        .login(adminPassword)
+        .then((res) => {
+          // 토큰 저장 (Owner 운영 API 호출용)
+          if (res?.token) {
+            localStorage.setItem("ownerToken", res.token);
+          }
+          onLogin({ ...selectedAdminUser, isOwner: true });
+          setShowAdminModal(false);
+          setSelectedAdminUser(null);
+          setAdminPassword("");
+          setLoginName("");
+        })
+        .catch(() => {
+          setPasswordError(true);
+        });
+      return;
     }
+
+    // 클럽 관리자 비밀번호는 서버에서 검증 (클럽별 adminPasswordHash)
+    authApi
+      .verifyAdminPassword(adminPassword)
+      .then(() => {
+        // 비밀번호 저장/삭제 (로컬 편의 기능)
+        if (rememberPassword) {
+          localStorage.setItem(
+            `adminPw_${selectedAdminUser.id}`,
+            adminPassword
+          );
+        } else {
+          localStorage.removeItem(`adminPw_${selectedAdminUser.id}`);
+        }
+
+        onLogin(selectedAdminUser);
+        setShowAdminModal(false);
+        setSelectedAdminUser(null);
+        setAdminPassword("");
+        setLoginName("");
+      })
+      .catch(() => {
+        setPasswordError(true);
+      });
   };
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setJoinCodeError(false);
 
-    // 승인 코드 검증
-    if (newUser.joinCode.toLowerCase().trim() !== JOIN_CODE.toLowerCase()) {
-      setJoinCodeError(true);
-      return;
-    }
-
     try {
       setCreating(true);
-      // joinCode는 서버로 전송하지 않음
-      const { joinCode, ...userData } = newUser;
-      const user = await userApi.create(userData);
+      // joinCode는 서버에서 검증(클럽별 joinCodeHash)
+      const user = await userApi.create(newUser);
       onLogin(user);
     } catch (error) {
       console.error("Failed to create user:", error);
+      if ((error.message || "").toLowerCase().includes("join code")) {
+        setJoinCodeError(true);
+        return;
+      }
       alert(error.message);
     } finally {
       setCreating(false);
@@ -183,7 +285,7 @@ function Login({ onLogin }) {
             <span className="text-4xl">🎾</span>
           </div>
           <h1 className="text-3xl font-bold text-white font-display">
-            {t("app.title")}
+            {clubInfo?.name || t("app.title")}
           </h1>
           <p className="text-slate-400 mt-2">{t("login.subtitle")}</p>
         </div>
@@ -327,6 +429,11 @@ function Login({ onLogin }) {
                 <div>
                   <label className="block text-sm font-medium text-slate-400 mb-2">
                     🔐 가입 승인 코드
+                    {clubInfo && (
+                      <span className="text-xs text-slate-500 ml-2">
+                        ({clubInfo.name})
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -422,6 +529,35 @@ function Login({ onLogin }) {
                   </button>
                 </p>
               </form>
+
+              {/* Owner 로그인 (URL로만 노출: ?owner=1) */}
+              {showOwnerEntry && (
+                <div className="mt-6 pt-6 border-t border-slate-700/40">
+                  <div className="text-xs text-slate-500 mb-2">
+                    운영자이신가요?
+                  </div>
+                  <button
+                    type="button"
+                    className="btn-secondary w-full flex items-center justify-center gap-2"
+                    onClick={() => {
+                      // 선택된 admin 유저가 없어도 Owner 로그인이 가능하도록 가짜 유저를 설정
+                      setSelectedAdminUser({
+                        id: "owner",
+                        name: "Owner",
+                        email: OWNER_EMAIL,
+                        role: "ADMIN",
+                      });
+                      setShowAdminModal(true);
+                      setAdminPassword("");
+                      setPasswordError(false);
+                      setRememberPassword(false);
+                    }}
+                  >
+                    <Shield size={18} />
+                    Owner 로그인
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

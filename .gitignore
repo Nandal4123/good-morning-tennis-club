@@ -34,5 +34,8 @@ server/backups/
 *.backup
 *.sql
 
+# Snapshots (backup artifacts - DO NOT COMMIT)
+snapshots/
+
 .vercel
 .env*.local

@@ -47,10 +47,16 @@ model Club {
   subdomain       String    @unique
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  // 운영 설정(Owner 대시보드에서 관리)
+  joinCodeHash       String?
+  adminPasswordHash  String?
+  trialEndsAt        DateTime?
+  plan              String?   // 예: TRIAL / BASIC / PRO (추후 enum으로 전환)
   
   users           User[]
   sessions        Session[]
   matches         Match[]
+  visits          Visit[]
   
   @@map("clubs")
 }
@@ -156,5 +162,21 @@ model Feedback {
   @@index([userId])
   @@index([date])
   @@map("feedbacks")
+}
+
+// 오늘 접속자(고유 방문자) 집계를 위한 방문 로그 (KST 하루 단위로 중복 방지)
+model Visit {
+  id        String   @id @default(cuid())
+  clubId    String
+  day       DateTime // 한국 시간 기준 해당 날짜 00:00:00(UTC로 변환된 값)
+  visitorId String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, day, visitorId])
+  @@index([clubId, day])
+  @@map("visits")
 }
 

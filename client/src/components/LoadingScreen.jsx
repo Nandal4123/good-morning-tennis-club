@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { clubApi } from "../lib/api";
+import { getClubIdentifier } from "../lib/clubContext";
 
 // 테니스 명언들 (출처 제외)
 const loadingMessages = [
@@ -39,6 +41,18 @@ const getRandomIndex = (prevIndex, length) => {
   return newIndex;
 };
 
+const humanizeClubIdentifier = (identifier) => {
+  if (!identifier || identifier === "default") {
+    return "Good Morning Club";
+  }
+  // ace-club -> Ace Club
+  return identifier
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
+
 export default function LoadingScreen() {
   // 초기값도 랜덤으로 설정
   const [messageIndex, setMessageIndex] = useState(() =>
@@ -46,8 +60,26 @@ export default function LoadingScreen() {
   );
   const [showTip, setShowTip] = useState(false);
   const [tipIndex, setTipIndex] = useState(0);
+  // API가 느릴 때도 "현재 클럽"이 즉시 보이도록 URL/localStorage 기반으로 초기값 설정
+  const [clubName, setClubName] = useState(() =>
+    humanizeClubIdentifier(
+      typeof window === "undefined" ? null : getClubIdentifier()
+    )
+  );
 
   useEffect(() => {
+    // 클럽 정보 로드
+    const loadClubInfo = async () => {
+      try {
+        const info = await clubApi.getInfo();
+        setClubName(info.name || "Good Morning Club");
+      } catch (error) {
+        console.error("Failed to load club info:", error);
+        // 기본값 유지
+      }
+    };
+    loadClubInfo();
+
     // 3초마다 랜덤 명언으로 변경
     const messageInterval = setInterval(() => {
       setMessageIndex((prev) => getRandomIndex(prev, loadingMessages.length));
@@ -97,7 +129,7 @@ export default function LoadingScreen() {
 
         {/* 클럽 로고 */}
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 font-display">
-          Good Morning Club
+          {clubName}
         </h1>
         <p className="text-orange-400 text-sm mb-8">테니스 동호회</p>
 

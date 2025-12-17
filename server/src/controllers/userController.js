@@ -2,7 +2,12 @@ import {
   getKoreanTodayStart,
   getKoreanTomorrowStart,
 } from "../utils/timezone.js";
-import { buildClubWhere, getClubFilter, getClubInfo } from "../utils/clubInfo.js";
+import {
+  buildClubWhere,
+  getClubFilter,
+  getClubInfo,
+} from "../utils/clubInfo.js";
+import { verifySecret } from "../utils/secretHash.js";
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -22,8 +27,16 @@ export const getAllUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
+    const clubId = getClubFilter(req);
+
+    // where 조건 구성
+    const where = { id };
+    if (clubId) {
+      where.clubId = clubId;
+    }
+
     const user = await req.prisma.user.findUnique({
-      where: { id },
+      where,
       include: {
         attendances: {
           include: { session: true },
@@ -53,6 +66,7 @@ export const getUserById = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const {
+      joinCode,
       email,
       name,
       role,
@@ -70,15 +84,38 @@ export const createUser = async (req, res) => {
       // MVP 모드: 기본 클럽 ID 사용
       const clubInfo = getClubInfo(req);
       const defaultClubId = clubInfo.id;
-      
+
       // 기본 클럽이 실제 Club 레코드인지 확인
-      if (defaultClubId && defaultClubId !== 'default-club') {
+      if (defaultClubId && defaultClubId !== "default-club") {
         const club = await req.prisma.club.findUnique({
           where: { id: defaultClubId },
         });
         if (club) {
           clubId = club.id;
         }
+      }
+    }
+
+    // 가입 승인 코드 검증 (클럽 설정 기반)
+    // - 멀티테넌트 운영 시 클럽별 joinCodeHash로 검증
+    // - 설정이 없으면 가입 불가로 처리(Owner 대시보드에서 설정 유도)
+    if (clubId) {
+      const club = await req.prisma.club.findUnique({
+        where: { id: clubId },
+        select: { id: true, joinCodeHash: true, subdomain: true },
+      });
+
+      if (club?.joinCodeHash) {
+        const ok = verifySecret((joinCode || "").toString(), club.joinCodeHash);
+        if (!ok) {
+          return res.status(403).json({ error: "Invalid join code" });
+        }
+      } else {
+        return res.status(409).json({
+          error: "Join code not set",
+          message:
+            "이 클럽의 가입 승인 코드가 아직 설정되지 않았습니다. Owner 대시보드에서 설정하세요.",
+        });
       }
     }
 
@@ -116,6 +153,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const clubId = getClubFilter(req);
     const {
       email,
       name,
@@ -125,6 +163,22 @@ export const updateUser = async (req, res) => {
       languagePref,
       profileMetadata,
     } = req.body;
+
+    // 멀티 테넌트: 사용자가 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const existingUser = await req.prisma.user.findUnique({
+        where: { id },
+        select: { clubId: true },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (existingUser.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
 
     // 업데이트할 데이터 구성 (undefined가 아닌 값만 포함)
     const updateData = {};
@@ -156,6 +210,23 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const clubId = getClubFilter(req);
+
+    // 멀티 테넌트: 사용자가 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const existingUser = await req.prisma.user.findUnique({
+        where: { id },
+        select: { clubId: true },
+      });
+
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (existingUser.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
 
     await req.prisma.user.delete({
       where: { id },
@@ -175,14 +246,20 @@ export const deleteUser = async (req, res) => {
 export const deleteMultipleUsers = async (req, res) => {
   try {
     const { userIds } = req.body;
+    const clubId = getClubFilter(req);
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return res.status(400).json({ error: "No user IDs provided" });
     }
 
-    // 삭제할 사용자 수 확인
+    // 삭제할 사용자 수 확인 (클럽 필터 적용)
+    const where = { id: { in: userIds } };
+    if (clubId) {
+      where.clubId = clubId;
+    }
+
     const usersToDelete = await req.prisma.user.findMany({
-      where: { id: { in: userIds } },
+      where,
       select: { id: true, name: true },
     });
 
@@ -192,7 +269,7 @@ export const deleteMultipleUsers = async (req, res) => {
 
     // 일괄 삭제
     const result = await req.prisma.user.deleteMany({
-      where: { id: { in: userIds } },
+      where,
     });
 
     res.json({
@@ -210,10 +287,17 @@ export const deleteMultipleUsers = async (req, res) => {
 export const getUserStats = async (req, res) => {
   try {
     const { id } = req.params;
+    const clubId = getClubFilter(req);
+
+    // where 조건 구성
+    const where = { id };
+    if (clubId) {
+      where.clubId = clubId;
+    }
 
     // 사용자 존재 확인
     const user = await req.prisma.user.findUnique({
-      where: { id },
+      where,
       select: { name: true, tennisLevel: true },
     });
 
@@ -221,14 +305,22 @@ export const getUserStats = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // 출석 수
+    // 출석 수 (클럽 필터 적용)
+    const attendanceWhere = { userId: id, status: "ATTENDED" };
+    if (clubId) {
+      attendanceWhere.user = { clubId };
+    }
     const attendanceCount = await req.prisma.attendance.count({
-      where: { userId: id, status: "ATTENDED" },
+      where: attendanceWhere,
     });
 
-    // 참가한 모든 경기 가져오기
+    // 참가한 모든 경기 가져오기 (클럽 필터 적용)
+    const matchParticipantWhere = { userId: id };
+    if (clubId) {
+      matchParticipantWhere.match = { clubId };
+    }
     const userMatches = await req.prisma.matchParticipant.findMany({
-      where: { userId: id },
+      where: matchParticipantWhere,
       include: {
         match: {
           include: {
@@ -267,8 +359,11 @@ export const getUserStats = async (req, res) => {
       }
     }
 
-    // 전체 세션 수 가져오기 (출석률 계산용)
-    const totalSessions = await req.prisma.session.count();
+    // 전체 세션 수 가져오기 (출석률 계산용, 클럽 필터 적용)
+    const sessionWhere = clubId ? { clubId } : {};
+    const totalSessions = await req.prisma.session.count({
+      where: sessionWhere,
+    });
 
     res.json({
       ...user,
@@ -296,10 +391,37 @@ export const getUserStats = async (req, res) => {
 export const getHeadToHead = async (req, res) => {
   try {
     const { id, opponentId } = req.params;
+    const clubId = getClubFilter(req);
 
-    // 내가 참가한 모든 경기 가져오기
+    // 멀티 테넌트: 두 사용자가 모두 해당 클럽에 속하는지 확인
+    if (clubId) {
+      const [user, opponent] = await Promise.all([
+        req.prisma.user.findUnique({
+          where: { id },
+          select: { clubId: true },
+        }),
+        req.prisma.user.findUnique({
+          where: { id: opponentId },
+          select: { clubId: true },
+        }),
+      ]);
+
+      if (!user || !opponent) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.clubId !== clubId || opponent.clubId !== clubId) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+    }
+
+    // 내가 참가한 모든 경기 가져오기 (클럽 필터 적용)
+    const matchParticipantWhere = { userId: id };
+    if (clubId) {
+      matchParticipantWhere.match = { clubId };
+    }
     const myMatches = await req.prisma.matchParticipant.findMany({
-      where: { userId: id },
+      where: matchParticipantWhere,
       include: {
         match: {
           include: {
@@ -419,6 +541,10 @@ export const getAllUsersWithMonthlyStats = async (req, res) => {
   try {
     console.log(`[API] 📊 /api/users/with-monthly-stats 호출됨`);
     console.log(`[API] Query params:`, req.query);
+
+    const clubId = getClubFilter(req);
+    const clubWhere = buildClubWhere(req);
+
     // 쿼리 파라미터로 년/월 받기 (기본값: 현재 월)
     const now = new Date();
     const year = parseInt(req.query.year) || now.getFullYear();
@@ -464,19 +590,24 @@ export const getAllUsersWithMonthlyStats = async (req, res) => {
       );
     }
 
-    // 모든 사용자 가져오기
+    // 모든 사용자 가져오기 (클럽 필터 적용)
     const users = await req.prisma.user.findMany({
+      where: clubWhere,
       orderBy: { name: "asc" },
     });
 
-    // 해당 월의 세션 수 (출석률 계산용)
-    const monthSessions = await req.prisma.session.count({
-      where: {
-        date: {
-          gte: startDate,
-          lt: endDate,
-        },
+    // 해당 월의 세션 수 (출석률 계산용, 클럽 필터 적용)
+    const monthSessionWhere = {
+      date: {
+        gte: startDate,
+        lt: endDate,
       },
+    };
+    if (clubId) {
+      monthSessionWhere.clubId = clubId;
+    }
+    const monthSessions = await req.prisma.session.count({
+      where: monthSessionWhere,
     });
 
     // ⚡ 성능 최적화: Bulk Query 방식 (54개 쿼리 → 2개 쿼리)
@@ -636,13 +767,19 @@ export const getAllUsersWithStats = async (req, res) => {
   try {
     console.log(`[API] 📊 /api/users/with-stats 호출됨`);
 
-    // 모든 사용자 가져오기
+    const clubId = getClubFilter(req);
+    const clubWhere = buildClubWhere(req);
+
+    // 모든 사용자 가져오기 (클럽 필터 적용)
     const users = await req.prisma.user.findMany({
+      where: clubWhere,
       orderBy: { name: "asc" },
     });
 
-    // 모든 세션 수 (출석률 계산용)
-    const totalSessions = await req.prisma.session.count();
+    // 모든 세션 수 (출석률 계산용, 클럽 필터 적용)
+    const totalSessions = await req.prisma.session.count({
+      where: clubWhere,
+    });
 
     // ⚡ 성능 최적화: Bulk Query 방식 (54개 쿼리 → 2개 쿼리)
     // 모든 데이터를 한 번에 가져와서 메모리에서 처리
@@ -750,7 +887,9 @@ export const getAllUsersWithStats = async (req, res) => {
       });
     }
 
-    console.log(`[API] ✅ /api/users/with-stats 완료: ${usersWithStats.length}명`);
+    console.log(
+      `[API] ✅ /api/users/with-stats 완료: ${usersWithStats.length}명`
+    );
     res.json(usersWithStats);
   } catch (error) {
     console.error("Error fetching users with stats:", error);

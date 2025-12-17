@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, 
@@ -6,15 +6,34 @@ import {
   Users, 
   Trophy, 
   User, 
+  Shield,
   LogOut,
   Menu,
   X
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { clubApi } from '../lib/api';
 
 function Layout({ children, currentUser, onLogout }) {
   const { t } = useTranslation();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [clubInfo, setClubInfo] = useState(null);
+
+  // URL 파라미터 변경 감지하여 클럽 정보 재로드
+  useEffect(() => {
+    loadClubInfo();
+  }, [location.search]);
+
+  const loadClubInfo = async () => {
+    try {
+      const info = await clubApi.getInfo();
+      setClubInfo(info);
+    } catch (error) {
+      console.error("Failed to load club info:", error);
+      setClubInfo({ name: t('app.title'), subdomain: 'default' });
+    }
+  };
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: t('nav.dashboard') },
@@ -22,11 +41,16 @@ function Layout({ children, currentUser, onLogout }) {
     { to: '/members', icon: Users, label: t('nav.members') },
     { to: '/matches', icon: Trophy, label: t('nav.matches') },
     { to: '/profile', icon: User, label: t('nav.profile') },
+    ...(currentUser?.isOwner
+      ? [{ to: '/owner', icon: Shield, label: 'Owner' }]
+      : []),
   ];
 
   const NavItem = ({ to, icon: Icon, label }) => (
     <NavLink
-      to={to}
+      // 멀티테넌트(localhost)에서 ?club=... 쿼리스트링이 탭 이동 시 사라지면
+      // 기본 클럽으로 인식되어 자동 로그아웃되는 문제가 생김 → 현재 search를 그대로 유지
+      to={{ pathname: to, search: location.search }}
       onClick={() => setMobileMenuOpen(false)}
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
@@ -51,7 +75,7 @@ function Layout({ children, currentUser, onLogout }) {
             <span className="text-xl">🎾</span>
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg text-white">{t('app.title')}</h1>
+            <h1 className="font-display font-bold text-lg text-white">{clubInfo?.name || t('app.title')}</h1>
             <p className="text-xs text-slate-500">{t('app.subtitle')}</p>
           </div>
         </div>
@@ -91,7 +115,7 @@ function Layout({ children, currentUser, onLogout }) {
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-tennis-400 to-tennis-600 flex items-center justify-center">
               <span className="text-sm">🎾</span>
             </div>
-            <h1 className="font-display font-bold text-white">{t('app.title')}</h1>
+            <h1 className="font-display font-bold text-white">{clubInfo?.name || t('app.title')}</h1>
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
