@@ -16,8 +16,11 @@ import { isMultiTenantMode } from '../utils/clubInfo.js';
  */
 export const resolveClub = async (req, res, next) => {
   try {
-    // 멀티 테넌트 모드가 아니면 스킵
-    if (!isMultiTenantMode()) {
+    // 멀티 테넌트 모드가 아니더라도, 요청에서 club을 명시했으면 해석한다.
+    // (Vercel/Render 환경변수 설정 실수에도 `?club=...`가 동작하도록)
+    const explicit =
+      !!req.get('X-Club-Subdomain') || !!req.query.club;
+    if (!isMultiTenantMode() && !explicit) {
       return next();
     }
 

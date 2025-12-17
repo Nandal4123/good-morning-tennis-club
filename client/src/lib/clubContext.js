@@ -18,13 +18,21 @@ export function getSubdomain() {
 
   // localhost / IP는 서브도메인 기반 멀티테넌트가 아님
   const isIp = host.match(/^\d{1,3}(\.\d{1,3}){3}$/);
-  const isLocalhost = host === "localhost" || host.endsWith(".localhost") || isIp;
+  const isLocalhost =
+    host === "localhost" || host.endsWith(".localhost") || isIp;
 
   // Render/Vercel 같은 호스팅 도메인의 서브도메인은 "클럽"이 아님
-  const isHostingDomain = host.endsWith(".onrender.com") || host.endsWith(".vercel.app");
+  const isHostingDomain =
+    host.endsWith(".onrender.com") || host.endsWith(".vercel.app");
 
   // 커스텀 도메인에서만 서브도메인 추출
-  if (!isLocalhost && !isHostingDomain && parts.length >= 3 && parts[0] && !parts[0].match(/^\d+$/)) {
+  if (
+    !isLocalhost &&
+    !isHostingDomain &&
+    parts.length >= 3 &&
+    parts[0] &&
+    !parts[0].match(/^\d+$/)
+  ) {
     return parts[0];
   }
 
@@ -36,9 +44,24 @@ export function getSubdomain() {
  * 환경 변수 또는 설정에서 확인
  */
 export function isMultiTenantMode() {
-  // 프로덕션에서는 환경 변수로 확인
-  // 개발 모드에서는 기본적으로 false (MVP 모드)
-  return import.meta.env.VITE_MULTI_TENANT_MODE === "true";
+  // 1) 환경 변수(정상 설정)
+  if (import.meta.env.VITE_MULTI_TENANT_MODE === "true") return true;
+
+  // 2) URL에 club 파라미터가 있으면 멀티테넌트로 강제 (Vercel 환경변수 누락/오배포 방어)
+  if (typeof window !== "undefined") {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("club")) return true;
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3) 커스텀 도메인 서브도메인이 있으면 멀티테넌트로 간주
+  const sub = getSubdomain();
+  if (sub) return true;
+
+  return false;
 }
 
 /**
@@ -82,11 +105,14 @@ export function getClubIdentifier() {
     // 3순위: 마지막으로 선택된 클럽
     // - 로컬 개발(localhost)에서만 허용 (탭 이동/리로드 시 ?club=... 유실 대응)
     // - 프로덕션/호스팅 도메인에서는 "기본 도메인(굿모닝)이 다른 클럽으로 바뀌는" 문제를 막기 위해 사용하지 않음
-    const host = (typeof window !== "undefined" && window.location?.hostname
-      ? window.location.hostname
-      : "").toLowerCase();
+    const host = (
+      typeof window !== "undefined" && window.location?.hostname
+        ? window.location.hostname
+        : ""
+    ).toLowerCase();
     const isIp = host.match(/^\d{1,3}(\.\d{1,3}){3}$/);
-    const isLocalhost = host === "localhost" || host.endsWith(".localhost") || isIp;
+    const isLocalhost =
+      host === "localhost" || host.endsWith(".localhost") || isIp;
     if (canUseStorage && isLocalhost) {
       try {
         const lastClub = window.localStorage.getItem("lastClubIdentifier");

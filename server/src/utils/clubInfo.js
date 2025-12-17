@@ -13,12 +13,27 @@ export const isMultiTenantMode = () => {
 };
 
 /**
+ * 요청에서 클럽을 명시했는지(헤더/쿼리) 판단
+ * - 환경변수 설정 실수에도 `?club=...`는 항상 동작하도록 하기 위함
+ */
+export const hasExplicitClubInRequest = (req) => {
+  try {
+    const header = req?.get?.('X-Club-Subdomain');
+    const query = req?.query?.club;
+    return !!(header || query);
+  } catch {
+    return false;
+  }
+};
+
+/**
  * default 클럽(굿모닝)에서 과거 데이터 호환을 위해 clubId가 NULL인 레코드를 포함할지 여부
  * - 기본값: true (안전한 전환)
  * - 끄려면: DEFAULT_CLUB_INCLUDES_NULL=false
  */
 export const shouldIncludeNullClubIdForDefault = (req) => {
-  if (!isMultiTenantMode()) return false;
+  // 멀티테넌트 모드이거나, 요청에서 클럽을 명시한 경우에는 동작
+  if (!isMultiTenantMode() && !hasExplicitClubInRequest(req)) return false;
   if ((process.env.DEFAULT_CLUB_INCLUDES_NULL || '').toLowerCase() === 'false') {
     return false;
   }
@@ -31,7 +46,7 @@ export const shouldIncludeNullClubIdForDefault = (req) => {
  * 전환 후: req.club.id (클럽별 필터)
  */
 export const getClubFilter = (req) => {
-  if (isMultiTenantMode() && req.club?.id) {
+  if ((isMultiTenantMode() || hasExplicitClubInRequest(req)) && req.club?.id) {
     return req.club.id;
   }
   // MVP: null 반환 (필터 없음)
