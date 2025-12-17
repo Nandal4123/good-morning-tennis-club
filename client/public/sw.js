@@ -1,12 +1,12 @@
 // Service Worker for 굿모닝 테니스 클럽
-const CACHE_NAME = 'goodmorning-club-v1';
+const CACHE_NAME = 'goodmorning-club-v2';
 
 // 캐시할 파일 목록
 const urlsToCache = [
   '/',
   '/index.html',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/icon-192.png?v=3',
+  '/icon-512.png?v=3',
   '/manifest.json'
 ];
 

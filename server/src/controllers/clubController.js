@@ -155,7 +155,9 @@ export const setClubBranding = async (req, res) => {
   try {
     const { subdomain } = req.params;
     const shareTitle = (req.body?.shareTitle || "").toString().trim();
-    const shareDescription = (req.body?.shareDescription || "").toString().trim();
+    const shareDescription = (req.body?.shareDescription || "")
+      .toString()
+      .trim();
     const shareImageUrl = (req.body?.shareImageUrl || "").toString().trim();
 
     const club = await req.prisma.club.findUnique({

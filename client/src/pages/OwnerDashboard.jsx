@@ -489,9 +489,11 @@ function OwnerDashboard({ currentUser }) {
                     카톡 공유 미리보기 설정
                   </div>
                   <div className="text-slate-400 text-xs mb-2">
-                    링크 미리보기(제목/설명/이미지)를 클럽마다 다르게 설정할 수 있습니다.
-                    저장 후 공유 링크는{" "}
-                    <span className="font-mono">/share?club={selected.subdomain}</span>{" "}
+                    링크 미리보기(제목/설명/이미지)를 클럽마다 다르게 설정할 수
+                    있습니다. 저장 후 공유 링크는{" "}
+                    <span className="font-mono">
+                      /share?club={selected.subdomain}
+                    </span>{" "}
                     를 사용하세요.
                   </div>
                   <input
