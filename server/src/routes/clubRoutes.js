@@ -20,6 +20,9 @@ router.get("/:subdomain/summary", clubController.getClubSummaryBySubdomain);
 // PUT /api/clubs/:subdomain/credentials
 router.put("/:subdomain/credentials", clubController.setClubCredentials);
 
+// PUT /api/clubs/:subdomain/branding
+router.put("/:subdomain/branding", clubController.setClubBranding);
+
 export default router;
 
 

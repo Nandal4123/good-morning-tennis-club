@@ -52,6 +52,11 @@ model Club {
   adminPasswordHash  String?
   trialEndsAt        DateTime?
   plan              String?   // 예: TRIAL / BASIC / PRO (추후 enum으로 전환)
+
+  // 공유/브랜딩(카톡 링크 미리보기 OG 태그)
+  shareTitle         String?
+  shareDescription   String?
+  shareImageUrl      String?   // 절대 URL(https://...) 또는 사이트 경로(/og/ace-club.svg 등)
   
   users           User[]
   sessions        Session[]

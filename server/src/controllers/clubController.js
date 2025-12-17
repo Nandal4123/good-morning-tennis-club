@@ -24,6 +24,9 @@ export const getAllClubs = async (req, res) => {
         id: true,
         name: true,
         subdomain: true,
+        shareTitle: true,
+        shareDescription: true,
+        shareImageUrl: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -33,6 +36,31 @@ export const getAllClubs = async (req, res) => {
   } catch (error) {
     console.error("Error fetching clubs:", error);
     return res.status(500).json({ error: "Failed to fetch clubs" });
+  }
+};
+
+// GET /api/public/clubs/:subdomain  (공개: 카톡 OG 미리보기/브랜딩 조회용)
+export const getPublicClubInfoBySubdomain = async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const club = await req.prisma.club.findUnique({
+      where: { subdomain },
+      select: {
+        id: true,
+        name: true,
+        subdomain: true,
+        shareTitle: true,
+        shareDescription: true,
+        shareImageUrl: true,
+      },
+    });
+    if (!club) {
+      return res.status(404).json({ error: "Club not found" });
+    }
+    return res.json({ club });
+  } catch (error) {
+    console.error("Error fetching public club info:", error);
+    return res.status(500).json({ error: "Failed to fetch club info" });
   }
 };
 
@@ -122,6 +150,48 @@ export const setClubCredentials = async (req, res) => {
   }
 };
 
+// PUT /api/clubs/:subdomain/branding (Owner 전용: 공유/브랜딩 설정)
+export const setClubBranding = async (req, res) => {
+  try {
+    const { subdomain } = req.params;
+    const shareTitle = (req.body?.shareTitle || "").toString().trim();
+    const shareDescription = (req.body?.shareDescription || "").toString().trim();
+    const shareImageUrl = (req.body?.shareImageUrl || "").toString().trim();
+
+    const club = await req.prisma.club.findUnique({
+      where: { subdomain },
+      select: { id: true, subdomain: true },
+    });
+    if (!club) return res.status(404).json({ error: "Club not found" });
+
+    const data = {
+      // 빈 문자열은 null로 저장(정리)
+      shareTitle: shareTitle || null,
+      shareDescription: shareDescription || null,
+      shareImageUrl: shareImageUrl || null,
+    };
+
+    const updated = await req.prisma.club.update({
+      where: { subdomain },
+      data,
+      select: {
+        id: true,
+        name: true,
+        subdomain: true,
+        shareTitle: true,
+        shareDescription: true,
+        shareImageUrl: true,
+        updatedAt: true,
+      },
+    });
+
+    return res.json({ ok: true, club: updated });
+  } catch (error) {
+    console.error("Error setting club branding:", error);
+    return res.status(500).json({ error: "Failed to set club branding" });
+  }
+};
+
 // GET /api/clubs/:subdomain/summary
 export const getClubSummaryBySubdomain = async (req, res) => {
   try {
@@ -129,7 +199,14 @@ export const getClubSummaryBySubdomain = async (req, res) => {
 
     const club = await req.prisma.club.findUnique({
       where: { subdomain },
-      select: { id: true, name: true, subdomain: true },
+      select: {
+        id: true,
+        name: true,
+        subdomain: true,
+        shareTitle: true,
+        shareDescription: true,
+        shareImageUrl: true,
+      },
     });
 
     if (!club) {

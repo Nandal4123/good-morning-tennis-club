@@ -271,6 +271,11 @@ export const clubsApi = {
       method: "PUT",
       body: JSON.stringify({ joinCode, adminPassword }),
     }),
+  setBranding: (subdomain, { shareTitle, shareDescription, shareImageUrl }) =>
+    fetchApi(`/clubs/${encodeURIComponent(subdomain)}/branding`, {
+      method: "PUT",
+      body: JSON.stringify({ shareTitle, shareDescription, shareImageUrl }),
+    }),
 };
 
 // Owner API (운영자 1인 운영: 서버에서 비밀번호 검증 후 토큰 발급)

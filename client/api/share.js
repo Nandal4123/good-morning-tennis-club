@@ -22,7 +22,29 @@ function humanizeClubIdentifier(identifier) {
     .join(" ");
 }
 
-export default function handler(req, res) {
+async function fetchClubBranding({ apiBase, subdomain }) {
+  try {
+    const url = `${apiBase.replace(/\/$/, "")}/public/clubs/${encodeURIComponent(
+      subdomain
+    )}`;
+    const r = await fetch(url, { method: "GET" });
+    if (!r.ok) return null;
+    const data = await r.json();
+    return data?.club || null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeImageUrl({ origin, value, fallback }) {
+  const v = (value || "").toString().trim();
+  if (!v) return fallback;
+  if (v.startsWith("http://") || v.startsWith("https://")) return v;
+  if (v.startsWith("/")) return `${origin}${v}`;
+  return `${origin}/${v}`;
+}
+
+export default async function handler(req, res) {
   const club = (req.query?.club || "default").toString().trim() || "default";
   const pathname = (req.query?.path || "/").toString().trim() || "/";
 
@@ -32,13 +54,35 @@ export default function handler(req, res) {
       ? `${origin}${pathname}?club=${encodeURIComponent(club)}`
       : `${origin}${pathname}`;
 
-  const clubName = humanizeClubIdentifier(club);
-  const title = `${clubName} | 테니스 출석·경기 기록`;
+  // 서버(렌더)에서 클럽 브랜딩 정보 조회 (설정이 없으면 fallback)
+  const apiBase =
+    process.env.VITE_API_URL ||
+    process.env.API_BASE ||
+    "https://tennis-club-server.onrender.com/api";
+  const branding = await fetchClubBranding({ apiBase, subdomain: club });
+
+  const clubName = branding?.name || humanizeClubIdentifier(club);
+  const title =
+    branding?.shareTitle ||
+    `${clubName} | 테니스 출석·경기 기록`;
   const description =
+    branding?.shareDescription ||
     "출석(경기 등록 시 자동 기록), 경기 결과/상대전적/월별 랭킹을 간편하게 확인하세요.";
 
-  // 기본 OG 이미지(공용) - 필요하면 클럽별 이미지로 확장 가능
-  const ogImage = `${origin}/og-image.png`;
+  // 기본 OG 이미지: 클럽별 설정이 있으면 우선 사용
+  // - 설정이 없으면 default/ace는 SVG 샘플, 그 외는 공용 PNG
+  const fallbackImage =
+    club === "default"
+      ? `${origin}/og/default.svg`
+      : club === "ace-club"
+      ? `${origin}/og/ace-club.svg`
+      : `${origin}/og-image.png`;
+
+  const ogImage = normalizeImageUrl({
+    origin,
+    value: branding?.shareImageUrl,
+    fallback: fallbackImage,
+  });
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   // 메신저 캐시가 너무 오래 남지 않도록 짧게

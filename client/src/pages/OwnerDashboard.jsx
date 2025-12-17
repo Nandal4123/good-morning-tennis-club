@@ -36,6 +36,12 @@ function OwnerDashboard({ currentUser }) {
   const [adminPassword, setAdminPassword] = useState("");
   const [savingCreds, setSavingCreds] = useState(false);
 
+  // Share/Branding (OG)
+  const [shareTitle, setShareTitle] = useState("");
+  const [shareDescription, setShareDescription] = useState("");
+  const [shareImageUrl, setShareImageUrl] = useState("");
+  const [savingBranding, setSavingBranding] = useState(false);
+
   const isOwner = !!currentUser?.isOwner;
 
   const formatDateOnly = (value) => {
@@ -82,6 +88,15 @@ function OwnerDashboard({ currentUser }) {
       setSummaryLoading(false);
     }
   };
+
+  // 요약 로드 시 현재 브랜딩 값을 폼에 반영
+  useEffect(() => {
+    const club = summary?.club;
+    if (!club) return;
+    setShareTitle(club.shareTitle || "");
+    setShareDescription(club.shareDescription || "");
+    setShareImageUrl(club.shareImageUrl || "");
+  }, [summary?.club?.subdomain]);
 
   useEffect(() => {
     if (!isOwner) return;
@@ -155,6 +170,27 @@ function OwnerDashboard({ currentUser }) {
       setError(e.message || "자격증명 저장에 실패했습니다.");
     } finally {
       setSavingCreds(false);
+    }
+  };
+
+  const handleSaveBranding = async () => {
+    if (!selected) return;
+    setError("");
+    setInfoMessage("");
+    try {
+      setSavingBranding(true);
+      await clubsApi.setBranding(selected.subdomain, {
+        shareTitle: shareTitle.trim() || undefined,
+        shareDescription: shareDescription.trim() || undefined,
+        shareImageUrl: shareImageUrl.trim() || undefined,
+      });
+      setInfoMessage("공유 미리보기(제목/설명/이미지) 설정이 저장되었습니다.");
+      await loadSummary(selected.subdomain);
+    } catch (e) {
+      console.error("Failed to set branding:", e);
+      setError(e.message || "공유 미리보기 설정 저장에 실패했습니다.");
+    } finally {
+      setSavingBranding(false);
     }
   };
 
@@ -446,6 +482,49 @@ function OwnerDashboard({ currentUser }) {
                 >
                   {savingCreds ? "저장 중..." : "저장"}
                 </button>
+
+                {/* 공유 미리보기(OG) 설정 */}
+                <div className="mt-4 pt-4 border-t border-slate-700/40">
+                  <div className="text-white font-semibold mb-2">
+                    카톡 공유 미리보기 설정
+                  </div>
+                  <div className="text-slate-400 text-xs mb-2">
+                    링크 미리보기(제목/설명/이미지)를 클럽마다 다르게 설정할 수 있습니다.
+                    저장 후 공유 링크는{" "}
+                    <span className="font-mono">/share?club={selected.subdomain}</span>{" "}
+                    를 사용하세요.
+                  </div>
+                  <input
+                    className="input"
+                    placeholder="공유 제목 (예: Ace Club | 테니스 출석·경기 기록)"
+                    value={shareTitle}
+                    onChange={(e) => setShareTitle(e.target.value)}
+                  />
+                  <textarea
+                    className="input min-h-[96px]"
+                    placeholder="공유 설명 (예: 출석/경기 결과/상대전적/월별 랭킹을 확인하세요)"
+                    value={shareDescription}
+                    onChange={(e) => setShareDescription(e.target.value)}
+                  />
+                  <input
+                    className="input"
+                    placeholder="공유 이미지 URL 또는 경로 (예: /og/ace-club.svg)"
+                    value={shareImageUrl}
+                    onChange={(e) => setShareImageUrl(e.target.value)}
+                  />
+                  <button
+                    className="btn-secondary w-full"
+                    onClick={handleSaveBranding}
+                    disabled={
+                      savingBranding ||
+                      (!shareTitle.trim() &&
+                        !shareDescription.trim() &&
+                        !shareImageUrl.trim())
+                    }
+                  >
+                    {savingBranding ? "저장 중..." : "미리보기 설정 저장"}
+                  </button>
+                </div>
               </div>
             )}
           </div>
