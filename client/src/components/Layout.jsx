@@ -13,6 +13,18 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { clubApi } from '../lib/api';
+import { getClubIdentifier } from "../lib/clubContext";
+
+const humanizeClubIdentifier = (identifier) => {
+  if (!identifier || identifier === "default") {
+    return "Good Morning Club";
+  }
+  return identifier
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
 
 function Layout({ children, currentUser, onLogout }) {
   const { t } = useTranslation();
@@ -26,12 +38,18 @@ function Layout({ children, currentUser, onLogout }) {
   }, [location.search]);
 
   const loadClubInfo = async () => {
+    // ✅ 플래시 방지: API 로드 전에는 URL의 ?club= 기반 힌트를 먼저 보여줌
+    const hintIdentifier = getClubIdentifier();
+    const hintName = humanizeClubIdentifier(hintIdentifier);
+    setClubInfo({ name: hintName, subdomain: hintIdentifier || "default" });
+
     try {
       const info = await clubApi.getInfo();
       setClubInfo(info);
     } catch (error) {
       console.error("Failed to load club info:", error);
-      setClubInfo({ name: t('app.title'), subdomain: 'default' });
+      // 에러 시에도 "굿모닝"으로 강제하지 않고, URL 힌트 유지
+      setClubInfo({ name: hintName || t("app.title"), subdomain: hintIdentifier || "default" });
     }
   };
 
@@ -75,7 +93,9 @@ function Layout({ children, currentUser, onLogout }) {
             <span className="text-xl">🎾</span>
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg text-white">{clubInfo?.name || t('app.title')}</h1>
+            <h1 className="font-display font-bold text-lg text-white">
+              {clubInfo?.name || t("app.title")}
+            </h1>
             <p className="text-xs text-slate-500">{t('app.subtitle')}</p>
           </div>
         </div>
@@ -115,7 +135,9 @@ function Layout({ children, currentUser, onLogout }) {
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-tennis-400 to-tennis-600 flex items-center justify-center">
               <span className="text-sm">🎾</span>
             </div>
-            <h1 className="font-display font-bold text-white">{clubInfo?.name || t('app.title')}</h1>
+            <h1 className="font-display font-bold text-white">
+              {clubInfo?.name || t("app.title")}
+            </h1>
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
