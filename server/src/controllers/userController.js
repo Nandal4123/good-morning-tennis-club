@@ -83,21 +83,6 @@ export const createUser = async (req, res) => {
     } = req.body;
 
     console.log("Creating user with data:", { email, name, role, tennisLevel });
-    console.log("[CreateUser] 전체 req.body:", JSON.stringify(req.body, null, 2));
-
-    // 필수 필드 검증
-    if (!name || !name.trim()) {
-      return res.status(400).json({
-        error: "Name is required",
-        message: "이름을 입력해주세요.",
-      });
-    }
-    if (!email || !email.trim()) {
-      return res.status(400).json({
-        error: "Email is required",
-        message: "이메일을 입력해주세요.",
-      });
-    }
 
     // 멀티 테넌트: clubId 자동 할당
     let clubId = getClubFilter(req);
@@ -117,81 +102,10 @@ export const createUser = async (req, res) => {
       }
     }
 
-    console.log("[CreateUser] clubId:", clubId);
-
     // 가입 승인 코드 검증 (클럽 설정 기반)
     // - 멀티테넌트 운영 시 클럽별 joinCodeHash로 검증
     // - 설정이 없으면 가입 불가로 처리(Owner 대시보드에서 설정 유도)
-    // - 단, 관리자가 회원을 추가할 때는 가입 코드 검증을 완전히 건너뜀 (굿모닝클럽과 동일)
-    // - clubId가 null인 경우도 검증 건너뛰기 (굿모닝클럽 호환)
-    const currentUserId = req.get("X-Current-User-Id");
-    console.log("[CreateUser] X-Current-User-Id 헤더:", currentUserId);
-    let isAdminRequest = false;
-
-    if (currentUserId) {
-      try {
-        const currentUser = await req.prisma.user.findUnique({
-          where: { id: currentUserId },
-          select: { id: true, role: true, clubId: true },
-        });
-        console.log("[CreateUser] 현재 사용자 조회 결과:", {
-          found: !!currentUser,
-          role: currentUser?.role,
-          userClubId: currentUser?.clubId,
-          targetClubId: clubId,
-          reqClubId: req.club?.id,
-        });
-        
-        // 관리자 확인 로직 (단순화):
-        // 1. 현재 사용자가 ADMIN이어야 함
-        // 2. 같은 클럽에 속해 있어야 함
-        //    - req.club이 있으면 req.club.id와 비교 (가장 정확)
-        //    - 없으면 clubId 직접 비교
-        //    - clubId가 null인 경우도 허용 (기본 클럽)
-        const isAdmin = currentUser && currentUser.role === "ADMIN";
-        
-        if (isAdmin) {
-          let isSameClub = false;
-          
-          // req.club이 있으면 req.club.id와 비교 (가장 정확)
-          if (req.club?.id) {
-            isSameClub = currentUser.clubId === req.club.id;
-          } else if (clubId) {
-            // clubId가 있으면 직접 비교
-            isSameClub = currentUser.clubId === clubId;
-          } else {
-            // clubId가 null이면 둘 다 null이어야 함 (기본 클럽)
-            isSameClub = currentUser.clubId === null;
-          }
-          
-          if (isSameClub) {
-            isAdminRequest = true;
-            console.log(
-              `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role}, clubId=${currentUser.clubId})`
-            );
-          } else {
-            console.log(
-              `[CreateUser] ❌ 관리자이지만 다른 클럽: userClubId=${currentUser.clubId}, targetClubId=${clubId}, reqClubId=${req.club?.id}`
-            );
-          }
-        } else {
-          console.log(
-            `[CreateUser] ❌ 관리자 아님: role=${currentUser?.role}`
-          );
-        }
-      } catch (error) {
-        console.error("[CreateUser] 현재 사용자 확인 실패:", error);
-        // 에러가 발생해도 일반 가입 흐름으로 진행
-      }
-    } else {
-      console.log("[CreateUser] X-Current-User-Id 헤더 없음 - 일반 가입 흐름");
-    }
-
-    // 가입 코드 검증 규칙 (굿모닝클럽과 동일한 방식):
-    // 1. 관리자 요청이면 검증 건너뛰기 (모든 클럽 공통)
-    // 2. clubId가 null이면 검증 건너뛰기 (굿모닝클럽 호환)
-    // 3. 그 외의 경우에만 가입 코드 검증 실행
-    if (!isAdminRequest && clubId) {
+    if (clubId) {
       const club = await req.prisma.club.findUnique({
         where: { id: clubId },
         select: { id: true, joinCodeHash: true, subdomain: true },
@@ -203,9 +117,6 @@ export const createUser = async (req, res) => {
           return res.status(403).json({ error: "Invalid join code" });
         }
       } else {
-        // 가입 코드가 설정되지 않은 경우
-        // - 일반 사용자: 가입 불가
-        // - 관리자는 이미 isAdminRequest가 true이므로 여기 도달하지 않음
         return res.status(409).json({
           error: "Join code not set",
           message:
@@ -213,52 +124,31 @@ export const createUser = async (req, res) => {
         });
       }
     }
-    
-    console.log(
-      `[CreateUser] 가입 코드 검증 결과: isAdminRequest=${isAdminRequest}, clubId=${clubId}, 검증 건너뜀=${isAdminRequest || !clubId}`
-    );
-
-    // 데이터 정리 (undefined 제거, 빈 문자열 처리)
-    const userData = {
-      email: email.trim(),
-      name: name.trim(),
-      role: role || "USER",
-      tennisLevel: tennisLevel || "NTRP_3_0",
-      languagePref: languagePref || "ko",
-      clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
-    };
-
-    // 선택적 필드 추가 (값이 있을 때만)
-    if (goals && goals.trim()) {
-      userData.goals = goals.trim();
-    }
-    if (profileMetadata) {
-      userData.profileMetadata = profileMetadata;
-    }
-
-    console.log("[CreateUser] 최종 userData:", JSON.stringify(userData, null, 2));
 
     const user = await req.prisma.user.create({
-      data: userData,
+      data: {
+        email,
+        name,
+        role: role || "USER",
+        tennisLevel: tennisLevel || "NTRP_3_0",
+        goals,
+        languagePref: languagePref || "ko",
+        profileMetadata,
+        clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
+      },
     });
 
     console.log("User created successfully:", user.id);
     res.status(201).json(user);
   } catch (error) {
-    console.error("❌ [CreateUser] 에러 발생:", error);
-    console.error("❌ [CreateUser] 에러 메시지:", error.message);
-    console.error("❌ [CreateUser] 에러 코드:", error.code);
-    console.error("❌ [CreateUser] 에러 스택:", error.stack);
+    console.error("Error creating user:", error);
+    console.error("Error details:", error.message);
     if (error.code === "P2002") {
-      return res.status(400).json({
-        error: "Email already exists",
-        message: "이미 사용 중인 이메일입니다.",
-      });
+      return res.status(400).json({ error: "Email already exists" });
     }
-    // 상세 에러 반환 (프로덕션에서도 디버깅을 위해)
+    // 개발 환경에서 상세 에러 반환
     res.status(500).json({
       error: "Failed to create user",
-      message: error.message || "회원 생성에 실패했습니다.",
       details: error.message,
       code: error.code,
     });

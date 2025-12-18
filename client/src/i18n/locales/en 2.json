@@ -1,0 +1,103 @@
+{
+  "app": {
+    "title": "Good Morning Club",
+    "subtitle": "Tennis Club Attendance"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "attendance": "Attendance",
+    "members": "Members",
+    "matches": "Matches",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "welcome": "Welcome back",
+    "todaySession": "Today's Session",
+    "quickCheckIn": "Quick Check-in",
+    "checkedIn": "You're checked in!",
+    "attendanceRate": "Attendance Rate",
+    "totalMatches": "Total Matches",
+    "recentActivity": "Recent Activity",
+    "noActivity": "No recent activity"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "checkIn": "Check In",
+    "checkOut": "Mark Absent",
+    "status": {
+      "attended": "Present",
+      "absent": "Absent"
+    },
+    "todayAttendees": "Today's Attendees",
+    "noAttendees": "No attendees yet",
+    "history": "Attendance History"
+  },
+  "members": {
+    "title": "Club Members",
+    "addMember": "Add Member",
+    "level": {
+      "beginner": "Beginner",
+      "intermediate": "Intermediate",
+      "advanced": "Advanced"
+    },
+    "noMembers": "No members found"
+  },
+  "matches": {
+    "title": "Match Records",
+    "newMatch": "New Match",
+    "editMatch": "Edit Match",
+    "deleteMatch": "Delete Match",
+    "deleteConfirm": "Are you sure you want to delete this match? This action cannot be undone.",
+    "type": {
+      "singles": "Singles",
+      "doubles": "Doubles"
+    },
+    "team": {
+      "a": "Team A",
+      "b": "Team B"
+    },
+    "score": "Score",
+    "noMatches": "No matches recorded"
+  },
+  "profile": {
+    "title": "My Profile",
+    "edit": "Edit Profile",
+    "save": "Save Changes",
+    "name": "Name",
+    "email": "Email",
+    "level": "Tennis Level",
+    "goals": "Goals",
+    "language": "Language",
+    "stats": "My Statistics"
+  },
+  "login": {
+    "title": "Welcome to Good Morning Club",
+    "subtitle": "Sign in to continue",
+    "loginTab": "Login",
+    "registerTab": "Register",
+    "selectUser": "Select your profile",
+    "newUser": "Create new profile",
+    "name": "Your name",
+    "email": "Your email",
+    "memberType": "Member Type",
+    "roleUser": "Member",
+    "roleAdmin": "Admin",
+    "create": "Join Club",
+    "continue": "Continue",
+    "noUsers": "No registered members",
+    "registerFirst": "Please register first"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  }
+}

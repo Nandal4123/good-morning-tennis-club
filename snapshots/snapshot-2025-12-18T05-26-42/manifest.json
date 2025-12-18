@@ -1,0 +1,19 @@
+{
+  "type": "snapshot-manifest",
+  "version": "1.0",
+  "snapshotId": "2025-12-18T05-26-42",
+  "createdAt": "2025-12-18T05:26:43.908Z",
+  "paths": {
+    "snapshotDir": "/Users/a000/Library/Mobile Documents/com~apple~CloudDocs/AI연구소/Good morning club/club-attendance/snapshots/snapshot-2025-12-18T05-26-42",
+    "dbFile": "/Users/a000/Library/Mobile Documents/com~apple~CloudDocs/AI연구소/Good morning club/club-attendance/snapshots/snapshot-2025-12-18T05-26-42/db.json",
+    "codeFile": "/Users/a000/Library/Mobile Documents/com~apple~CloudDocs/AI연구소/Good morning club/club-attendance/snapshots/snapshot-2025-12-18T05-26-42/code.tar.gz"
+  },
+  "checksums": {
+    "db.json": "sha256:39a361b99ddcd42d5f87f21db0302217c0417c2757302b739ff810151064b22d",
+    "code.tar.gz": "sha256:7a1d931854e72dcacb078d9282e57948aa9f298f806a9cc572bae235fa9cd7e3",
+    "server/prisma/schema.prisma": "sha256:5caad96a157257dca726f925bbfd6190e8e6890682d9c846089a8eceea2a3c84"
+  },
+  "runtime": {
+    "node": "v22.19.0"
+  }
+}

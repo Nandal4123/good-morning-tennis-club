@@ -12,22 +12,9 @@ import clubRoutes from "./routes/clubRoutes.js";
 import ownerRoutes from "./routes/ownerRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import metricsRoutes from "./routes/metricsRoutes.js";
-import publicRoutes from "./routes/publicRoutes.js";
 import { resolveClub } from "./middleware/clubResolver.js";
 
 dotenv.config();
-
-// 서버 시작 시 환경변수 상태 확인 (디버깅용)
-console.log("🔍 [Server Start] 환경변수 확인:");
-console.log("  - OWNER_PASSWORD 설정됨:", !!process.env.OWNER_PASSWORD);
-console.log(
-  "  - OWNER_PASSWORD 길이:",
-  (process.env.OWNER_PASSWORD || "").length
-);
-console.log("  - OWNER_TOKEN_SECRET 설정됨:", !!process.env.OWNER_TOKEN_SECRET);
-console.log("  - DATABASE_URL 설정됨:", !!process.env.DATABASE_URL);
-console.log("  - NODE_ENV:", process.env.NODE_ENV);
-console.log("  - PORT:", process.env.PORT);
 
 const app = express();
 
@@ -98,9 +85,6 @@ app.use("/api/owner", ownerRoutes);
 // Owner 운영 API(클럽 목록/생성/설정)는 클럽 해석 없이 접근 가능하게 둔다
 // (클럽 파라미터가 잘못되어도 404로 막히지 않도록)
 app.use("/api/clubs", clubRoutes);
-
-// 공개 엔드포인트(클럽 OG/브랜딩 조회 등) - 클럽 해석 없이 접근 가능
-app.use("/api/public", publicRoutes);
 
 // 모든 API에 클럽 해석 미들웨어 적용
 app.use("/api", resolveClub);
