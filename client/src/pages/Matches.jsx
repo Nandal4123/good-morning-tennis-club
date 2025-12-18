@@ -272,13 +272,16 @@ function Matches({ currentUser }) {
       // 게스트용 고유 이메일 생성
       const guestEmail = `guest_${Date.now()}@guest.local`;
       
-      // 게스트 사용자 생성
-      const newGuest = await userApi.create({
-        email: guestEmail,
-        name: `👤 ${guestName.trim()}`, // 👤 아이콘으로 게스트 구분
-        role: "USER",
-        tennisLevel: "NTRP_3_0",
-      });
+      // 게스트 사용자 생성 (현재 사용자 ID 전달하여 가입 코드 검증 건너뛰기)
+      const newGuest = await userApi.create(
+        {
+          email: guestEmail,
+          name: `👤 ${guestName.trim()}`, // 👤 아이콘으로 게스트 구분
+          role: "USER",
+          tennisLevel: "NTRP_3_0",
+        },
+        currentUser?.id // 현재 사용자 ID 전달
+      );
 
       // users 목록에 추가
       setUsers([...users, newGuest]);

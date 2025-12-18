@@ -147,7 +147,8 @@ function Members({ currentUser }) {
     e.preventDefault();
     try {
       setSaving(true);
-      await userApi.create(newMember);
+      // 관리자가 회원을 추가할 때는 현재 사용자 ID를 전달하여 가입 코드 검증을 건너뛰도록 함
+      await userApi.create(newMember, isAdmin ? currentUser?.id : null);
       setShowModal(false);
       setNewMember({ name: "", email: "", tennisLevel: "NTRP_3_0", goals: "" });
       await loadMembers();

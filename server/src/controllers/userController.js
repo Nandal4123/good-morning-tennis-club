@@ -105,7 +105,35 @@ export const createUser = async (req, res) => {
     // 가입 승인 코드 검증 (클럽 설정 기반)
     // - 멀티테넌트 운영 시 클럽별 joinCodeHash로 검증
     // - 설정이 없으면 가입 불가로 처리(Owner 대시보드에서 설정 유도)
-    if (clubId) {
+    // - 단, 관리자가 회원을 추가할 때는 가입 코드 검증을 건너뜀
+    const currentUserId = req.get("X-Current-User-Id");
+    let isAdminRequest = false;
+
+    if (currentUserId) {
+      try {
+        const currentUser = await req.prisma.user.findUnique({
+          where: { id: currentUserId },
+          select: { id: true, role: true, clubId: true },
+        });
+        // 현재 사용자가 ADMIN이고, 같은 클럽에 속해 있으면 관리자 요청으로 간주
+        if (
+          currentUser &&
+          currentUser.role === "ADMIN" &&
+          currentUser.clubId === clubId
+        ) {
+          isAdminRequest = true;
+          console.log(
+            `[CreateUser] 관리자 요청 감지: ${currentUser.id} (${currentUser.role})`
+          );
+        }
+      } catch (error) {
+        console.error("[CreateUser] 현재 사용자 확인 실패:", error);
+        // 에러가 발생해도 일반 가입 흐름으로 진행
+      }
+    }
+
+    // 관리자가 아닌 경우에만 가입 코드 검증
+    if (!isAdminRequest && clubId) {
       const club = await req.prisma.club.findUnique({
         where: { id: clubId },
         select: { id: true, joinCodeHash: true, subdomain: true },

@@ -144,8 +144,18 @@ export const userApi = {
     return fetchApi(`/users/with-monthly-stats${queryString}`);
   },
   getById: (id) => fetchApi(`/users/${id}`),
-  create: (data) =>
-    fetchApi("/users", { method: "POST", body: JSON.stringify(data) }),
+  create: (data, currentUserId = null) => {
+    const headers = {};
+    // 관리자가 회원을 추가할 때 현재 사용자 ID를 헤더에 포함
+    if (currentUserId) {
+      headers["X-Current-User-Id"] = currentUserId;
+    }
+    return fetchApi("/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers,
+    });
+  },
   update: (id, data) =>
     fetchApi(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id) => fetchApi(`/users/${id}`, { method: "DELETE" }),

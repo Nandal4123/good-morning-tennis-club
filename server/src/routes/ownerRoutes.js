@@ -12,10 +12,16 @@ router.get("/debug", (req, res) => {
 
   // 서버 로그에도 출력 (디버깅용)
   console.log("[Owner Debug] 환경변수 확인:");
-  console.log("  - process.env.OWNER_PASSWORD 원본:", rawOwnerPassword ? `"${rawOwnerPassword}"` : "undefined");
+  console.log(
+    "  - process.env.OWNER_PASSWORD 원본:",
+    rawOwnerPassword ? `"${rawOwnerPassword}"` : "undefined"
+  );
   console.log("  - 원본 길이:", rawOwnerPassword ? rawOwnerPassword.length : 0);
   console.log("  - trim 후 길이:", ownerPassword.length);
-  console.log("  - 모든 OWNER 관련 환경변수:", Object.keys(process.env).filter(k => k.includes('OWNER')));
+  console.log(
+    "  - 모든 OWNER 관련 환경변수:",
+    Object.keys(process.env).filter((k) => k.includes("OWNER"))
+  );
 
   // 보안: 실제 값은 출력하지 않고 상태만 확인
   return res.json({
@@ -51,7 +57,9 @@ router.get("/debug", (req, res) => {
         : rawOwnerPassword && rawOwnerPassword.length > 0
         ? "***"
         : "(empty)",
-    allOwnerEnvVars: Object.keys(process.env).filter(k => k.includes('OWNER')),
+    allOwnerEnvVars: Object.keys(process.env).filter((k) =>
+      k.includes("OWNER")
+    ),
   });
 });
 
