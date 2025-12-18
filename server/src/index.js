@@ -17,6 +17,15 @@ import { resolveClub } from "./middleware/clubResolver.js";
 
 dotenv.config();
 
+// 서버 시작 시 환경변수 상태 확인 (디버깅용)
+console.log("🔍 [Server Start] 환경변수 확인:");
+console.log("  - OWNER_PASSWORD 설정됨:", !!process.env.OWNER_PASSWORD);
+console.log("  - OWNER_PASSWORD 길이:", (process.env.OWNER_PASSWORD || "").length);
+console.log("  - OWNER_TOKEN_SECRET 설정됨:", !!process.env.OWNER_TOKEN_SECRET);
+console.log("  - DATABASE_URL 설정됨:", !!process.env.DATABASE_URL);
+console.log("  - NODE_ENV:", process.env.NODE_ENV);
+console.log("  - PORT:", process.env.PORT);
+
 const app = express();
 
 // Prisma 클라이언트 생성 (연결 풀 최적화)

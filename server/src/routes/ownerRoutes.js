@@ -8,18 +8,31 @@ const router = express.Router();
 router.get("/debug", (req, res) => {
   const ownerPassword = (process.env.OWNER_PASSWORD || "").toString().trim();
   const secret = process.env.OWNER_TOKEN_SECRET;
-  
+
   // 보안: 실제 값은 출력하지 않고 상태만 확인
   return res.json({
     ownerPasswordConfigured: !!ownerPassword,
     ownerPasswordLength: ownerPassword.length,
-    ownerPasswordFirstChar: ownerPassword.length > 0 ? String.fromCharCode(ownerPassword.charCodeAt(0)) : null,
-    ownerPasswordLastChar: ownerPassword.length > 0 ? String.fromCharCode(ownerPassword.charCodeAt(ownerPassword.length - 1)) : null,
+    ownerPasswordFirstChar:
+      ownerPassword.length > 0
+        ? String.fromCharCode(ownerPassword.charCodeAt(0))
+        : null,
+    ownerPasswordLastChar:
+      ownerPassword.length > 0
+        ? String.fromCharCode(
+            ownerPassword.charCodeAt(ownerPassword.length - 1)
+          )
+        : null,
     ownerTokenSecretConfigured: !!secret,
     // 첫 3글자와 마지막 3글자만 보여주기 (디버깅용)
-    ownerPasswordPreview: ownerPassword.length > 6 
-      ? `${ownerPassword.substring(0, 3)}...${ownerPassword.substring(ownerPassword.length - 3)}`
-      : ownerPassword.length > 0 ? "***" : "(empty)",
+    ownerPasswordPreview:
+      ownerPassword.length > 6
+        ? `${ownerPassword.substring(0, 3)}...${ownerPassword.substring(
+            ownerPassword.length - 3
+          )}`
+        : ownerPassword.length > 0
+        ? "***"
+        : "(empty)",
   });
 });
 
@@ -63,6 +76,10 @@ router.post("/login", async (req, res) => {
 
     if (!ownerPassword) {
       console.error("[Owner Login] ❌ OWNER_PASSWORD 환경변수가 설정되지 않음");
+      console.error("[Owner Login] 🔍 디버깅 정보:");
+      console.error("  - process.env.OWNER_PASSWORD:", process.env.OWNER_PASSWORD);
+      console.error("  - typeof process.env.OWNER_PASSWORD:", typeof process.env.OWNER_PASSWORD);
+      console.error("  - 모든 환경변수 키:", Object.keys(process.env).filter(k => k.includes('OWNER')));
       return res.status(500).json({
         error: "Owner password not configured",
         message: "서버 환경 변수 OWNER_PASSWORD가 설정되어야 합니다.",
