@@ -84,6 +84,16 @@ export const createUser = async (req, res) => {
 
     console.log("Creating user with data:", { email, name, role, tennisLevel });
 
+    // 필수 필드 검증
+    if (!name || name.trim().length === 0) {
+      console.error("[CreateUser] ❌ 이름이 누락되었거나 비어 있습니다.");
+      return res.status(400).json({ error: "Name is required", message: "이름을 입력해주세요." });
+    }
+    if (!email || email.trim().length === 0) {
+      console.error("[CreateUser] ❌ 이메일이 누락되었거나 비어 있습니다.");
+      return res.status(400).json({ error: "Email is required", message: "이메일을 입력해주세요." });
+    }
+
     // 멀티 테넌트: clubId 자동 할당
     let clubId = getClubFilter(req);
     if (!clubId) {
@@ -103,9 +113,39 @@ export const createUser = async (req, res) => {
     }
 
     // 가입 승인 코드 검증 (클럽 설정 기반)
-    // - 멀티테넌트 운영 시 클럽별 joinCodeHash로 검증
-    // - 설정이 없으면 가입 불가로 처리(Owner 대시보드에서 설정 유도)
-    if (clubId) {
+    // 관리자 요청인지 확인
+    const currentUserId = req.get("X-Current-User-Id");
+    let isAdminRequest = false;
+
+    if (currentUserId) {
+      try {
+        const currentUser = await req.prisma.user.findUnique({
+          where: { id: currentUserId },
+          select: { id: true, role: true, clubId: true },
+        });
+
+        if (currentUser && currentUser.role === "ADMIN") {
+          // 같은 클럽의 관리자인지 확인
+          const isSameClub =
+            currentUser.clubId === clubId ||
+            (clubId === null && currentUser.clubId === null);
+          if (isSameClub) {
+            isAdminRequest = true;
+            console.log(
+              `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role})`
+            );
+          }
+        }
+      } catch (error) {
+        console.error("[CreateUser] 현재 사용자 확인 실패:", error);
+      }
+    }
+
+    // 가입 코드 검증 규칙:
+    // 1. 관리자 요청이면 검증 건너뛰기
+    // 2. clubId가 null이면 검증 건너뛰기 (굿모닝클럽 호환)
+    // 3. 그 외의 경우에만 가입 코드 검증 실행
+    if (!isAdminRequest && clubId) {
       const club = await req.prisma.club.findUnique({
         where: { id: clubId },
         select: { id: true, joinCodeHash: true, subdomain: true },
@@ -127,11 +167,11 @@ export const createUser = async (req, res) => {
 
     const user = await req.prisma.user.create({
       data: {
-        email,
-        name,
+        email: email.trim(),
+        name: name.trim(),
         role: role || "USER",
         tennisLevel: tennisLevel || "NTRP_3_0",
-        goals,
+        goals: goals?.trim() || null, // 빈 문자열이면 null로 저장
         languagePref: languagePref || "ko",
         profileMetadata,
         clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
