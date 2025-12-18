@@ -154,7 +154,10 @@ function Members({ currentUser }) {
       await loadMembers();
     } catch (error) {
       console.error("Failed to create member:", error);
-      alert(error.message);
+      // 서버에서 반환한 상세 에러 메시지 표시
+      const errorMessage =
+        error.message || "회원 추가에 실패했습니다. 다시 시도해주세요.";
+      alert(errorMessage);
     } finally {
       setSaving(false);
     }

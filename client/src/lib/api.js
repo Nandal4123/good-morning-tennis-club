@@ -100,20 +100,28 @@ async function fetchApi(endpoint, options = {}) {
 
     if (!response.ok) {
       let errorMessage = "Request failed";
+      let errorData = null;
       try {
-        const error = await response.json();
+        errorData = await response.json();
         errorMessage =
-          error.message ||
-          error.error ||
+          errorData.message ||
+          errorData.error ||
           `HTTP ${response.status}: ${response.statusText}`;
       } catch (e) {
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
       console.error(
         `[API] ❌ Error ${response.status} from ${url}:`,
-        errorMessage
+        errorMessage,
+        errorData
       );
-      throw new Error(errorMessage);
+      const error = new Error(errorMessage);
+      // 서버에서 반환한 상세 정보를 에러 객체에 포함
+      if (errorData) {
+        error.details = errorData.details;
+        error.code = errorData.code;
+      }
+      throw error;
     }
 
     const data = await response.json();

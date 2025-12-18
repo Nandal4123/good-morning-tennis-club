@@ -102,11 +102,14 @@ export const createUser = async (req, res) => {
       }
     }
 
+    console.log("[CreateUser] clubId:", clubId);
+
     // 가입 승인 코드 검증 (클럽 설정 기반)
     // - 멀티테넌트 운영 시 클럽별 joinCodeHash로 검증
     // - 설정이 없으면 가입 불가로 처리(Owner 대시보드에서 설정 유도)
     // - 단, 관리자가 회원을 추가할 때는 가입 코드 검증을 건너뜀
     const currentUserId = req.get("X-Current-User-Id");
+    console.log("[CreateUser] X-Current-User-Id 헤더:", currentUserId);
     let isAdminRequest = false;
 
     if (currentUserId) {
@@ -115,21 +118,35 @@ export const createUser = async (req, res) => {
           where: { id: currentUserId },
           select: { id: true, role: true, clubId: true },
         });
+        console.log("[CreateUser] 현재 사용자 조회 결과:", {
+          found: !!currentUser,
+          role: currentUser?.role,
+          userClubId: currentUser?.clubId,
+          targetClubId: clubId,
+        });
         // 현재 사용자가 ADMIN이고, 같은 클럽에 속해 있으면 관리자 요청으로 간주
+        // clubId가 null인 경우도 허용 (기본 클럽)
         if (
           currentUser &&
           currentUser.role === "ADMIN" &&
-          currentUser.clubId === clubId
+          (currentUser.clubId === clubId ||
+            (clubId === null && currentUser.clubId === null))
         ) {
           isAdminRequest = true;
           console.log(
-            `[CreateUser] 관리자 요청 감지: ${currentUser.id} (${currentUser.role})`
+            `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role})`
+          );
+        } else {
+          console.log(
+            `[CreateUser] ❌ 관리자 요청 아님: role=${currentUser?.role}, clubId 일치=${currentUser?.clubId === clubId}`
           );
         }
       } catch (error) {
         console.error("[CreateUser] 현재 사용자 확인 실패:", error);
         // 에러가 발생해도 일반 가입 흐름으로 진행
       }
+    } else {
+      console.log("[CreateUser] X-Current-User-Id 헤더 없음 - 일반 가입 흐름");
     }
 
     // 관리자가 아닌 경우에만 가입 코드 검증
@@ -169,14 +186,20 @@ export const createUser = async (req, res) => {
     console.log("User created successfully:", user.id);
     res.status(201).json(user);
   } catch (error) {
-    console.error("Error creating user:", error);
-    console.error("Error details:", error.message);
+    console.error("❌ [CreateUser] 에러 발생:", error);
+    console.error("❌ [CreateUser] 에러 메시지:", error.message);
+    console.error("❌ [CreateUser] 에러 코드:", error.code);
+    console.error("❌ [CreateUser] 에러 스택:", error.stack);
     if (error.code === "P2002") {
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({
+        error: "Email already exists",
+        message: "이미 사용 중인 이메일입니다.",
+      });
     }
-    // 개발 환경에서 상세 에러 반환
+    // 상세 에러 반환 (프로덕션에서도 디버깅을 위해)
     res.status(500).json({
       error: "Failed to create user",
+      message: error.message || "회원 생성에 실패했습니다.",
       details: error.message,
       code: error.code,
     });
