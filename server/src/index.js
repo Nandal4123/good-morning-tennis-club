@@ -74,12 +74,16 @@ app.use((req, res, next) => {
 });
 
 // 멀티 테넌트: 클럽 해석 미들웨어
-// Health check와 Owner API는 클럽 해석 없이 접근 가능
+// Health check, Owner API, Clubs API는 클럽 해석 없이 접근 가능
 app.use("/api/health", (req, res, next) => next());
 app.use("/api/owner", (req, res, next) => next());
+app.use("/api/clubs", (req, res, next) => next()); // Owner 대시보드용 - 모든 클럽 조회
 
 // Owner Routes (클럽 해석 전에 등록)
 app.use("/api/owner", ownerRoutes);
+
+// Clubs Routes (클럽 해석 전에 등록 - Owner 대시보드용)
+app.use("/api/clubs", clubRoutes);
 
 // 모든 API에 클럽 해석 미들웨어 적용
 app.use("/api", resolveClub);
@@ -90,7 +94,6 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendances", attendanceRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
-app.use("/api/clubs", clubRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -149,21 +152,35 @@ process.on("SIGINT", async () => {
 
 app.listen(PORT, () => {
   console.log(`🎾 Club Attendance Server running on port ${PORT}`);
-  
+
   // 서버 시작 시 환경 변수 확인 (디버깅용)
   console.log("\n🔍 [Server Start] 환경변수 확인:");
   console.log("  - OWNER_PASSWORD 설정됨:", !!process.env.OWNER_PASSWORD);
-  console.log("  - OWNER_PASSWORD 길이:", process.env.OWNER_PASSWORD?.length || 0);
-  console.log("  - OWNER_TOKEN_SECRET 설정됨:", !!process.env.OWNER_TOKEN_SECRET);
-  console.log("  - OWNER_TOKEN_SECRET 길이:", process.env.OWNER_TOKEN_SECRET?.length || 0);
+  console.log(
+    "  - OWNER_PASSWORD 길이:",
+    process.env.OWNER_PASSWORD?.length || 0
+  );
+  console.log(
+    "  - OWNER_TOKEN_SECRET 설정됨:",
+    !!process.env.OWNER_TOKEN_SECRET
+  );
+  console.log(
+    "  - OWNER_TOKEN_SECRET 길이:",
+    process.env.OWNER_TOKEN_SECRET?.length || 0
+  );
   console.log("  - DATABASE_URL 설정됨:", !!process.env.DATABASE_URL);
   console.log("  - NODE_ENV:", process.env.NODE_ENV || "not set");
   console.log("  - PORT:", PORT);
-  
+
   // OWNER 관련 환경 변수 키 확인
-  const ownerEnvKeys = Object.keys(process.env).filter((k) => k.includes("OWNER"));
-  console.log("  - OWNER 관련 환경변수 키:", ownerEnvKeys.length > 0 ? ownerEnvKeys : "없음");
-  
+  const ownerEnvKeys = Object.keys(process.env).filter((k) =>
+    k.includes("OWNER")
+  );
+  console.log(
+    "  - OWNER 관련 환경변수 키:",
+    ownerEnvKeys.length > 0 ? ownerEnvKeys : "없음"
+  );
+
   if (!process.env.OWNER_PASSWORD) {
     console.error("  ⚠️ 경고: OWNER_PASSWORD가 설정되지 않았습니다!");
   }
