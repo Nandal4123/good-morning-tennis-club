@@ -107,7 +107,8 @@ export const createUser = async (req, res) => {
     // 가입 승인 코드 검증 (클럽 설정 기반)
     // - 멀티테넌트 운영 시 클럽별 joinCodeHash로 검증
     // - 설정이 없으면 가입 불가로 처리(Owner 대시보드에서 설정 유도)
-    // - 단, 관리자가 회원을 추가할 때는 가입 코드 검증을 건너뜀
+    // - 단, 관리자가 회원을 추가할 때는 가입 코드 검증을 완전히 건너뜀 (굿모닝클럽과 동일)
+    // - clubId가 null인 경우도 검증 건너뛰기 (굿모닝클럽 호환)
     const currentUserId = req.get("X-Current-User-Id");
     console.log("[CreateUser] X-Current-User-Id 헤더:", currentUserId);
     let isAdminRequest = false;
@@ -126,35 +127,41 @@ export const createUser = async (req, res) => {
           reqClubId: req.club?.id,
         });
         
-        // 관리자 확인 로직:
+        // 관리자 확인 로직 (단순화):
         // 1. 현재 사용자가 ADMIN이어야 함
-        // 2. 같은 클럽에 속해 있어야 함 (clubId 비교)
-        //    - clubId가 null인 경우: 둘 다 null이어야 함 (기본 클럽)
-        //    - clubId가 있는 경우: 정확히 일치해야 함
-        //    - 또는 req.club이 있으면 req.club.id와 비교
+        // 2. 같은 클럽에 속해 있어야 함
+        //    - req.club이 있으면 req.club.id와 비교 (가장 정확)
+        //    - 없으면 clubId 직접 비교
+        //    - clubId가 null인 경우도 허용 (기본 클럽)
         const isAdmin = currentUser && currentUser.role === "ADMIN";
-        let isSameClub = false;
         
         if (isAdmin) {
-          // req.club이 있으면 req.club.id와 비교 (더 정확함)
+          let isSameClub = false;
+          
+          // req.club이 있으면 req.club.id와 비교 (가장 정확)
           if (req.club?.id) {
             isSameClub = currentUser.clubId === req.club.id;
+          } else if (clubId) {
+            // clubId가 있으면 직접 비교
+            isSameClub = currentUser.clubId === clubId;
           } else {
-            // req.club이 없으면 clubId 직접 비교
-            isSameClub =
-              currentUser.clubId === clubId ||
-              (clubId === null && currentUser.clubId === null);
+            // clubId가 null이면 둘 다 null이어야 함 (기본 클럽)
+            isSameClub = currentUser.clubId === null;
           }
-        }
-        
-        if (isAdmin && isSameClub) {
-          isAdminRequest = true;
-          console.log(
-            `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role}, clubId=${currentUser.clubId})`
-          );
+          
+          if (isSameClub) {
+            isAdminRequest = true;
+            console.log(
+              `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role}, clubId=${currentUser.clubId})`
+            );
+          } else {
+            console.log(
+              `[CreateUser] ❌ 관리자이지만 다른 클럽: userClubId=${currentUser.clubId}, targetClubId=${clubId}, reqClubId=${req.club?.id}`
+            );
+          }
         } else {
           console.log(
-            `[CreateUser] ❌ 관리자 요청 아님: isAdmin=${isAdmin}, isSameClub=${isSameClub}, role=${currentUser?.role}, userClubId=${currentUser?.clubId}, targetClubId=${clubId}, reqClubId=${req.club?.id}`
+            `[CreateUser] ❌ 관리자 아님: role=${currentUser?.role}`
           );
         }
       } catch (error) {
@@ -165,8 +172,10 @@ export const createUser = async (req, res) => {
       console.log("[CreateUser] X-Current-User-Id 헤더 없음 - 일반 가입 흐름");
     }
 
-    // 관리자가 아닌 경우에만 가입 코드 검증
-    // clubId가 null이면 검증 건너뛰기 (굿모닝클럽 호환)
+    // 가입 코드 검증 규칙 (굿모닝클럽과 동일한 방식):
+    // 1. 관리자 요청이면 검증 건너뛰기 (모든 클럽 공통)
+    // 2. clubId가 null이면 검증 건너뛰기 (굿모닝클럽 호환)
+    // 3. 그 외의 경우에만 가입 코드 검증 실행
     if (!isAdminRequest && clubId) {
       const club = await req.prisma.club.findUnique({
         where: { id: clubId },
@@ -181,7 +190,7 @@ export const createUser = async (req, res) => {
       } else {
         // 가입 코드가 설정되지 않은 경우
         // - 일반 사용자: 가입 불가
-        // - 관리자: 이미 isAdminRequest가 true이므로 여기 도달하지 않음
+        // - 관리자는 이미 isAdminRequest가 true이므로 여기 도달하지 않음
         return res.status(409).json({
           error: "Join code not set",
           message:
@@ -190,10 +199,8 @@ export const createUser = async (req, res) => {
       }
     }
     
-    // clubId가 null인 경우 (굿모닝클럽 호환) 가입 코드 검증 건너뛰기
-    // 관리자 요청인 경우도 이미 처리됨
     console.log(
-      `[CreateUser] 가입 코드 검증 결과: isAdminRequest=${isAdminRequest}, clubId=${clubId}`
+      `[CreateUser] 가입 코드 검증 결과: isAdminRequest=${isAdminRequest}, clubId=${clubId}, 검증 건너뜀=${isAdminRequest || !clubId}`
     );
 
     const user = await req.prisma.user.create({
