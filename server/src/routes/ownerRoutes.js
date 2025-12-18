@@ -6,12 +6,21 @@ const router = express.Router();
 
 // GET /api/owner/debug (디버깅용 - 환경변수 상태만 확인, 실제 값은 출력하지 않음)
 router.get("/debug", (req, res) => {
-  const ownerPassword = (process.env.OWNER_PASSWORD || "").toString().trim();
+  const rawOwnerPassword = process.env.OWNER_PASSWORD;
+  const ownerPassword = (rawOwnerPassword || "").toString().trim();
   const secret = process.env.OWNER_TOKEN_SECRET;
+
+  // 서버 로그에도 출력 (디버깅용)
+  console.log("[Owner Debug] 환경변수 확인:");
+  console.log("  - process.env.OWNER_PASSWORD 원본:", rawOwnerPassword ? `"${rawOwnerPassword}"` : "undefined");
+  console.log("  - 원본 길이:", rawOwnerPassword ? rawOwnerPassword.length : 0);
+  console.log("  - trim 후 길이:", ownerPassword.length);
+  console.log("  - 모든 OWNER 관련 환경변수:", Object.keys(process.env).filter(k => k.includes('OWNER')));
 
   // 보안: 실제 값은 출력하지 않고 상태만 확인
   return res.json({
     ownerPasswordConfigured: !!ownerPassword,
+    ownerPasswordRawLength: rawOwnerPassword ? rawOwnerPassword.length : 0,
     ownerPasswordLength: ownerPassword.length,
     ownerPasswordFirstChar:
       ownerPassword.length > 0
@@ -33,6 +42,16 @@ router.get("/debug", (req, res) => {
         : ownerPassword.length > 0
         ? "***"
         : "(empty)",
+    // 원본 값의 첫 3글자와 마지막 3글자 (trim 전)
+    ownerPasswordRawPreview:
+      rawOwnerPassword && rawOwnerPassword.length > 6
+        ? `${rawOwnerPassword.substring(0, 3)}...${rawOwnerPassword.substring(
+            rawOwnerPassword.length - 3
+          )}`
+        : rawOwnerPassword && rawOwnerPassword.length > 0
+        ? "***"
+        : "(empty)",
+    allOwnerEnvVars: Object.keys(process.env).filter(k => k.includes('OWNER')),
   });
 });
 
@@ -42,14 +61,20 @@ router.post("/login", async (req, res) => {
   try {
     // Render UI에서 복사/붙여넣기 시 공백이 섞이는 실수를 방지하기 위해 trim 처리
     const inputPassword = (req.body?.password || "").toString().trim();
-    
+
     // 환경변수 직접 확인 (디버깅용)
     const rawOwnerPassword = process.env.OWNER_PASSWORD;
     console.log("[Owner Login] 🔍 환경변수 원본 확인:");
-    console.log("  - process.env.OWNER_PASSWORD 원본:", rawOwnerPassword ? `"${rawOwnerPassword}"` : "undefined");
+    console.log(
+      "  - process.env.OWNER_PASSWORD 원본:",
+      rawOwnerPassword ? `"${rawOwnerPassword}"` : "undefined"
+    );
     console.log("  - typeof:", typeof rawOwnerPassword);
-    console.log("  - 길이 (원본):", rawOwnerPassword ? rawOwnerPassword.length : 0);
-    
+    console.log(
+      "  - 길이 (원본):",
+      rawOwnerPassword ? rawOwnerPassword.length : 0
+    );
+
     const ownerPassword = (rawOwnerPassword || "").toString().trim();
     const secret = process.env.OWNER_TOKEN_SECRET;
 
