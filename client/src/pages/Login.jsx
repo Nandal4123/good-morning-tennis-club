@@ -17,7 +17,7 @@ import { userApi, clubApi } from "../lib/api";
 const OWNER_EMAIL = "nandal4123@gmail.com";
 
 // 소유자 암호 (OWNER 전용)
-const OWNER_PASSWORD = "admin2347";
+const OWNER_PASSWORD = "owner2025";
 
 // 클럽별 관리자 암호
 const CLUB_ADMIN_PASSWORDS = {
