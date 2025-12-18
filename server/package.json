@@ -20,7 +20,9 @@
     "code:restore-snapshot": "node scripts/restore-code-snapshot.js",
     "db:cleanup-duplicates": "node scripts/cleanup-duplicate-attendances.js",
     "db:cleanup-guests": "node scripts/cleanup-guest-attendances.js",
-    "db:prepare-multi-tenant": "node scripts/prepare-multi-tenant-migration.js"
+    "db:prepare-multi-tenant": "node scripts/prepare-multi-tenant-migration.js",
+    "db:check-clubs": "node scripts/check-clubs.js",
+    "db:create-ace-club": "node scripts/create-ace-club.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
