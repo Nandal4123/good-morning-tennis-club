@@ -123,22 +123,38 @@ export const createUser = async (req, res) => {
           role: currentUser?.role,
           userClubId: currentUser?.clubId,
           targetClubId: clubId,
+          reqClubId: req.club?.id,
         });
-        // 현재 사용자가 ADMIN이고, 같은 클럽에 속해 있으면 관리자 요청으로 간주
-        // clubId가 null인 경우도 허용 (기본 클럽)
-        if (
-          currentUser &&
-          currentUser.role === "ADMIN" &&
-          (currentUser.clubId === clubId ||
-            (clubId === null && currentUser.clubId === null))
-        ) {
+        
+        // 관리자 확인 로직:
+        // 1. 현재 사용자가 ADMIN이어야 함
+        // 2. 같은 클럽에 속해 있어야 함 (clubId 비교)
+        //    - clubId가 null인 경우: 둘 다 null이어야 함 (기본 클럽)
+        //    - clubId가 있는 경우: 정확히 일치해야 함
+        //    - 또는 req.club이 있으면 req.club.id와 비교
+        const isAdmin = currentUser && currentUser.role === "ADMIN";
+        let isSameClub = false;
+        
+        if (isAdmin) {
+          // req.club이 있으면 req.club.id와 비교 (더 정확함)
+          if (req.club?.id) {
+            isSameClub = currentUser.clubId === req.club.id;
+          } else {
+            // req.club이 없으면 clubId 직접 비교
+            isSameClub =
+              currentUser.clubId === clubId ||
+              (clubId === null && currentUser.clubId === null);
+          }
+        }
+        
+        if (isAdmin && isSameClub) {
           isAdminRequest = true;
           console.log(
-            `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role})`
+            `[CreateUser] ✅ 관리자 요청 감지: ${currentUser.id} (${currentUser.role}, clubId=${currentUser.clubId})`
           );
         } else {
           console.log(
-            `[CreateUser] ❌ 관리자 요청 아님: role=${currentUser?.role}, clubId 일치=${currentUser?.clubId === clubId}`
+            `[CreateUser] ❌ 관리자 요청 아님: isAdmin=${isAdmin}, isSameClub=${isSameClub}, role=${currentUser?.role}, userClubId=${currentUser?.clubId}, targetClubId=${clubId}, reqClubId=${req.club?.id}`
           );
         }
       } catch (error) {
@@ -150,6 +166,7 @@ export const createUser = async (req, res) => {
     }
 
     // 관리자가 아닌 경우에만 가입 코드 검증
+    // clubId가 null이면 검증 건너뛰기 (굿모닝클럽 호환)
     if (!isAdminRequest && clubId) {
       const club = await req.prisma.club.findUnique({
         where: { id: clubId },
@@ -162,6 +179,9 @@ export const createUser = async (req, res) => {
           return res.status(403).json({ error: "Invalid join code" });
         }
       } else {
+        // 가입 코드가 설정되지 않은 경우
+        // - 일반 사용자: 가입 불가
+        // - 관리자: 이미 isAdminRequest가 true이므로 여기 도달하지 않음
         return res.status(409).json({
           error: "Join code not set",
           message:
@@ -169,6 +189,12 @@ export const createUser = async (req, res) => {
         });
       }
     }
+    
+    // clubId가 null인 경우 (굿모닝클럽 호환) 가입 코드 검증 건너뛰기
+    // 관리자 요청인 경우도 이미 처리됨
+    console.log(
+      `[CreateUser] 가입 코드 검증 결과: isAdminRequest=${isAdminRequest}, clubId=${clubId}`
+    );
 
     const user = await req.prisma.user.create({
       data: {
