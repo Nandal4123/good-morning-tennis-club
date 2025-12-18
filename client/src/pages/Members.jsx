@@ -146,12 +146,24 @@ function Members({ currentUser }) {
   const handleCreateMember = async (e) => {
     e.preventDefault();
     
+    console.log("[Members] handleCreateMember 호출, newMember:", newMember);
+    
+    // 폼에서 직접 값 가져오기 (상태 업데이트 타이밍 문제 방지)
+    const form = e.target;
+    const formData = new FormData(form);
+    const name = formData.get("name") || newMember.name || "";
+    const email = formData.get("email") || newMember.email || "";
+    const tennisLevel = formData.get("tennisLevel") || newMember.tennisLevel || "NTRP_3_0";
+    const goals = formData.get("goals") || newMember.goals || "";
+    
+    console.log("[Members] 폼 데이터:", { name, email, tennisLevel, goals });
+    
     // 클라이언트 측 검증
-    if (!newMember.name || !newMember.name.trim()) {
+    if (!name || !name.trim()) {
       alert("이름을 입력해주세요.");
       return;
     }
-    if (!newMember.email || !newMember.email.trim()) {
+    if (!email || !email.trim()) {
       alert("이메일을 입력해주세요.");
       return;
     }
@@ -161,17 +173,17 @@ function Members({ currentUser }) {
       
       // 데이터 정리 (빈 문자열 제거)
       const memberData = {
-        name: newMember.name.trim(),
-        email: newMember.email.trim(),
-        tennisLevel: newMember.tennisLevel || "NTRP_3_0",
+        name: name.trim(),
+        email: email.trim(),
+        tennisLevel: tennisLevel || "NTRP_3_0",
       };
       
       // goals가 있으면 추가
-      if (newMember.goals && newMember.goals.trim()) {
-        memberData.goals = newMember.goals.trim();
+      if (goals && goals.trim()) {
+        memberData.goals = goals.trim();
       }
       
-      console.log("[Members] 회원 추가 데이터:", memberData);
+      console.log("[Members] 최종 회원 추가 데이터:", memberData);
       
       // 관리자가 회원을 추가할 때는 현재 사용자 ID를 전달하여 가입 코드 검증을 건너뛰도록 함
       await userApi.create(memberData, isAdmin ? currentUser?.id : null);
@@ -885,6 +897,7 @@ function Members({ currentUser }) {
                 </label>
                 <input
                   type="text"
+                  name="name"
                   required
                   value={newMember.name}
                   onChange={(e) =>
@@ -901,6 +914,7 @@ function Members({ currentUser }) {
                 </label>
                 <input
                   type="email"
+                  name="email"
                   required
                   value={newMember.email}
                   onChange={(e) =>
@@ -926,6 +940,7 @@ function Members({ currentUser }) {
                   </button>
                 </div>
                 <select
+                  name="tennisLevel"
                   value={newMember.tennisLevel}
                   onChange={(e) =>
                     setNewMember({ ...newMember, tennisLevel: e.target.value })
@@ -945,6 +960,7 @@ function Members({ currentUser }) {
                   {t("profile.goals")}
                 </label>
                 <textarea
+                  name="goals"
                   value={newMember.goals}
                   onChange={(e) =>
                     setNewMember({ ...newMember, goals: e.target.value })
