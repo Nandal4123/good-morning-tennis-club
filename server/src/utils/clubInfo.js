@@ -48,35 +48,12 @@ export const getClubInfo = (req) => {
 };
 
 /**
- * default 클럽인 경우 clubId NULL 데이터도 포함해야 하는지 확인
- */
-export const shouldIncludeNullClubIdForDefault = (req) => {
-  if (!isMultiTenantMode()) {
-    return true; // MVP 모드에서는 항상 포함
-  }
-  
-  const clubInfo = getClubInfo(req);
-  return clubInfo.subdomain === "default" || clubInfo.id === "default-club";
-};
-
-/**
  * 클럽 필터를 포함한 where 조건 생성
  */
 export const buildClubWhere = (req, additionalWhere = {}) => {
   const clubId = getClubFilter(req);
-  const allowNull = shouldIncludeNullClubIdForDefault(req);
   
   if (clubId) {
-    if (allowNull) {
-      // default 클럽인 경우 clubId가 null인 데이터도 포함
-      return {
-        ...additionalWhere,
-        OR: [
-          { clubId },
-          { clubId: null },
-        ],
-      };
-    }
     return {
       ...additionalWhere,
       clubId,

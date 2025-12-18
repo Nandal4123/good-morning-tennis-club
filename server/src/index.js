@@ -9,9 +9,6 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import clubRoutes from "./routes/clubRoutes.js";
-import ownerRoutes from "./routes/ownerRoutes.js";
-import authRoutes from "./routes/authRoutes.js";
-import metricsRoutes from "./routes/metricsRoutes.js";
 import { resolveClub } from "./middleware/clubResolver.js";
 
 dotenv.config();
@@ -79,24 +76,16 @@ app.use((req, res, next) => {
 // Health check는 클럽 해석 없이 접근 가능
 app.use("/api/health", (req, res, next) => next());
 
-// Owner 인증(클럽 해석 없이 접근 가능)
-app.use("/api/owner", ownerRoutes);
-
-// Owner 운영 API(클럽 목록/생성/설정)는 클럽 해석 없이 접근 가능하게 둔다
-// (클럽 파라미터가 잘못되어도 404로 막히지 않도록)
-app.use("/api/clubs", clubRoutes);
-
 // 모든 API에 클럽 해석 미들웨어 적용
 app.use("/api", resolveClub);
 
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/metrics", metricsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/attendances", attendanceRoutes);
 app.use("/api/matches", matchRoutes);
 app.use("/api/feedbacks", feedbackRoutes);
+app.use("/api/clubs", clubRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

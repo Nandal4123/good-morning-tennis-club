@@ -147,8 +147,7 @@ function Members({ currentUser }) {
     e.preventDefault();
     try {
       setSaving(true);
-      // 관리자일 경우 currentUserId 전달 (가입 코드 검증 건너뛰기)
-      await userApi.create(newMember, isAdmin ? currentUser?.id : null);
+      await userApi.create(newMember);
       setShowModal(false);
       setNewMember({ name: "", email: "", tennisLevel: "NTRP_3_0", goals: "" });
       await loadMembers();

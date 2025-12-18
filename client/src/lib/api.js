@@ -121,17 +121,8 @@ export const userApi = {
     return fetchApi(`/users/with-monthly-stats${queryString}`);
   },
   getById: (id) => fetchApi(`/users/${id}`),
-  create: (data, currentUserId = null) => {
-    const headers = {};
-    if (currentUserId) {
-      headers["X-Current-User-Id"] = currentUserId;
-    }
-    return fetchApi("/users", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers,
-    });
-  },
+  create: (data) =>
+    fetchApi("/users", { method: "POST", body: JSON.stringify(data) }),
   update: (id, data) =>
     fetchApi(`/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   delete: (id) => fetchApi(`/users/${id}`, { method: "DELETE" }),
