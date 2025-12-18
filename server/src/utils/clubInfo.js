@@ -49,11 +49,25 @@ export const getClubInfo = (req) => {
 
 /**
  * 클럽 필터를 포함한 where 조건 생성
+ * 기본 클럽(default)일 때는 clubId=NULL 레거시 데이터도 포함
  */
 export const buildClubWhere = (req, additionalWhere = {}) => {
   const clubId = getClubFilter(req);
   
   if (clubId) {
+    // 기본 클럽(default)인 경우 clubId=NULL 레거시 데이터도 포함
+    const clubSubdomain = req.club?.subdomain;
+    if (clubSubdomain === 'default') {
+      return {
+        ...additionalWhere,
+        OR: [
+          { clubId },
+          { clubId: null }, // 레거시 데이터 호환
+        ],
+      };
+    }
+    
+    // 다른 클럽은 정확히 해당 clubId만 조회
     return {
       ...additionalWhere,
       clubId,

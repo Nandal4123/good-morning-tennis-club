@@ -31,11 +31,22 @@ export const getUserById = async (req, res) => {
     // where 조건 구성
     const where = { id };
     if (clubId) {
-      where.clubId = clubId;
+      // 기본 클럽(default)인 경우 clubId=NULL 레거시 데이터도 포함
+      const clubSubdomain = req.club?.subdomain;
+      if (clubSubdomain === 'default') {
+        where.OR = [
+          { id, clubId },
+          { id, clubId: null }, // 레거시 데이터 호환
+        ];
+      } else {
+        where.clubId = clubId;
+      }
     }
 
-    const user = await req.prisma.user.findUnique({
-      where,
+    const user = clubId && req.club?.subdomain === 'default' && where.OR
+      ? await req.prisma.user.findFirst({ where: { OR: where.OR } })
+      : await req.prisma.user.findUnique({
+          where,
       include: {
         attendances: {
           include: { session: true },
