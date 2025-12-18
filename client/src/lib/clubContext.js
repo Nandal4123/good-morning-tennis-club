@@ -47,7 +47,7 @@ export function isMultiTenantMode() {
       return true;
     }
   }
-  
+
   // 프로덕션에서는 환경 변수로 확인
   // 개발 모드에서는 기본적으로 false (MVP 모드)
   return import.meta.env.VITE_MULTI_TENANT_MODE === "true";

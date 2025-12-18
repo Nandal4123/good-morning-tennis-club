@@ -42,42 +42,44 @@ enum UserRole {
 
 // 멀티 테넌트를 위한 Club 모델
 model Club {
-  id              String    @id @default(cuid())
-  name            String
-  subdomain       String    @unique
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  users           User[]
-  sessions        Session[]
-  matches         Match[]
-  
+  id                String   @id @default(cuid())
+  name              String
+  subdomain         String   @unique
+  adminPasswordHash String? // 관리자 비밀번호 해시
+  joinCodeHash      String? // 가입 코드 해시
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  users    User[]
+  sessions Session[]
+  matches  Match[]
+
   @@map("clubs")
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
+  id              String      @id @default(cuid())
+  email           String      @unique
   name            String
-  role            UserRole  @default(USER)
+  role            UserRole    @default(USER)
   tennisLevel     TennisLevel @default(NTRP_3_0)
   goals           String?
-  languagePref    String    @default("en")
+  languagePref    String      @default("en")
   profileMetadata Json?
   // 멀티 테넌트를 위한 clubId 필드 (마이그레이션 후 필수로 변경)
-  clubId          String?   // 마이그레이션 전까지 옵셔널
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  clubId          String? // 마이그레이션 전까지 옵셔널
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  attendances      Attendance[]
+  attendances       Attendance[]
   matchParticipants MatchParticipant[]
-  feedbacks        Feedback[]
-  createdMatches   Match[] @relation("MatchCreator")
-  club            Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  feedbacks         Feedback[]
+  createdMatches    Match[]            @relation("MatchCreator")
+  club              Club?              @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
-  @@map("users")
   // 마이그레이션 후 활성화: @@unique([clubId, email])
   @@index([clubId])
+  @@map("users")
 }
 
 model Session {
@@ -85,14 +87,14 @@ model Session {
   date        DateTime
   description String?
   // 멀티 테넌트를 위한 clubId 필드 (마이그레이션 후 필수로 변경)
-  clubId      String?   // 마이그레이션 전까지 옵셔널
+  clubId      String? // 마이그레이션 전까지 옵셔널
   createdAt   DateTime @default(now())
 
   attendances Attendance[]
-  club        Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  club        Club?        @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
-  @@map("sessions")
   @@index([clubId])
+  @@map("sessions")
 }
 
 model Attendance {
@@ -117,16 +119,16 @@ model Match {
   date      DateTime
   type      MatchType @default(DOUBLES)
   createdAt DateTime  @default(now())
-  createdBy String?   // 등록자 ID
+  createdBy String? // 등록자 ID
   // 멀티 테넌트를 위한 clubId 필드 (마이그레이션 후 필수로 변경)
-  clubId    String?   // 마이그레이션 전까지 옵셔널
+  clubId    String? // 마이그레이션 전까지 옵셔널
 
   participants MatchParticipant[]
-  creator      User?   @relation("MatchCreator", fields: [createdBy], references: [id], onDelete: SetNull)
-  club        Club?     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  creator      User?              @relation("MatchCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  club         Club?              @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
-  @@map("matches")
   @@index([clubId])
+  @@map("matches")
 }
 
 model MatchParticipant {
@@ -157,4 +159,3 @@ model Feedback {
   @@index([date])
   @@map("feedbacks")
 }
-

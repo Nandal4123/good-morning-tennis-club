@@ -237,4 +237,17 @@ export const clubsApi = {
     return fetchApi(`/clubs${queryString}`);
   },
   getSummary: (subdomain) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}/summary`),
+  get: (subdomain) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}`),
+  create: (data) => fetchApi("/clubs", {
+    method: "POST",
+    body: JSON.stringify(data),
+  }),
+  updateAdminPassword: (subdomain, password) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}/admin-password`, {
+    method: "PUT",
+    body: JSON.stringify({ password }),
+  }),
+  updateJoinCode: (subdomain, joinCode) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}/join-code`, {
+    method: "PUT",
+    body: JSON.stringify({ joinCode }),
+  }),
 };

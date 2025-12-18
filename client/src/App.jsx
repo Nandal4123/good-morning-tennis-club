@@ -37,18 +37,18 @@ function AppContent() {
   // 현재 클럽 정보 로드
   // Owner 대시보드는 모든 클럽을 관리하므로 클럽 정보를 로드하지 않음
   useEffect(() => {
-    if (location.pathname === '/owner') {
+    if (location.pathname === "/owner") {
       setClubInfoLoading(false);
       setCurrentClubInfo(null);
       return;
     }
-    
+
     const loadClubInfo = async () => {
       try {
         setClubInfoLoading(true);
         const info = await clubApi.getInfo();
         setCurrentClubInfo(info);
-        console.log('[App] 클럽 정보 로드 완료:', info.name);
+        console.log("[App] 클럽 정보 로드 완료:", info.name);
       } catch (error) {
         console.error("Failed to load club info:", error);
         // 기본값 설정하지 않음 (에러 상태 유지)
@@ -62,10 +62,10 @@ function AppContent() {
   // URL 파라미터 변경 시 클럽 확인 및 사용자 검증
   useEffect(() => {
     // Owner 대시보드에서는 클럽 검증하지 않음
-    if (location.pathname === '/owner') {
+    if (location.pathname === "/owner") {
       return;
     }
-    
+
     // 클럽 정보가 로드되지 않았으면 검증하지 않음
     if (clubInfoLoading || !currentClubInfo) {
       return;
@@ -79,21 +79,21 @@ function AppContent() {
 
       const userClubId = currentUser.clubId;
       const currentClubId = currentClubInfo.id;
-      
+
       // 사용자의 클럽과 현재 클럽이 다르면 로그아웃
       if (userClubId && currentClubId && userClubId !== currentClubId) {
-        console.log('[App] ⚠️ 클럽 불일치 감지, 로그아웃 처리');
+        console.log("[App] ⚠️ 클럽 불일치 감지, 로그아웃 처리");
         console.log(`  사용자 클럽 ID: ${userClubId}`);
         console.log(`  현재 클럽 ID: ${currentClubId}`);
         console.log(`  현재 클럽 이름: ${currentClubInfo.name}`);
         setCurrentUser(null);
         localStorage.removeItem("clubUser");
       } else if (userClubId && currentClubId && userClubId === currentClubId) {
-        console.log('[App] ✅ 클럽 일치 확인:', currentClubInfo.name);
+        console.log("[App] ✅ 클럽 일치 확인:", currentClubInfo.name);
       } else {
-        console.log('[App] ⚠️ 클럽 정보 불완전:', {
+        console.log("[App] ⚠️ 클럽 정보 불완전:", {
           userClubId: !!userClubId,
-          currentClubId: !!currentClubId
+          currentClubId: !!currentClubId,
         });
       }
     }
@@ -109,11 +109,11 @@ function AppContent() {
       };
       setCurrentUser(userWithClub);
       localStorage.setItem("clubUser", JSON.stringify(userWithClub));
-      console.log('[App] 로그인 완료:', {
+      console.log("[App] 로그인 완료:", {
         userName: user.name,
         userClubId: user.clubId,
         currentClubId: clubInfo.id,
-        clubName: clubInfo.name
+        clubName: clubInfo.name,
       });
     } catch (error) {
       console.error("Failed to load club info during login:", error);
@@ -175,7 +175,12 @@ function AppContent() {
           {/* 쿼리스트링(예: ?club=ace-club) 유지를 위해 search도 함께 전달 */}
           <Route
             path="*"
-            element={<Navigate to={{ pathname: "/", search: location.search }} replace />}
+            element={
+              <Navigate
+                to={{ pathname: "/", search: location.search }}
+                replace
+              />
+            }
           />
         </Routes>
       </Layout>

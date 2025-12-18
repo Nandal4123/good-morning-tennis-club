@@ -8,28 +8,37 @@ const router = express.Router();
 router.get("/debug", (req, res) => {
   const ownerPassword = process.env.OWNER_PASSWORD || "";
   const secret = process.env.OWNER_TOKEN_SECRET || "";
-  
+
   console.log("[Owner Debug] 환경변수 확인:");
-  console.log("  - process.env.OWNER_PASSWORD 원본:", ownerPassword ? `"${ownerPassword}"` : "undefined");
+  console.log(
+    "  - process.env.OWNER_PASSWORD 원본:",
+    ownerPassword ? `"${ownerPassword}"` : "undefined"
+  );
   console.log("  - 원본 길이:", ownerPassword.length);
   console.log("  - trim 후:", `"${ownerPassword.trim()}"`);
   console.log("  - trim 후 길이:", ownerPassword.trim().length);
   console.log("  - OWNER_TOKEN_SECRET 설정됨:", !!secret);
   console.log("  - OWNER_TOKEN_SECRET 길이:", secret.length);
-  
+
   // 모든 OWNER 관련 환경변수 키
-  const allOwnerEnvVars = Object.keys(process.env).filter((k) => k.includes("OWNER"));
+  const allOwnerEnvVars = Object.keys(process.env).filter((k) =>
+    k.includes("OWNER")
+  );
   console.log("  - 모든 OWNER 관련 환경변수:", allOwnerEnvVars);
-  
+
   res.json({
     ownerPasswordConfigured: !!ownerPassword,
     ownerPasswordLength: ownerPassword.length,
     ownerPasswordTrimmedLength: ownerPassword.trim().length,
     ownerPasswordFirstChar: ownerPassword.length > 0 ? ownerPassword[0] : null,
-    ownerPasswordLastChar: ownerPassword.length > 0 ? ownerPassword[ownerPassword.length - 1] : null,
-    ownerPasswordPreview: ownerPassword.length > 0 
-      ? `${ownerPassword.substring(0, 3)}...${ownerPassword.substring(ownerPassword.length - 3)}`
-      : "(empty)",
+    ownerPasswordLastChar:
+      ownerPassword.length > 0 ? ownerPassword[ownerPassword.length - 1] : null,
+    ownerPasswordPreview:
+      ownerPassword.length > 0
+        ? `${ownerPassword.substring(0, 3)}...${ownerPassword.substring(
+            ownerPassword.length - 3
+          )}`
+        : "(empty)",
     ownerTokenSecretConfigured: !!secret,
     ownerTokenSecretLength: secret.length,
     allOwnerEnvVars: allOwnerEnvVars,
@@ -48,13 +57,21 @@ router.post("/login", async (req, res) => {
 
     // 디버깅: 환경변수 상태 로그
     console.log("[Owner Login] 🔍 환경변수 확인:");
-    console.log("  - process.env.OWNER_PASSWORD 원본:", process.env.OWNER_PASSWORD ? `"${process.env.OWNER_PASSWORD}"` : "undefined");
+    console.log(
+      "  - process.env.OWNER_PASSWORD 원본:",
+      process.env.OWNER_PASSWORD
+        ? `"${process.env.OWNER_PASSWORD}"`
+        : "undefined"
+    );
     console.log("  - typeof:", typeof process.env.OWNER_PASSWORD);
     console.log("  - 원본 길이:", process.env.OWNER_PASSWORD?.length || 0);
     console.log("  - trim 후:", `"${ownerPassword}"`);
     console.log("  - trim 후 길이:", ownerPassword.length);
-    console.log("  - 모든 OWNER 관련 환경변수 키:", Object.keys(process.env).filter((k) => k.includes("OWNER")));
-    
+    console.log(
+      "  - 모든 OWNER 관련 환경변수 키:",
+      Object.keys(process.env).filter((k) => k.includes("OWNER"))
+    );
+
     if (!ownerPassword) {
       console.error("[Owner Login] ❌ OWNER_PASSWORD 환경변수가 설정되지 않음");
       return res.status(500).json({

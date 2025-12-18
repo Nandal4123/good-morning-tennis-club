@@ -80,7 +80,10 @@ function Login({ onLogin }) {
   // 클럽 정보가 로드되면 사용자 목록 로드
   useEffect(() => {
     if (clubInfo) {
-      console.log('[Login] 클럽 정보 확인됨, 사용자 목록 로드 시작:', clubInfo.name);
+      console.log(
+        "[Login] 클럽 정보 확인됨, 사용자 목록 로드 시작:",
+        clubInfo.name
+      );
       loadUsers();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,7 +93,7 @@ function Login({ onLogin }) {
     try {
       const info = await clubApi.getInfo();
       setClubInfo(info);
-      console.log('[Login] 클럽 정보 로드 완료:', info.name, info.subdomain);
+      console.log("[Login] 클럽 정보 로드 완료:", info.name, info.subdomain);
     } catch (error) {
       console.error("Failed to load club info:", error);
       // 기본값 설정
@@ -104,30 +107,45 @@ function Login({ onLogin }) {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      
-      console.log('[Login] 사용자 목록 로드 시작');
-      console.log('[Login] 현재 클럽 정보:', clubInfo?.name || '없음', clubInfo?.subdomain || '없음');
-      
+
+      console.log("[Login] 사용자 목록 로드 시작");
+      console.log(
+        "[Login] 현재 클럽 정보:",
+        clubInfo?.name || "없음",
+        clubInfo?.subdomain || "없음"
+      );
+
       // URL에서 직접 클럽 파라미터 확인 (디버깅용)
       const urlParams = new URLSearchParams(window.location.search);
-      const clubParam = urlParams.get('club');
-      console.log('[Login] URL 파라미터에서 클럽:', clubParam || '없음');
-      
+      const clubParam = urlParams.get("club");
+      console.log("[Login] URL 파라미터에서 클럽:", clubParam || "없음");
+
       const data = await userApi.getAll();
-      console.log('[Login] 사용자 목록 로드 완료:', data.length, '명');
-      console.log('[Login] 사용자 목록:', data.map(u => `${u.name} (clubId: ${u.clubId || '없음'})`));
-      
+      console.log("[Login] 사용자 목록 로드 완료:", data.length, "명");
+      console.log(
+        "[Login] 사용자 목록:",
+        data.map((u) => `${u.name} (clubId: ${u.clubId || "없음"})`)
+      );
+
       // 클럽 정보와 사용자 목록 일치 확인
       if (clubInfo && data.length > 0) {
-        const usersInCurrentClub = data.filter(u => u.clubId === clubInfo.id);
-        console.log('[Login] 현재 클럽 사용자:', usersInCurrentClub.length, '명');
+        const usersInCurrentClub = data.filter((u) => u.clubId === clubInfo.id);
+        console.log(
+          "[Login] 현재 클럽 사용자:",
+          usersInCurrentClub.length,
+          "명"
+        );
         if (usersInCurrentClub.length === 0 && data.length > 0) {
-          console.warn('[Login] ⚠️ 경고: 다른 클럽의 사용자가 로드되었을 수 있습니다!');
-          console.warn('[Login]   현재 클럽 ID:', clubInfo.id);
-          console.warn('[Login]   로드된 사용자들의 clubId:', [...new Set(data.map(u => u.clubId))]);
+          console.warn(
+            "[Login] ⚠️ 경고: 다른 클럽의 사용자가 로드되었을 수 있습니다!"
+          );
+          console.warn("[Login]   현재 클럽 ID:", clubInfo.id);
+          console.warn("[Login]   로드된 사용자들의 clubId:", [
+            ...new Set(data.map((u) => u.clubId)),
+          ]);
         }
       }
-      
+
       setUsers(data);
       if (data.length === 0) {
         setActiveTab("register");
@@ -187,11 +205,12 @@ function Login({ onLogin }) {
   const handleAdminLogin = () => {
     // OWNER와 일반 ADMIN의 비밀번호 구분
     const isOwner = selectedAdminUser?.email === OWNER_EMAIL;
-    
+
     // 클럽별 관리자 비밀번호 가져오기
     const clubSubdomain = clubInfo?.subdomain || "default";
-    const clubAdminPassword = CLUB_ADMIN_PASSWORDS[clubSubdomain] || DEFAULT_ADMIN_PASSWORD;
-    
+    const clubAdminPassword =
+      CLUB_ADMIN_PASSWORDS[clubSubdomain] || DEFAULT_ADMIN_PASSWORD;
+
     const correctPassword = isOwner ? OWNER_PASSWORD : clubAdminPassword;
 
     if (adminPassword === correctPassword) {
@@ -204,7 +223,9 @@ function Login({ onLogin }) {
 
       // Owner는 클럽에 종속되지 않는 운영 화면(멀티클럽 대시보드)을 쓸 수 있도록 플래그 부여
       // role은 기존 로직(ADMIN 체크) 호환을 위해 유지
-      onLogin(isOwner ? { ...selectedAdminUser, isOwner: true } : selectedAdminUser);
+      onLogin(
+        isOwner ? { ...selectedAdminUser, isOwner: true } : selectedAdminUser
+      );
       setShowAdminModal(false);
       setSelectedAdminUser(null);
       setAdminPassword("");
