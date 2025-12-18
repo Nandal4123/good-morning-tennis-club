@@ -145,10 +145,36 @@ function Members({ currentUser }) {
 
   const handleCreateMember = async (e) => {
     e.preventDefault();
+    
+    // 클라이언트 측 검증
+    if (!newMember.name || !newMember.name.trim()) {
+      alert("이름을 입력해주세요.");
+      return;
+    }
+    if (!newMember.email || !newMember.email.trim()) {
+      alert("이메일을 입력해주세요.");
+      return;
+    }
+
     try {
       setSaving(true);
+      
+      // 데이터 정리 (빈 문자열 제거)
+      const memberData = {
+        name: newMember.name.trim(),
+        email: newMember.email.trim(),
+        tennisLevel: newMember.tennisLevel || "NTRP_3_0",
+      };
+      
+      // goals가 있으면 추가
+      if (newMember.goals && newMember.goals.trim()) {
+        memberData.goals = newMember.goals.trim();
+      }
+      
+      console.log("[Members] 회원 추가 데이터:", memberData);
+      
       // 관리자가 회원을 추가할 때는 현재 사용자 ID를 전달하여 가입 코드 검증을 건너뛰도록 함
-      await userApi.create(newMember, isAdmin ? currentUser?.id : null);
+      await userApi.create(memberData, isAdmin ? currentUser?.id : null);
       setShowModal(false);
       setNewMember({ name: "", email: "", tennisLevel: "NTRP_3_0", goals: "" });
       await loadMembers();

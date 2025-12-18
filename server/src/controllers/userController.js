@@ -83,6 +83,21 @@ export const createUser = async (req, res) => {
     } = req.body;
 
     console.log("Creating user with data:", { email, name, role, tennisLevel });
+    console.log("[CreateUser] 전체 req.body:", JSON.stringify(req.body, null, 2));
+
+    // 필수 필드 검증
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        error: "Name is required",
+        message: "이름을 입력해주세요.",
+      });
+    }
+    if (!email || !email.trim()) {
+      return res.status(400).json({
+        error: "Email is required",
+        message: "이메일을 입력해주세요.",
+      });
+    }
 
     // 멀티 테넌트: clubId 자동 할당
     let clubId = getClubFilter(req);
@@ -203,17 +218,28 @@ export const createUser = async (req, res) => {
       `[CreateUser] 가입 코드 검증 결과: isAdminRequest=${isAdminRequest}, clubId=${clubId}, 검증 건너뜀=${isAdminRequest || !clubId}`
     );
 
+    // 데이터 정리 (undefined 제거, 빈 문자열 처리)
+    const userData = {
+      email: email.trim(),
+      name: name.trim(),
+      role: role || "USER",
+      tennisLevel: tennisLevel || "NTRP_3_0",
+      languagePref: languagePref || "ko",
+      clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
+    };
+
+    // 선택적 필드 추가 (값이 있을 때만)
+    if (goals && goals.trim()) {
+      userData.goals = goals.trim();
+    }
+    if (profileMetadata) {
+      userData.profileMetadata = profileMetadata;
+    }
+
+    console.log("[CreateUser] 최종 userData:", JSON.stringify(userData, null, 2));
+
     const user = await req.prisma.user.create({
-      data: {
-        email,
-        name,
-        role: role || "USER",
-        tennisLevel: tennisLevel || "NTRP_3_0",
-        goals,
-        languagePref: languagePref || "ko",
-        profileMetadata,
-        clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
-      },
+      data: userData,
     });
 
     console.log("User created successfully:", user.id);
