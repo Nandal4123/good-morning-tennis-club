@@ -149,6 +149,28 @@ process.on("SIGINT", async () => {
 
 app.listen(PORT, () => {
   console.log(`🎾 Club Attendance Server running on port ${PORT}`);
+  
+  // 서버 시작 시 환경 변수 확인 (디버깅용)
+  console.log("\n🔍 [Server Start] 환경변수 확인:");
+  console.log("  - OWNER_PASSWORD 설정됨:", !!process.env.OWNER_PASSWORD);
+  console.log("  - OWNER_PASSWORD 길이:", process.env.OWNER_PASSWORD?.length || 0);
+  console.log("  - OWNER_TOKEN_SECRET 설정됨:", !!process.env.OWNER_TOKEN_SECRET);
+  console.log("  - OWNER_TOKEN_SECRET 길이:", process.env.OWNER_TOKEN_SECRET?.length || 0);
+  console.log("  - DATABASE_URL 설정됨:", !!process.env.DATABASE_URL);
+  console.log("  - NODE_ENV:", process.env.NODE_ENV || "not set");
+  console.log("  - PORT:", PORT);
+  
+  // OWNER 관련 환경 변수 키 확인
+  const ownerEnvKeys = Object.keys(process.env).filter((k) => k.includes("OWNER"));
+  console.log("  - OWNER 관련 환경변수 키:", ownerEnvKeys.length > 0 ? ownerEnvKeys : "없음");
+  
+  if (!process.env.OWNER_PASSWORD) {
+    console.error("  ⚠️ 경고: OWNER_PASSWORD가 설정되지 않았습니다!");
+  }
+  if (!process.env.OWNER_TOKEN_SECRET) {
+    console.error("  ⚠️ 경고: OWNER_TOKEN_SECRET이 설정되지 않았습니다!");
+  }
+  console.log("");
 });
 
 export { prisma };
