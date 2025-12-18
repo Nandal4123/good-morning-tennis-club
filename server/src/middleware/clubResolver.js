@@ -58,7 +58,13 @@ export const resolveClub = async (req, res, next) => {
     });
 
     if (!club) {
-      console.warn(`[Club Resolver] 클럽을 찾을 수 없음: ${subdomain}`);
+      // 호스팅 도메인인 경우 경고 메시지 출력하지 않음
+      const hostingDomains = ['.onrender.com', '.vercel.app', '.netlify.app', '.railway.app'];
+      const isHostingDomain = hostingDomains.some(domain => host.endsWith(domain));
+      
+      if (!isHostingDomain) {
+        console.warn(`[Club Resolver] 클럽을 찾을 수 없음: ${subdomain}`);
+      }
       
       // 기본 클럽 찾기 시도 (개발/프로덕션 모두)
       const defaultClub = await req.prisma.club.findFirst({
@@ -66,7 +72,9 @@ export const resolveClub = async (req, res, next) => {
       });
       
       if (defaultClub) {
-        console.log(`[Club Resolver] 기본 클럽 사용: ${defaultClub.name} (${defaultClub.subdomain})`);
+        if (!isHostingDomain) {
+          console.log(`[Club Resolver] 기본 클럽 사용: ${defaultClub.name} (${defaultClub.subdomain})`);
+        }
         req.club = defaultClub;
         return next();
       }
