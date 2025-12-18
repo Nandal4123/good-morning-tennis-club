@@ -22,7 +22,8 @@
     "db:cleanup-guests": "node scripts/cleanup-guest-attendances.js",
     "db:prepare-multi-tenant": "node scripts/prepare-multi-tenant-migration.js",
     "db:check-clubs": "node scripts/check-clubs.js",
-    "db:create-ace-club": "node scripts/create-ace-club.js"
+    "db:create-ace-club": "node scripts/create-ace-club.js",
+    "db:check-schema": "node scripts/check-club-schema.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
