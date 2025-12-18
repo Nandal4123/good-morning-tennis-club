@@ -9,6 +9,7 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
 import clubRoutes from "./routes/clubRoutes.js";
+import ownerRoutes from "./routes/ownerRoutes.js";
 import { resolveClub } from "./middleware/clubResolver.js";
 
 dotenv.config();
@@ -73,8 +74,12 @@ app.use((req, res, next) => {
 });
 
 // 멀티 테넌트: 클럽 해석 미들웨어
-// Health check는 클럽 해석 없이 접근 가능
+// Health check와 Owner API는 클럽 해석 없이 접근 가능
 app.use("/api/health", (req, res, next) => next());
+app.use("/api/owner", (req, res, next) => next());
+
+// Owner Routes (클럽 해석 전에 등록)
+app.use("/api/owner", ownerRoutes);
 
 // 모든 API에 클럽 해석 미들웨어 적용
 app.use("/api", resolveClub);
