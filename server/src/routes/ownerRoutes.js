@@ -42,7 +42,15 @@ router.post("/login", async (req, res) => {
   try {
     // Render UI에서 복사/붙여넣기 시 공백이 섞이는 실수를 방지하기 위해 trim 처리
     const inputPassword = (req.body?.password || "").toString().trim();
-    const ownerPassword = (process.env.OWNER_PASSWORD || "").toString().trim();
+    
+    // 환경변수 직접 확인 (디버깅용)
+    const rawOwnerPassword = process.env.OWNER_PASSWORD;
+    console.log("[Owner Login] 🔍 환경변수 원본 확인:");
+    console.log("  - process.env.OWNER_PASSWORD 원본:", rawOwnerPassword ? `"${rawOwnerPassword}"` : "undefined");
+    console.log("  - typeof:", typeof rawOwnerPassword);
+    console.log("  - 길이 (원본):", rawOwnerPassword ? rawOwnerPassword.length : 0);
+    
+    const ownerPassword = (rawOwnerPassword || "").toString().trim();
     const secret = process.env.OWNER_TOKEN_SECRET;
 
     // 디버깅: 환경변수 상태 확인 (보안상 실제 값은 출력하지 않음)
@@ -77,9 +85,18 @@ router.post("/login", async (req, res) => {
     if (!ownerPassword) {
       console.error("[Owner Login] ❌ OWNER_PASSWORD 환경변수가 설정되지 않음");
       console.error("[Owner Login] 🔍 디버깅 정보:");
-      console.error("  - process.env.OWNER_PASSWORD:", process.env.OWNER_PASSWORD);
-      console.error("  - typeof process.env.OWNER_PASSWORD:", typeof process.env.OWNER_PASSWORD);
-      console.error("  - 모든 환경변수 키:", Object.keys(process.env).filter(k => k.includes('OWNER')));
+      console.error(
+        "  - process.env.OWNER_PASSWORD:",
+        process.env.OWNER_PASSWORD
+      );
+      console.error(
+        "  - typeof process.env.OWNER_PASSWORD:",
+        typeof process.env.OWNER_PASSWORD
+      );
+      console.error(
+        "  - 모든 환경변수 키:",
+        Object.keys(process.env).filter((k) => k.includes("OWNER"))
+      );
       return res.status(500).json({
         error: "Owner password not configured",
         message: "서버 환경 변수 OWNER_PASSWORD가 설정되어야 합니다.",
