@@ -78,8 +78,18 @@ function OwnerDashboard({ currentUser }) {
     }
 
     // 같은 탭에서 해당 클럽으로 이동 (쿼리스트링 유지가 핵심)
+    // Owner 대시보드에서 클럽으로 이동할 때는 클럽 파라미터를 포함하여 이동
     navigate({ pathname: "/", search }, { replace: false });
   };
+  
+  // Owner 대시보드 접속 시 클럽 파라미터 제거 (불필요함)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.has('club') && location.pathname === '/owner') {
+      // Owner 대시보드에서는 클럽 파라미터가 필요 없으므로 제거
+      navigate({ pathname: '/owner', search: '' }, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
 
   if (!isOwner) {
     return (

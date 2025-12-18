@@ -35,7 +35,14 @@ function AppContent() {
   }, []);
 
   // 현재 클럽 정보 로드
+  // Owner 대시보드는 모든 클럽을 관리하므로 클럽 정보를 로드하지 않음
   useEffect(() => {
+    if (location.pathname === '/owner') {
+      setClubInfoLoading(false);
+      setCurrentClubInfo(null);
+      return;
+    }
+    
     const loadClubInfo = async () => {
       try {
         setClubInfoLoading(true);
@@ -50,10 +57,15 @@ function AppContent() {
       }
     };
     loadClubInfo();
-  }, [location.search]);
+  }, [location.search, location.pathname]);
 
   // URL 파라미터 변경 시 클럽 확인 및 사용자 검증
   useEffect(() => {
+    // Owner 대시보드에서는 클럽 검증하지 않음
+    if (location.pathname === '/owner') {
+      return;
+    }
+    
     // 클럽 정보가 로드되지 않았으면 검증하지 않음
     if (clubInfoLoading || !currentClubInfo) {
       return;

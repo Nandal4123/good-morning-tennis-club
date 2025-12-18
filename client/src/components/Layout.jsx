@@ -21,9 +21,14 @@ function Layout({ children, currentUser, onLogout }) {
   const [clubInfo, setClubInfo] = useState(null);
 
   // URL 파라미터 변경 감지하여 클럽 정보 재로드
+  // Owner 대시보드는 모든 클럽을 관리하므로 클럽 정보를 로드하지 않음
   useEffect(() => {
+    if (location.pathname === '/owner') {
+      setClubInfo({ name: 'Owner Dashboard', subdomain: null });
+      return;
+    }
     loadClubInfo();
-  }, [location.search]);
+  }, [location.search, location.pathname]);
 
   const loadClubInfo = async () => {
     try {
