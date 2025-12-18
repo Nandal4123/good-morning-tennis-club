@@ -242,6 +242,9 @@
   - PostgreSQL + Prisma ORM
   - 멀티 테넌트 데이터 구조
   - 관계형 데이터 모델
+  - **Supabase Transaction Mode 사용** (롤백 후)
+  - Connection Pool 최적화
+  - 안정적인 연결 관리
 
 - **API 구조**
   - RESTful API
@@ -372,6 +375,16 @@
 ### backup-2024-12-11
 - 게스트→회원 전환
 - 월별 랭킹 기능
+
+### 롤백 작업 (2024-12-11)
+- **데이터베이스 연결 설정 롤백**
+  - `7a1befc`: connection_limit 자동 설정 제거
+    - DATABASE_URL을 Render 환경변수 그대로 사용
+    - 자동 최적화 제거로 안정성 향상
+  - `1af7a26`: Transaction Mode로 복귀
+    - Direct Connection에서 Transaction Mode로 되돌림
+    - Supabase 연결 안정화
+    - Prisma 클라이언트 설정 단순화
 
 ---
 
