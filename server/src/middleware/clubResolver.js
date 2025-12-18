@@ -28,8 +28,12 @@ export const resolveClub = async (req, res, next) => {
     const host = req.get('host') || '';
     const hostParts = host.split('.');
     
-    // localhost나 IP 주소가 아닌 경우 서브도메인 추출
-    if (hostParts.length >= 3 && !hostParts[0].match(/^\d+$/)) {
+    // 호스팅 도메인 무시 (.onrender.com, .vercel.app 등)
+    const hostingDomains = ['.onrender.com', '.vercel.app', '.netlify.app', '.railway.app'];
+    const isHostingDomain = hostingDomains.some(domain => host.endsWith(domain));
+    
+    // localhost나 IP 주소가 아니고, 호스팅 도메인이 아닌 경우에만 서브도메인 추출
+    if (hostParts.length >= 3 && !hostParts[0].match(/^\d+$/) && !isHostingDomain) {
       subdomain = hostParts[0];
     }
 
@@ -113,7 +117,11 @@ export const resolveClubOptional = async (req, res, next) => {
     const host = req.get('host') || '';
     const hostParts = host.split('.');
     
-    if (hostParts.length >= 3 && !hostParts[0].match(/^\d+$/)) {
+    // 호스팅 도메인 무시 (.onrender.com, .vercel.app 등)
+    const hostingDomains = ['.onrender.com', '.vercel.app', '.netlify.app', '.railway.app'];
+    const isHostingDomain = hostingDomains.some(domain => host.endsWith(domain));
+    
+    if (hostParts.length >= 3 && !hostParts[0].match(/^\d+$/) && !isHostingDomain) {
       subdomain = hostParts[0];
     }
 
