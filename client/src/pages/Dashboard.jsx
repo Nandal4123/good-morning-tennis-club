@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   CalendarCheck,
   Trophy,
@@ -28,6 +28,7 @@ function Dashboard({ currentUser }) {
 
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [userStats, setUserStats] = useState(null);
   const [recentAttendance, setRecentAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -466,7 +467,7 @@ function Dashboard({ currentUser }) {
 
         {/* Action Button - 경기 등록 */}
         <button
-          onClick={() => navigate("/matches")}
+          onClick={() => navigate({ pathname: "/matches", search: location.search })}
           className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-tennis-500 to-tennis-600 hover:from-tennis-600 hover:to-tennis-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-tennis-500/25"
         >
           <Trophy size={20} />
@@ -789,7 +790,7 @@ function Dashboard({ currentUser }) {
             </span>
           </h2>
           <button
-            onClick={() => navigate("/matches")}
+            onClick={() => navigate({ pathname: "/matches", search: location.search })}
             className="flex items-center gap-1 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm"
           >
             <Plus size={16} />
