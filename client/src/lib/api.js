@@ -47,25 +47,56 @@ async function fetchApi(endpoint, options = {}) {
   const isMultiTenant = isMultiTenantMode();
   const clubIdentifier = getClubIdentifier();
 
+  // 현재 URL에서 직접 클럽 파라미터 확인 (최우선)
+  let urlClubParam = null;
+  if (typeof window !== "undefined") {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlClubParam = urlParams.get("club");
+  }
+
+  // 클럽 식별자 우선순위: URL 파라미터 > getClubIdentifier()
+  const finalClubIdentifier = urlClubParam || clubIdentifier;
+
   // 멀티 테넌트 모드일 때 클럽 쿼리 파라미터 추가
-  const endpointWithClub = addClubQueryParam(endpoint);
+  // endpoint에 이미 쿼리 파라미터가 있을 수 있으므로 주의
+  let endpointWithClub = endpoint;
+  if (isMultiTenant && finalClubIdentifier) {
+    // endpoint에 이미 쿼리 파라미터가 있는지 확인
+    const hasQuery = endpoint.includes("?");
+    const separator = hasQuery ? "&" : "?";
+    
+    // 이미 club 파라미터가 있는지 확인
+    const hasClubParam = endpoint.includes("club=");
+    if (!hasClubParam) {
+      endpointWithClub = `${endpoint}${separator}club=${encodeURIComponent(finalClubIdentifier)}`;
+    } else {
+      // 이미 club 파라미터가 있으면 그대로 사용
+      endpointWithClub = endpoint;
+    }
+  }
+  
   const url = `${API_BASE}${endpointWithClub}`;
 
   // 멀티 테넌트 모드일 때 클럽 헤더 추가
   const clubHeaders = getClubHeaders();
+  // URL 파라미터가 있으면 헤더에도 추가 (이중 보장)
+  if (isMultiTenant && finalClubIdentifier && !clubHeaders["X-Club-Subdomain"]) {
+    clubHeaders["X-Club-Subdomain"] = finalClubIdentifier;
+  }
 
   console.log(
     `[API] 📞 Calling: ${url}`,
     options.method ? `(${options.method})` : "",
     isMultiTenant ? "[멀티 테넌트 모드]" : "[MVP 모드]",
-    clubIdentifier ? `[클럽: ${clubIdentifier}]` : "[클럽: 없음]"
+    finalClubIdentifier ? `[클럽: ${finalClubIdentifier}]` : "[클럽: 없음]",
+    urlClubParam ? `[URL에서 직접 읽음]` : ""
   );
 
   // 디버깅: 실제 URL에 클럽 파라미터가 포함되었는지 확인
-  if (isMultiTenant && clubIdentifier) {
+  if (isMultiTenant && finalClubIdentifier) {
     const urlHasClub =
-      url.includes(`club=${encodeURIComponent(clubIdentifier)}`) ||
-      url.includes(`club=${clubIdentifier}`);
+      url.includes(`club=${encodeURIComponent(finalClubIdentifier)}`) ||
+      url.includes(`club=${finalClubIdentifier}`);
     const hasHeader = !!clubHeaders["X-Club-Subdomain"];
 
     if (!urlHasClub && !hasHeader) {
@@ -74,19 +105,25 @@ async function fetchApi(endpoint, options = {}) {
       );
       console.error("[API]   endpoint:", endpoint);
       console.error("[API]   endpointWithClub:", endpointWithClub);
+      console.error("[API]   finalClubIdentifier:", finalClubIdentifier);
+      console.error("[API]   urlClubParam:", urlClubParam);
       console.error("[API]   clubIdentifier:", clubIdentifier);
       console.error("[API]   isMultiTenantMode:", isMultiTenant);
       console.error("[API]   URL에 club 파라미터:", urlHasClub);
       console.error("[API]   헤더에 X-Club-Subdomain:", hasHeader);
+      console.error("[API]   현재 URL:", typeof window !== "undefined" ? window.location.href : "N/A");
     } else {
       console.log("[API] ✅ 클럽 파라미터 확인:", {
         urlHasClub,
         hasHeader,
-        clubIdentifier,
+        finalClubIdentifier,
+        urlClubParam,
+        source: urlClubParam ? "URL 직접" : "getClubIdentifier",
       });
     }
-  } else if (isMultiTenant && !clubIdentifier) {
+  } else if (isMultiTenant && !finalClubIdentifier) {
     console.warn("[API] ⚠️ 멀티테넌트 모드이지만 클럽 식별자가 없습니다!");
+    console.warn("[API]   현재 URL:", typeof window !== "undefined" ? window.location.href : "N/A");
   }
 
   try {
