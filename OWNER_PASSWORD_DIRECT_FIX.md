@@ -180,3 +180,4 @@ https://good-morning-tennis-club-v2.onrender.com/api/owner/debug
 
 **가장 빠른 방법: 디버깅 엔드포인트로 환경변수 상태를 먼저 확인하세요!**
 
+

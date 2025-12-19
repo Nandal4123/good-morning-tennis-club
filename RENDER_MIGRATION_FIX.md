@@ -91,3 +91,4 @@ cat prisma/migrations/*/migration.sql
 - `pnpm install` 실행
 - `which prisma` 또는 `pnpm exec prisma --version` 확인
 
+

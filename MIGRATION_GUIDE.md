@@ -63,3 +63,4 @@ pnpm prisma studio
 - `cd server`로 서버 디렉토리로 이동
 - `pnpm install` 실행하여 의존성 설치 확인
 
+

@@ -57,3 +57,4 @@ curl https://good-morning-tennis-club-v2.onrender.com/api/health
 2. **Environment 탭 확인**: 환경 변수 설정 확인
 3. **Health Check**: 서버가 정상적으로 응답하는지 확인
 
+

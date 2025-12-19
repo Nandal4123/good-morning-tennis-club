@@ -154,3 +154,4 @@ https://good-morning-tennis-club-v2.onrender.com/api/owner/debug
 - Render에서 환경변수 변경 후 **반드시 Manual Deploy** 필요
 - "Clear build cache & deploy"를 사용하면 더 확실합니다
 
+

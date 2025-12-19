@@ -189,3 +189,4 @@ corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm prisma ge
 
 **Render 로그에서 `ELIFECYCLE Command failed` 이전의 에러 메시지를 확인하고 알려주시면 정확한 원인을 파악할 수 있습니다!**
 
+

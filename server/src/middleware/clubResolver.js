@@ -63,6 +63,10 @@ export const resolveClub = async (req, res, next) => {
 
     // 클럽 조회
     console.log(`[Club Resolver] 클럽 조회 시도: subdomain="${subdomain}"`);
+    console.log(`[Club Resolver]   쿼리 파라미터:`, req.query);
+    console.log(`[Club Resolver]   헤더 X-Club-Subdomain:`, req.get('X-Club-Subdomain'));
+    console.log(`[Club Resolver]   호스트:`, host);
+    
     const club = await req.prisma.club.findUnique({
       where: { subdomain },
     });
@@ -75,12 +79,20 @@ export const resolveClub = async (req, res, next) => {
       console.error(`[Club Resolver] ❌ 클럽을 찾을 수 없음: ${subdomain}`);
       console.error(`[Club Resolver]   요청된 subdomain: "${subdomain}"`);
       console.error(`[Club Resolver]   호스팅 도메인: ${isHostingDomain}`);
+      console.error(`[Club Resolver]   쿼리 파라미터 req.query.club:`, req.query.club);
       
       // 모든 클럽 목록 확인 (디버깅용)
       const allClubs = await req.prisma.club.findMany({
         select: { subdomain: true, name: true },
       });
       console.error(`[Club Resolver]   데이터베이스에 있는 클럽 목록:`, allClubs.map(c => `${c.name} (${c.subdomain})`));
+      
+      // 정확한 subdomain 매칭 확인 (대소문자, 공백 등)
+      const exactMatch = allClubs.find(c => c.subdomain === subdomain);
+      const caseInsensitiveMatch = allClubs.find(c => c.subdomain.toLowerCase() === subdomain.toLowerCase());
+      if (!exactMatch && caseInsensitiveMatch) {
+        console.error(`[Club Resolver]   ⚠️ 대소문자 불일치 발견: 요청="${subdomain}", DB="${caseInsensitiveMatch.subdomain}"`);
+      }
       
       // 쿼리 파라미터로 명시적으로 요청된 경우에는 기본 클럽으로 폴백하지 않음
       // 명시적 요청은 반드시 해당 클럽이 존재해야 함

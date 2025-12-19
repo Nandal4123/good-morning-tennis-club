@@ -80,3 +80,4 @@
 3. **데이터 확인**: Render Shell에서 클럽 목록 확인
 4. **레거시 데이터 마이그레이션**: 필요시 `backfill-default-clubid.js` 실행
 
+

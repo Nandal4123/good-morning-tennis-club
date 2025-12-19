@@ -10,3 +10,4 @@ router.get("/clubs/:subdomain", clubController.getPublicClubInfoBySubdomain);
 export default router;
 
 
+

@@ -259,3 +259,4 @@ console.log("OWNER_PASSWORD last char:", ownerPassword.charCodeAt(ownerPassword.
 2. 브라우저 개발자 도구(F12) → Network 탭에서 API 응답 확인
 3. 임시로 간단한 비밀번호(`test123`)로 테스트하여 문제 격리
 
+
