@@ -13,20 +13,50 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { clubApi } from '../lib/api';
+import { getClubIdentifier } from '../lib/clubContext';
+
+// 클럽 식별자를 사람이 읽을 수 있는 이름으로 변환
+function humanizeClubIdentifier(subdomain) {
+  if (!subdomain || subdomain === 'default') return null;
+  return subdomain
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
 
 function Layout({ children, currentUser, onLogout }) {
   const { t } = useTranslation();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [clubInfo, setClubInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // URL에서 클럽 파라미터 읽기 (로딩 중 임시 표시용)
+  const getClubNameFromURL = () => {
+    const urlParams = new URLSearchParams(location.search);
+    const clubParam = urlParams.get('club');
+    if (clubParam) {
+      return humanizeClubIdentifier(clubParam);
+    }
+    // URL 파라미터가 없으면 getClubIdentifier() 사용
+    const clubIdentifier = getClubIdentifier();
+    if (clubIdentifier && clubIdentifier !== 'default') {
+      return humanizeClubIdentifier(clubIdentifier);
+    }
+    return null;
+  };
 
   // URL 파라미터 변경 감지하여 클럽 정보 재로드
   // Owner 대시보드는 모든 클럽을 관리하므로 클럽 정보를 로드하지 않음
   useEffect(() => {
     if (location.pathname === '/owner') {
       setClubInfo({ name: 'Owner Dashboard', subdomain: null });
+      setLoading(false);
       return;
     }
+    
+    // 로딩 시작
+    setLoading(true);
     loadClubInfo();
   }, [location.search, location.pathname]);
 
@@ -36,8 +66,29 @@ function Layout({ children, currentUser, onLogout }) {
       setClubInfo(info);
     } catch (error) {
       console.error("Failed to load club info:", error);
-      setClubInfo({ name: t('app.title'), subdomain: 'default' });
+      // 에러 발생 시 URL에서 읽은 값 사용
+      const urlClubName = getClubNameFromURL();
+      setClubInfo({ 
+        name: urlClubName || t('app.title'), 
+        subdomain: 'default' 
+      });
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // 표시할 클럽 이름 결정
+  const displayClubName = () => {
+    if (clubInfo?.name) {
+      return clubInfo.name;
+    }
+    // 로딩 중이거나 clubInfo가 없을 때 URL에서 읽은 값 사용
+    const urlClubName = getClubNameFromURL();
+    if (urlClubName) {
+      return urlClubName;
+    }
+    // 모두 없으면 기본값
+    return t('app.title');
   };
 
   const navItems = [
@@ -80,7 +131,13 @@ function Layout({ children, currentUser, onLogout }) {
             <span className="text-xl">🎾</span>
           </div>
           <div>
-            <h1 className="font-display font-bold text-lg text-white">{clubInfo?.name || t('app.title')}</h1>
+            <h1 className="font-display font-bold text-lg text-white">
+              {loading ? (
+                <span className="inline-block w-32 h-5 bg-slate-700 rounded animate-pulse" />
+              ) : (
+                displayClubName()
+              )}
+            </h1>
             <p className="text-xs text-slate-500">{t('app.subtitle')}</p>
           </div>
         </div>
@@ -120,7 +177,13 @@ function Layout({ children, currentUser, onLogout }) {
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-tennis-400 to-tennis-600 flex items-center justify-center">
               <span className="text-sm">🎾</span>
             </div>
-            <h1 className="font-display font-bold text-white">{clubInfo?.name || t('app.title')}</h1>
+            <h1 className="font-display font-bold text-white">
+              {loading ? (
+                <span className="inline-block w-24 h-5 bg-slate-700 rounded animate-pulse" />
+              ) : (
+                displayClubName()
+              )}
+            </h1>
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
