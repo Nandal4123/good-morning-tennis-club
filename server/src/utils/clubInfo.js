@@ -7,9 +7,25 @@
 
 /**
  * 멀티 테넌트 모드 여부 확인
+ * 
+ * 활성화 조건:
+ * 1. 환경 변수 MULTI_TENANT_MODE === 'true'
+ * 2. 또는 req.query.club 파라미터가 있음 (쿼리 파라미터 기반 강제 활성화)
  */
-export const isMultiTenantMode = () => {
-  return process.env.MULTI_TENANT_MODE === 'true';
+export const isMultiTenantMode = (req = null) => {
+  // 쿼리 파라미터가 있으면 강제로 멀티테넌트 모드 활성화
+  // 이것이 환경 변수보다 우선순위가 높음
+  if (req && req.query && req.query.club) {
+    console.log(`[ClubInfo] 멀티테넌트 모드 활성화 (쿼리 파라미터): ${req.query.club}`);
+    return true;
+  }
+  
+  // 환경 변수 확인
+  const envMode = process.env.MULTI_TENANT_MODE === 'true';
+  if (envMode) {
+    console.log(`[ClubInfo] 멀티테넌트 모드 활성화 (환경 변수)`);
+  }
+  return envMode;
 };
 
 /**

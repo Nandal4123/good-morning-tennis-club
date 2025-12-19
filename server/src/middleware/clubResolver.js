@@ -17,7 +17,9 @@ import { isMultiTenantMode } from '../utils/clubInfo.js';
 export const resolveClub = async (req, res, next) => {
   try {
     // 멀티 테넌트 모드가 아니면 스킵
-    if (!isMultiTenantMode()) {
+    // req를 전달하여 쿼리 파라미터 기반 강제 활성화 확인
+    if (!isMultiTenantMode(req)) {
+      console.log(`[Club Resolver] 멀티테넌트 모드 비활성화 - 클럽 해석 스킵`);
       return next();
     }
 
