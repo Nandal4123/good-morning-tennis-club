@@ -22,34 +22,41 @@ export const resolveClub = async (req, res, next) => {
     }
 
     // 클럽 식별자 추출
+    // 우선순위: 쿼리 파라미터 > 헤더 > 서브도메인 > 환경 변수
     let subdomain = null;
-
-    // 방법 1: 서브도메인에서 추출
     const host = req.get('host') || '';
-    const hostParts = host.split('.');
     
-    // 호스팅 도메인 무시 (.onrender.com, .vercel.app 등)
+    // 호스팅 도메인 확인 (.onrender.com, .vercel.app 등)
     const hostingDomains = ['.onrender.com', '.vercel.app', '.netlify.app', '.railway.app'];
     const isHostingDomain = hostingDomains.some(domain => host.endsWith(domain));
-    
-    // localhost나 IP 주소가 아니고, 호스팅 도메인이 아닌 경우에만 서브도메인 추출
-    if (hostParts.length >= 3 && !hostParts[0].match(/^\d+$/) && !isHostingDomain) {
-      subdomain = hostParts[0];
+
+    // 방법 1: 쿼리 파라미터에서 추출 (최우선, 호스팅 도메인에서 필수)
+    // 호스팅 도메인에서는 서브도메인을 사용할 수 없으므로 쿼리 파라미터가 필수
+    if (req.query.club && req.query.club.trim()) {
+      subdomain = req.query.club.trim();
+      console.log(`[Club Resolver] 클럽 식별자 (쿼리 파라미터, 최우선): ${subdomain}`);
     }
 
     // 방법 2: 헤더에서 추출 (X-Club-Subdomain)
     if (!subdomain && req.get('X-Club-Subdomain')) {
-      subdomain = req.get('X-Club-Subdomain');
+      subdomain = req.get('X-Club-Subdomain').trim();
+      console.log(`[Club Resolver] 클럽 식별자 (헤더): ${subdomain}`);
     }
 
-    // 방법 3: 쿼리 파라미터에서 추출 (개발용)
-    if (!subdomain && req.query.club) {
-      subdomain = req.query.club;
+    // 방법 3: 서브도메인에서 추출 (호스팅 도메인이 아닐 때만)
+    if (!subdomain && !isHostingDomain) {
+      const hostParts = host.split('.');
+      // localhost나 IP 주소가 아니고, 호스팅 도메인이 아닌 경우에만 서브도메인 추출
+      if (hostParts.length >= 3 && !hostParts[0].match(/^\d+$/)) {
+        subdomain = hostParts[0];
+        console.log(`[Club Resolver] 클럽 식별자 (서브도메인): ${subdomain}`);
+      }
     }
 
     // 방법 4: 환경 변수에서 기본값 (개발용)
     if (!subdomain) {
       subdomain = process.env.CLUB_SUBDOMAIN || 'default';
+      console.log(`[Club Resolver] 클럽 식별자 (환경 변수, 기본값): ${subdomain}`);
     }
 
     // 클럽 조회

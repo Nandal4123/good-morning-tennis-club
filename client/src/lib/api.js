@@ -43,8 +43,11 @@ const API_BASE = (() => {
 
 // Helper function for API calls
 async function fetchApi(endpoint, options = {}) {
-  // 멀티 테넌트 모드일 때 클럽 쿼리 파라미터 추가
+  // 멀티 테넌트 모드 확인
+  const isMultiTenant = isMultiTenantMode();
   const clubIdentifier = getClubIdentifier();
+  
+  // 멀티 테넌트 모드일 때 클럽 쿼리 파라미터 추가
   const endpointWithClub = addClubQueryParam(endpoint);
   const url = `${API_BASE}${endpointWithClub}`;
 
@@ -54,21 +57,34 @@ async function fetchApi(endpoint, options = {}) {
   console.log(
     `[API] 📞 Calling: ${url}`,
     options.method ? `(${options.method})` : "",
-    isMultiTenantMode() ? "[멀티 테넌트 모드]" : "[MVP 모드]",
+    isMultiTenant ? "[멀티 테넌트 모드]" : "[MVP 모드]",
     clubIdentifier ? `[클럽: ${clubIdentifier}]` : "[클럽: 없음]"
   );
 
   // 디버깅: 실제 URL에 클럽 파라미터가 포함되었는지 확인
-  if (isMultiTenantMode() && clubIdentifier) {
+  if (isMultiTenant && clubIdentifier) {
     const urlHasClub =
       url.includes(`club=${encodeURIComponent(clubIdentifier)}`) ||
       url.includes(`club=${clubIdentifier}`);
-    if (!urlHasClub && !clubHeaders["X-Club-Subdomain"]) {
-      console.warn("[API] ⚠️ 클럽 파라미터가 URL에 포함되지 않았습니다!");
-      console.warn("[API]   endpoint:", endpoint);
-      console.warn("[API]   endpointWithClub:", endpointWithClub);
-      console.warn("[API]   clubIdentifier:", clubIdentifier);
+    const hasHeader = !!clubHeaders["X-Club-Subdomain"];
+    
+    if (!urlHasClub && !hasHeader) {
+      console.error("[API] ❌ 클럽 파라미터가 URL 또는 헤더에 포함되지 않았습니다!");
+      console.error("[API]   endpoint:", endpoint);
+      console.error("[API]   endpointWithClub:", endpointWithClub);
+      console.error("[API]   clubIdentifier:", clubIdentifier);
+      console.error("[API]   isMultiTenantMode:", isMultiTenant);
+      console.error("[API]   URL에 club 파라미터:", urlHasClub);
+      console.error("[API]   헤더에 X-Club-Subdomain:", hasHeader);
+    } else {
+      console.log("[API] ✅ 클럽 파라미터 확인:", {
+        urlHasClub,
+        hasHeader,
+        clubIdentifier,
+      });
     }
+  } else if (isMultiTenant && !clubIdentifier) {
+    console.warn("[API] ⚠️ 멀티테넌트 모드이지만 클럽 식별자가 없습니다!");
   }
 
   try {

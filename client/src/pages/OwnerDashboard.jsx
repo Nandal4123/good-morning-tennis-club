@@ -125,19 +125,20 @@ function OwnerDashboard({ currentUser }) {
 
   const openClub = (club, newTab = false) => {
     if (!club || !club.subdomain) {
-      console.error("[OwnerDashboard] 클럽 정보가 없습니다:", club);
+      console.error("[OwnerDashboard] ❌ 클럽 정보가 없습니다:", club);
       return;
     }
 
-    const subdomain = club.subdomain;
+    const subdomain = club.subdomain.trim();
     const search = `?club=${encodeURIComponent(subdomain)}`;
     const url = `${window.location.origin}/${search}`;
 
-    console.log("[OwnerDashboard] 클럽 이동:", {
+    console.log("[OwnerDashboard] 🚀 클럽 이동 시작:", {
       clubName: club.name,
       subdomain: subdomain,
       search,
       url,
+      newTab,
     });
 
     // localStorage에 클럽 식별자 저장 (멀티테넌트 모드 활성화를 위해)
@@ -145,13 +146,17 @@ function OwnerDashboard({ currentUser }) {
     try {
       if (typeof window !== "undefined" && window.localStorage) {
         window.localStorage.setItem("lastClubIdentifier", subdomain);
-        console.log("[OwnerDashboard] localStorage에 클럽 식별자 저장:", subdomain);
+        console.log(
+          "[OwnerDashboard] ✅ localStorage에 클럽 식별자 저장:",
+          subdomain
+        );
       }
     } catch (error) {
-      console.warn("[OwnerDashboard] localStorage 저장 실패:", error);
+      console.warn("[OwnerDashboard] ⚠️ localStorage 저장 실패:", error);
     }
 
     if (newTab) {
+      console.log("[OwnerDashboard] 새 탭에서 열기:", url);
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
@@ -160,6 +165,7 @@ function OwnerDashboard({ currentUser }) {
     // search는 문자열로 전달 (예: "?club=ace-club")
     // replace: false로 설정하여 브라우저 히스토리에 추가
     // 주의: navigate는 비동기이므로 localStorage 업데이트를 먼저 수행해야 함
+    console.log("[OwnerDashboard] 같은 탭에서 이동:", { pathname: "/", search });
     navigate({ pathname: "/", search }, { replace: false });
   };
 

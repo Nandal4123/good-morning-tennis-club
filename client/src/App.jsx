@@ -46,11 +46,35 @@ function AppContent() {
     const loadClubInfo = async () => {
       try {
         setClubInfoLoading(true);
+        
+        // URL 파라미터 확인
+        const urlParams = new URLSearchParams(location.search);
+        const clubParam = urlParams.get("club");
+        console.log("[App] 클럽 정보 로드 시작:", {
+          pathname: location.pathname,
+          search: location.search,
+          clubParam,
+        });
+        
         const info = await clubApi.getInfo();
         setCurrentClubInfo(info);
-        console.log("[App] 클럽 정보 로드 완료:", info.name);
+        console.log("[App] ✅ 클럽 정보 로드 완료:", {
+          name: info.name,
+          subdomain: info.subdomain,
+          id: info.id,
+          expectedClub: clubParam,
+          match: clubParam === info.subdomain,
+        });
+        
+        // 클럽 불일치 경고
+        if (clubParam && clubParam !== info.subdomain) {
+          console.warn("[App] ⚠️ 클럽 불일치 감지:", {
+            expected: clubParam,
+            actual: info.subdomain,
+          });
+        }
       } catch (error) {
-        console.error("Failed to load club info:", error);
+        console.error("[App] ❌ 클럽 정보 로드 실패:", error);
         // 기본값 설정하지 않음 (에러 상태 유지)
       } finally {
         setClubInfoLoading(false);
