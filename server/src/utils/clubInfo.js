@@ -34,10 +34,19 @@ export const isMultiTenantMode = (req = null) => {
  * 전환 후: req.club.id (클럽별 필터)
  */
 export const getClubFilter = (req) => {
-  if (isMultiTenantMode() && req.club?.id) {
+  // req를 전달하여 쿼리 파라미터 기반 멀티테넌트 모드 활성화 확인
+  if (isMultiTenantMode(req) && req.club?.id) {
+    console.log(`[ClubInfo] 클럽 필터 적용: ${req.club.name} (${req.club.subdomain}) - ID: ${req.club.id}`);
     return req.club.id;
   }
+  
+  // 멀티테넌트 모드이지만 req.club이 없는 경우 경고
+  if (isMultiTenantMode(req) && !req.club) {
+    console.warn(`[ClubInfo] ⚠️ 멀티테넌트 모드이지만 req.club이 없습니다. req.query.club:`, req.query?.club);
+  }
+  
   // MVP: null 반환 (필터 없음)
+  console.log(`[ClubInfo] 클럽 필터 없음 (MVP 모드 또는 req.club 없음)`);
   return null;
 };
 
@@ -74,6 +83,7 @@ export const buildClubWhere = (req, additionalWhere = {}) => {
     // 기본 클럽(default)인 경우 clubId=NULL 레거시 데이터도 포함
     const clubSubdomain = req.club?.subdomain;
     if (clubSubdomain === 'default') {
+      console.log(`[ClubInfo] 기본 클럽 필터 (레거시 데이터 포함): clubId=${clubId}`);
       return {
         ...additionalWhere,
         OR: [
@@ -84,6 +94,7 @@ export const buildClubWhere = (req, additionalWhere = {}) => {
     }
     
     // 다른 클럽은 정확히 해당 clubId만 조회
+    console.log(`[ClubInfo] 클럽 필터 적용: clubId=${clubId} (${clubSubdomain})`);
     return {
       ...additionalWhere,
       clubId,
@@ -91,6 +102,7 @@ export const buildClubWhere = (req, additionalWhere = {}) => {
   }
   
   // MVP: clubId가 null인 경우 필터 없음
+  console.log(`[ClubInfo] 클럽 필터 없음 (모든 데이터 조회)`);
   return additionalWhere;
 };
 
