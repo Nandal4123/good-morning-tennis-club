@@ -1,5 +1,5 @@
 // Club 관련 API (Owner 대시보드/운영 도구용)
-import { hashSecret } from '../utils/secretHash.js';
+import { hashSecret } from "../utils/secretHash.js";
 
 // GET /api/clubs?q=...
 export const getAllClubs = async (req, res) => {
@@ -274,5 +274,3 @@ export const updateJoinCode = async (req, res) => {
     });
   }
 };
-
-

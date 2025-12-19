@@ -124,14 +124,42 @@ function OwnerDashboard({ currentUser }) {
   };
 
   const openClub = (club, newTab = false) => {
-    const search = `?club=${encodeURIComponent(club.subdomain)}`;
+    if (!club || !club.subdomain) {
+      console.error("[OwnerDashboard] 클럽 정보가 없습니다:", club);
+      return;
+    }
+
+    const subdomain = club.subdomain;
+    const search = `?club=${encodeURIComponent(subdomain)}`;
     const url = `${window.location.origin}/${search}`;
+
+    console.log("[OwnerDashboard] 클럽 이동:", {
+      clubName: club.name,
+      subdomain: subdomain,
+      search,
+      url,
+    });
+
+    // localStorage에 클럽 식별자 저장 (멀티테넌트 모드 활성화를 위해)
+    // 이 작업을 navigate 전에 수행하여 getClubIdentifier()가 올바른 값을 반환하도록 함
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.setItem("lastClubIdentifier", subdomain);
+        console.log("[OwnerDashboard] localStorage에 클럽 식별자 저장:", subdomain);
+      }
+    } catch (error) {
+      console.warn("[OwnerDashboard] localStorage 저장 실패:", error);
+    }
 
     if (newTab) {
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
 
+    // 같은 탭에서 해당 클럽으로 이동
+    // search는 문자열로 전달 (예: "?club=ace-club")
+    // replace: false로 설정하여 브라우저 히스토리에 추가
+    // 주의: navigate는 비동기이므로 localStorage 업데이트를 먼저 수행해야 함
     navigate({ pathname: "/", search }, { replace: false });
   };
 
@@ -397,9 +425,7 @@ function OwnerDashboard({ currentUser }) {
             <div className="space-y-4">
               {/* 클럽 기본 정보 */}
               <div>
-                <div className="text-white font-medium">
-                  {clubDetail.name}
-                </div>
+                <div className="text-white font-medium">{clubDetail.name}</div>
                 <div className="text-slate-400 text-sm font-mono">
                   {clubDetail.subdomain}
                 </div>
@@ -477,7 +503,9 @@ function OwnerDashboard({ currentUser }) {
               </div>
             </div>
           ) : (
-            <div className="text-slate-400 text-sm">정보를 불러올 수 없습니다.</div>
+            <div className="text-slate-400 text-sm">
+              정보를 불러올 수 없습니다.
+            </div>
           )}
         </div>
       </div>

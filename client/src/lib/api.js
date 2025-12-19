@@ -1,5 +1,10 @@
 // 클럽 컨텍스트 유틸리티 import
-import { getClubHeaders, addClubQueryParam, isMultiTenantMode, getClubIdentifier } from './clubContext.js';
+import {
+  getClubHeaders,
+  addClubQueryParam,
+  isMultiTenantMode,
+  getClubIdentifier,
+} from "./clubContext.js";
 
 // API Base URL 설정
 // 로컬 개발: 항상 http://localhost:5001/api 사용
@@ -42,26 +47,27 @@ async function fetchApi(endpoint, options = {}) {
   const clubIdentifier = getClubIdentifier();
   const endpointWithClub = addClubQueryParam(endpoint);
   const url = `${API_BASE}${endpointWithClub}`;
-  
+
   // 멀티 테넌트 모드일 때 클럽 헤더 추가
   const clubHeaders = getClubHeaders();
-  
+
   console.log(
     `[API] 📞 Calling: ${url}`,
     options.method ? `(${options.method})` : "",
     isMultiTenantMode() ? "[멀티 테넌트 모드]" : "[MVP 모드]",
     clubIdentifier ? `[클럽: ${clubIdentifier}]` : "[클럽: 없음]"
   );
-  
+
   // 디버깅: 실제 URL에 클럽 파라미터가 포함되었는지 확인
   if (isMultiTenantMode() && clubIdentifier) {
-    const urlHasClub = url.includes(`club=${encodeURIComponent(clubIdentifier)}`) || 
-                      url.includes(`club=${clubIdentifier}`);
-    if (!urlHasClub && !clubHeaders['X-Club-Subdomain']) {
-      console.warn('[API] ⚠️ 클럽 파라미터가 URL에 포함되지 않았습니다!');
-      console.warn('[API]   endpoint:', endpoint);
-      console.warn('[API]   endpointWithClub:', endpointWithClub);
-      console.warn('[API]   clubIdentifier:', clubIdentifier);
+    const urlHasClub =
+      url.includes(`club=${encodeURIComponent(clubIdentifier)}`) ||
+      url.includes(`club=${clubIdentifier}`);
+    if (!urlHasClub && !clubHeaders["X-Club-Subdomain"]) {
+      console.warn("[API] ⚠️ 클럽 파라미터가 URL에 포함되지 않았습니다!");
+      console.warn("[API]   endpoint:", endpoint);
+      console.warn("[API]   endpointWithClub:", endpointWithClub);
+      console.warn("[API]   clubIdentifier:", clubIdentifier);
     }
   }
 
@@ -236,18 +242,22 @@ export const clubsApi = {
     const queryString = params.toString() ? `?${params.toString()}` : "";
     return fetchApi(`/clubs${queryString}`);
   },
-  getSummary: (subdomain) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}/summary`),
+  getSummary: (subdomain) =>
+    fetchApi(`/clubs/${encodeURIComponent(subdomain)}/summary`),
   get: (subdomain) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}`),
-  create: (data) => fetchApi("/clubs", {
-    method: "POST",
-    body: JSON.stringify(data),
-  }),
-  updateAdminPassword: (subdomain, password) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}/admin-password`, {
-    method: "PUT",
-    body: JSON.stringify({ password }),
-  }),
-  updateJoinCode: (subdomain, joinCode) => fetchApi(`/clubs/${encodeURIComponent(subdomain)}/join-code`, {
-    method: "PUT",
-    body: JSON.stringify({ joinCode }),
-  }),
+  create: (data) =>
+    fetchApi("/clubs", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateAdminPassword: (subdomain, password) =>
+    fetchApi(`/clubs/${encodeURIComponent(subdomain)}/admin-password`, {
+      method: "PUT",
+      body: JSON.stringify({ password }),
+    }),
+  updateJoinCode: (subdomain, joinCode) =>
+    fetchApi(`/clubs/${encodeURIComponent(subdomain)}/join-code`, {
+      method: "PUT",
+      body: JSON.stringify({ joinCode }),
+    }),
 };
