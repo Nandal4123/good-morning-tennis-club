@@ -60,6 +60,7 @@ export const resolveClub = async (req, res, next) => {
     }
 
     // 클럽 조회
+    console.log(`[Club Resolver] 클럽 조회 시도: subdomain="${subdomain}"`);
     const club = await req.prisma.club.findUnique({
       where: { subdomain },
     });
@@ -69,19 +70,36 @@ export const resolveClub = async (req, res, next) => {
       const hostingDomains = ['.onrender.com', '.vercel.app', '.netlify.app', '.railway.app'];
       const isHostingDomain = hostingDomains.some(domain => host.endsWith(domain));
       
-      if (!isHostingDomain) {
-        console.warn(`[Club Resolver] 클럽을 찾을 수 없음: ${subdomain}`);
+      console.error(`[Club Resolver] ❌ 클럽을 찾을 수 없음: ${subdomain}`);
+      console.error(`[Club Resolver]   요청된 subdomain: "${subdomain}"`);
+      console.error(`[Club Resolver]   호스팅 도메인: ${isHostingDomain}`);
+      
+      // 모든 클럽 목록 확인 (디버깅용)
+      const allClubs = await req.prisma.club.findMany({
+        select: { subdomain: true, name: true },
+      });
+      console.error(`[Club Resolver]   데이터베이스에 있는 클럽 목록:`, allClubs.map(c => `${c.name} (${c.subdomain})`));
+      
+      // 쿼리 파라미터로 명시적으로 요청된 경우에는 기본 클럽으로 폴백하지 않음
+      // 명시적 요청은 반드시 해당 클럽이 존재해야 함
+      if (req.query.club && req.query.club.trim() === subdomain) {
+        console.error(`[Club Resolver]   명시적 클럽 요청이지만 클럽이 존재하지 않음 - 404 반환`);
+        return res.status(404).json({ 
+          error: 'Club not found',
+          subdomain,
+          message: `클럽을 찾을 수 없습니다: ${subdomain}`,
+          availableClubs: allClubs.map(c => ({ subdomain: c.subdomain, name: c.name })),
+        });
       }
       
-      // 기본 클럽 찾기 시도 (개발/프로덕션 모두)
+      // 기본 클럽 찾기 시도 (쿼리 파라미터가 아닌 경우에만)
       const defaultClub = await req.prisma.club.findFirst({
         where: { subdomain: 'default' },
       });
       
       if (defaultClub) {
-        if (!isHostingDomain) {
-          console.log(`[Club Resolver] 기본 클럽 사용: ${defaultClub.name} (${defaultClub.subdomain})`);
-        }
+        console.warn(`[Club Resolver] ⚠️ 기본 클럽으로 폴백: ${defaultClub.name} (${defaultClub.subdomain})`);
+        console.warn(`[Club Resolver]   원래 요청: ${subdomain}`);
         req.club = defaultClub;
         return next();
       }
@@ -90,6 +108,7 @@ export const resolveClub = async (req, res, next) => {
         error: 'Club not found',
         subdomain,
         message: `클럽을 찾을 수 없습니다: ${subdomain}`,
+        availableClubs: allClubs.map(c => ({ subdomain: c.subdomain, name: c.name })),
       });
     }
 

@@ -105,15 +105,15 @@ app.get("/api/club/info", (req, res) => {
   try {
     // 쿼리 파라미터 확인 (디버깅용)
     const queryClub = req.query.club;
-    const headerClub = req.get('X-Club-Subdomain');
+    const headerClub = req.get("X-Club-Subdomain");
     const resolvedClub = req.club;
-    
+
     console.log("[Club Info] 요청 정보:", {
       queryClub,
       headerClub,
       resolvedClubName: resolvedClub?.name,
       resolvedClubSubdomain: resolvedClub?.subdomain,
-      host: req.get('host'),
+      host: req.get("host"),
     });
 
     // 멀티 테넌트 모드에서 클럽 정보 반환
@@ -133,7 +133,10 @@ app.get("/api/club/info", (req, res) => {
       name: process.env.CLUB_NAME || "Good Morning Club",
       subdomain: process.env.CLUB_SUBDOMAIN || "default",
     };
-    console.log("[Club Info] ⚠️ 기본 클럽 정보 반환 (클럽 해석 실패):", defaultInfo);
+    console.log(
+      "[Club Info] ⚠️ 기본 클럽 정보 반환 (클럽 해석 실패):",
+      defaultInfo
+    );
     res.json(defaultInfo);
   } catch (error) {
     console.error("[Club Info] ❌ 오류:", error);

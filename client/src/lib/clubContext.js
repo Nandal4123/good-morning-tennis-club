@@ -38,7 +38,7 @@ export function getSubdomain() {
 /**
  * 멀티 테넌트 모드 확인
  * 환경 변수 또는 설정에서 확인
- * 
+ *
  * 우선순위:
  * 1. URL 쿼리 파라미터 (?club=) - 최우선, 강제 활성화
  * 2. 환경 변수 (VITE_MULTI_TENANT_MODE)
@@ -50,7 +50,10 @@ export function isMultiTenantMode() {
     const urlParams = new URLSearchParams(window.location.search);
     const clubParam = urlParams.get("club");
     if (clubParam) {
-      console.log("[ClubContext] 멀티테넌트 모드 활성화 (URL 파라미터):", clubParam);
+      console.log(
+        "[ClubContext] 멀티테넌트 모드 활성화 (URL 파라미터):",
+        clubParam
+      );
       return true;
     }
   }
@@ -66,7 +69,7 @@ export function isMultiTenantMode() {
 
 /**
  * 현재 클럽 식별자 가져오기
- * 
+ *
  * 우선순위 (멀티테넌트 모드):
  * 1. URL 쿼리 파라미터 (?club=) - 최우선
  * 2. 서브도메인 (호스팅 도메인 제외)
@@ -75,9 +78,8 @@ export function isMultiTenantMode() {
  */
 export function getClubIdentifier() {
   const canUseStorage =
-    typeof window !== "undefined" &&
-    typeof window.localStorage !== "undefined";
-  
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
   const saveLastClub = (club) => {
     if (!canUseStorage) return;
     try {
@@ -90,7 +92,7 @@ export function getClubIdentifier() {
 
   // 멀티테넌트 모드 확인
   const isMultiTenant = isMultiTenantMode();
-  
+
   if (isMultiTenant) {
     // 멀티 테넌트 모드: 우선순위에 따라 클럽 식별자 추출
 
@@ -100,7 +102,10 @@ export function getClubIdentifier() {
       const clubParam = urlParams.get("club");
       if (clubParam && clubParam.trim()) {
         const trimmed = clubParam.trim();
-        console.log("[ClubContext] ✅ 클럽 식별자 (URL 파라미터, 최우선):", trimmed);
+        console.log(
+          "[ClubContext] ✅ 클럽 식별자 (URL 파라미터, 최우선):",
+          trimmed
+        );
         // 탭 이동으로 쿼리스트링이 사라져도 동일 클럽을 유지할 수 있도록 저장
         saveLastClub(trimmed);
         return trimmed;
@@ -122,7 +127,10 @@ export function getClubIdentifier() {
         const lastClub = window.localStorage.getItem("lastClubIdentifier");
         if (lastClub && lastClub.trim()) {
           const trimmed = lastClub.trim();
-          console.log("[ClubContext] ⚠️ 클럽 식별자 (localStorage, URL 파라미터 없음):", trimmed);
+          console.log(
+            "[ClubContext] ⚠️ 클럽 식별자 (localStorage, URL 파라미터 없음):",
+            trimmed
+          );
           return trimmed;
         }
       } catch (error) {
@@ -133,12 +141,17 @@ export function getClubIdentifier() {
     // 4순위: 환경 변수에서 기본값
     const defaultSubdomain = import.meta.env.VITE_CLUB_SUBDOMAIN || null;
     if (defaultSubdomain) {
-      console.log("[ClubContext] ⚠️ 클럽 식별자 (환경 변수, 기본값):", defaultSubdomain);
+      console.log(
+        "[ClubContext] ⚠️ 클럽 식별자 (환경 변수, 기본값):",
+        defaultSubdomain
+      );
       return defaultSubdomain;
     }
 
     // 멀티테넌트 모드인데 클럽 식별자를 찾을 수 없음
-    console.warn("[ClubContext] ⚠️ 멀티테넌트 모드이지만 클럽 식별자를 찾을 수 없습니다.");
+    console.warn(
+      "[ClubContext] ⚠️ 멀티테넌트 모드이지만 클럽 식별자를 찾을 수 없습니다."
+    );
     return null;
   }
 

@@ -46,7 +46,7 @@ function AppContent() {
     const loadClubInfo = async () => {
       try {
         setClubInfoLoading(true);
-        
+
         // URL 파라미터 확인
         const urlParams = new URLSearchParams(location.search);
         const clubParam = urlParams.get("club");
@@ -55,7 +55,7 @@ function AppContent() {
           search: location.search,
           clubParam,
         });
-        
+
         const info = await clubApi.getInfo();
         setCurrentClubInfo(info);
         console.log("[App] ✅ 클럽 정보 로드 완료:", {
@@ -65,7 +65,7 @@ function AppContent() {
           expectedClub: clubParam,
           match: clubParam === info.subdomain,
         });
-        
+
         // 클럽 불일치 경고
         if (clubParam && clubParam !== info.subdomain) {
           console.warn("[App] ⚠️ 클럽 불일치 감지:", {

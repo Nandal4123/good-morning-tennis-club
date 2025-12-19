@@ -165,7 +165,10 @@ function OwnerDashboard({ currentUser }) {
     // search는 문자열로 전달 (예: "?club=ace-club")
     // replace: false로 설정하여 브라우저 히스토리에 추가
     // 주의: navigate는 비동기이므로 localStorage 업데이트를 먼저 수행해야 함
-    console.log("[OwnerDashboard] 같은 탭에서 이동:", { pathname: "/", search });
+    console.log("[OwnerDashboard] 같은 탭에서 이동:", {
+      pathname: "/",
+      search,
+    });
     navigate({ pathname: "/", search }, { replace: false });
   };
 

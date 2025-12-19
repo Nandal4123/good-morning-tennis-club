@@ -46,7 +46,7 @@ async function fetchApi(endpoint, options = {}) {
   // 멀티 테넌트 모드 확인
   const isMultiTenant = isMultiTenantMode();
   const clubIdentifier = getClubIdentifier();
-  
+
   // 멀티 테넌트 모드일 때 클럽 쿼리 파라미터 추가
   const endpointWithClub = addClubQueryParam(endpoint);
   const url = `${API_BASE}${endpointWithClub}`;
@@ -67,9 +67,11 @@ async function fetchApi(endpoint, options = {}) {
       url.includes(`club=${encodeURIComponent(clubIdentifier)}`) ||
       url.includes(`club=${clubIdentifier}`);
     const hasHeader = !!clubHeaders["X-Club-Subdomain"];
-    
+
     if (!urlHasClub && !hasHeader) {
-      console.error("[API] ❌ 클럽 파라미터가 URL 또는 헤더에 포함되지 않았습니다!");
+      console.error(
+        "[API] ❌ 클럽 파라미터가 URL 또는 헤더에 포함되지 않았습니다!"
+      );
       console.error("[API]   endpoint:", endpoint);
       console.error("[API]   endpointWithClub:", endpointWithClub);
       console.error("[API]   clubIdentifier:", clubIdentifier);
