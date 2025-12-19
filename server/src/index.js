@@ -101,7 +101,8 @@ app.get("/api/health", (req, res) => {
 });
 
 // Club info endpoint (클럽 정보 반환)
-app.get("/api/club/info", (req, res) => {
+// 주의: 이 엔드포인트는 resolveClub 미들웨어를 거치므로 req.club이 설정되어 있어야 함
+app.get("/api/club/info", async (req, res) => {
   try {
     // 쿼리 파라미터 확인 (디버깅용)
     const queryClub = req.query.club;
@@ -114,6 +115,7 @@ app.get("/api/club/info", (req, res) => {
       resolvedClubName: resolvedClub?.name,
       resolvedClubSubdomain: resolvedClub?.subdomain,
       host: req.get("host"),
+      hasResolvedClub: !!resolvedClub,
     });
 
     // 멀티 테넌트 모드에서 클럽 정보 반환
@@ -124,7 +126,42 @@ app.get("/api/club/info", (req, res) => {
         subdomain: resolvedClub.subdomain,
       };
       console.log("[Club Info] ✅ 클럽 정보 반환:", clubInfo);
+      
+      // 클럽 불일치 경고 (쿼리 파라미터와 해석된 클럽이 다른 경우)
+      if (queryClub && queryClub !== resolvedClub.subdomain) {
+        console.error("[Club Info] ❌ 클럽 불일치:", {
+          requested: queryClub,
+          resolved: resolvedClub.subdomain,
+        });
+      }
+      
       return res.json(clubInfo);
+    }
+
+    // req.club이 없는 경우 - 쿼리 파라미터로 직접 조회 시도
+    if (queryClub) {
+      console.log("[Club Info] ⚠️ req.club이 없음, 쿼리 파라미터로 직접 조회:", queryClub);
+      try {
+        const club = await req.prisma.club.findUnique({
+          where: { subdomain: queryClub.trim() },
+        });
+        
+        if (club) {
+          console.log("[Club Info] ✅ 쿼리 파라미터로 클럽 찾기 성공:", {
+            name: club.name,
+            subdomain: club.subdomain,
+          });
+          return res.json({
+            id: club.id,
+            name: club.name,
+            subdomain: club.subdomain,
+          });
+        } else {
+          console.error("[Club Info] ❌ 쿼리 파라미터로 클럽을 찾을 수 없음:", queryClub);
+        }
+      } catch (error) {
+        console.error("[Club Info] ❌ 클럽 조회 중 오류:", error);
+      }
     }
 
     // MVP 모드 또는 클럽이 없는 경우 기본 클럽 정보 반환
@@ -133,7 +170,7 @@ app.get("/api/club/info", (req, res) => {
       name: process.env.CLUB_NAME || "Good Morning Club",
       subdomain: process.env.CLUB_SUBDOMAIN || "default",
     };
-    console.log(
+    console.error(
       "[Club Info] ⚠️ 기본 클럽 정보 반환 (클럽 해석 실패):",
       defaultInfo
     );
