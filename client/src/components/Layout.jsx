@@ -32,17 +32,14 @@ function Layout({ children, currentUser, onLogout }) {
   const [loading, setLoading] = useState(true);
 
   // URL에서 클럽 파라미터 읽기 (로딩 중 임시 표시용)
+  // 주의: URL 파라미터가 없으면 기본 클럽 이름 사용 (localStorage 무시)
   const getClubNameFromURL = () => {
     const urlParams = new URLSearchParams(location.search);
     const clubParam = urlParams.get('club');
-    if (clubParam) {
-      return humanizeClubIdentifier(clubParam);
+    if (clubParam && clubParam.trim()) {
+      return humanizeClubIdentifier(clubParam.trim());
     }
-    // URL 파라미터가 없으면 getClubIdentifier() 사용
-    const clubIdentifier = getClubIdentifier();
-    if (clubIdentifier && clubIdentifier !== 'default') {
-      return humanizeClubIdentifier(clubIdentifier);
-    }
+    // URL 파라미터가 없으면 null 반환 (기본 클럽 이름 사용)
     return null;
   };
 

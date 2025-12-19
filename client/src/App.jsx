@@ -34,7 +34,7 @@ function AppContent() {
     setLoading(false);
   }, []);
 
-  // 현재 클럽 정보 로드 및 쿼리 파라미터 유지
+  // 현재 클럽 정보 로드
   // Owner 대시보드는 모든 클럽을 관리하므로 클럽 정보를 로드하지 않음
   useEffect(() => {
     if (location.pathname === "/owner") {
@@ -72,22 +72,6 @@ function AppContent() {
             expected: clubParam,
             actual: info.subdomain,
           });
-        }
-
-        // 멀티테넌트 모드이고 URL에 클럽 파라미터가 없으면 추가
-        // 이렇게 하면 URL과 화면이 항상 일치함
-        if (info.subdomain && info.subdomain !== 'default') {
-          const currentUrlParams = new URLSearchParams(window.location.search);
-          if (!currentUrlParams.has('club')) {
-            const newSearch = `?club=${encodeURIComponent(info.subdomain)}`;
-            console.log("[App] 🔧 URL에 클럽 파라미터 추가:", newSearch);
-            // replace를 사용하여 히스토리에 추가하지 않음 (뒤로가기 방지)
-            window.history.replaceState(
-              {},
-              '',
-              `${location.pathname}${newSearch}`
-            );
-          }
         }
       } catch (error) {
         console.error("[App] ❌ 클럽 정보 로드 실패:", error);
