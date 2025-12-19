@@ -96,17 +96,23 @@ export const resolveClub = async (req, res, next) => {
       
       // 쿼리 파라미터로 명시적으로 요청된 경우에는 기본 클럽으로 폴백하지 않음
       // 명시적 요청은 반드시 해당 클럽이 존재해야 함
-      if (req.query.club && req.query.club.trim() === subdomain) {
-        console.error(`[Club Resolver]   명시적 클럽 요청이지만 클럽이 존재하지 않음 - 404 반환`);
+      // 주의: 쿼리 파라미터가 있으면 무조건 404 반환 (기본 클럽으로 폴백 금지)
+      const hasExplicitClubQuery = req.query.club && req.query.club.trim();
+      if (hasExplicitClubQuery) {
+        console.error(`[Club Resolver]   ❌ 명시적 클럽 요청(?club=${req.query.club})이지만 클럽이 존재하지 않음 - 404 반환`);
+        console.error(`[Club Resolver]   ⚠️ 기본 클럽으로 폴백하지 않음 (명시적 요청)`);
         return res.status(404).json({ 
           error: 'Club not found',
-          subdomain,
-          message: `클럽을 찾을 수 없습니다: ${subdomain}`,
+          subdomain: req.query.club.trim(),
+          requestedSubdomain: req.query.club.trim(),
+          resolvedSubdomain: subdomain,
+          message: `클럽을 찾을 수 없습니다: ${req.query.club.trim()}`,
           availableClubs: allClubs.map(c => ({ subdomain: c.subdomain, name: c.name })),
         });
       }
       
-      // 기본 클럽 찾기 시도 (쿼리 파라미터가 아닌 경우에만)
+      // 기본 클럽 찾기 시도 (쿼리 파라미터가 없는 경우에만)
+      // 쿼리 파라미터가 없고 서브도메인/헤더로 요청된 경우에만 폴백
       const defaultClub = await req.prisma.club.findFirst({
         where: { subdomain: 'default' },
       });
