@@ -75,16 +75,21 @@ function Layout({ children, currentUser, onLogout }) {
   };
 
   // 표시할 클럽 이름 결정
+  // 중요: URL 파라미터가 없으면 기본 클럽 이름만 표시 (localStorage 무시)
   const displayClubName = () => {
-    if (clubInfo?.name) {
+    // 1순위: API에서 로드된 실제 클럽 정보
+    if (clubInfo?.name && !loading) {
       return clubInfo.name;
     }
-    // 로딩 중이거나 clubInfo가 없을 때 URL에서 읽은 값 사용
+    
+    // 2순위: URL 파라미터에서 읽은 클럽 이름 (로딩 중 임시 표시용)
+    // 주의: URL 파라미터가 없으면 null 반환하여 기본값 사용
     const urlClubName = getClubNameFromURL();
     if (urlClubName) {
       return urlClubName;
     }
-    // 모두 없으면 기본값
+    
+    // 3순위: 기본 클럽 이름 (URL 파라미터가 없을 때)
     return t('app.title');
   };
 

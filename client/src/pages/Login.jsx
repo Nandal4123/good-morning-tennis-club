@@ -91,16 +91,56 @@ function Login({ onLogin }) {
 
   const loadClubInfo = async () => {
     try {
+      // URL 파라미터 확인
+      const urlParams = new URLSearchParams(location.search);
+      const clubParam = urlParams.get("club");
+      
+      // URL 파라미터가 없으면 기본 클럽 정보로 설정 (API 호출 안 함)
+      if (!clubParam || !clubParam.trim()) {
+        console.log("[Login] URL 파라미터 없음, 기본 클럽 사용");
+        setClubInfo({
+          name: "Good Morning Club",
+          subdomain: "default",
+        });
+        return;
+      }
+      
+      // URL 파라미터가 있으면 API 호출
       const info = await clubApi.getInfo();
       setClubInfo(info);
       console.log("[Login] 클럽 정보 로드 완료:", info.name, info.subdomain);
+      
+      // URL 파라미터와 실제 클럽 정보 일치 확인
+      if (clubParam !== info.subdomain) {
+        console.warn("[Login] ⚠️ URL 파라미터와 클럽 정보 불일치:", {
+          urlParam: clubParam,
+          actualSubdomain: info.subdomain,
+        });
+      }
     } catch (error) {
       console.error("Failed to load club info:", error);
-      // 기본값 설정
-      setClubInfo({
-        name: "Good Morning Club",
-        subdomain: "default",
-      });
+      
+      // 에러 발생 시 URL 파라미터 확인
+      const urlParams = new URLSearchParams(location.search);
+      const clubParam = urlParams.get("club");
+      
+      if (clubParam && clubParam.trim()) {
+        // URL 파라미터가 있으면 임시로 표시
+        const clubName = clubParam
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        setClubInfo({
+          name: clubName,
+          subdomain: clubParam.trim(),
+        });
+      } else {
+        // URL 파라미터가 없으면 기본값
+        setClubInfo({
+          name: "Good Morning Club",
+          subdomain: "default",
+        });
+      }
     }
   };
 
