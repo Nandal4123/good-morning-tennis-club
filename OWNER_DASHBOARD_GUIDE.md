@@ -240,3 +240,4 @@ https://good-morning-tennis-club.vercel.app/?club=<클럽이름>&owner=1
 **문제가 계속되면:** Render 서버 로그를 확인하거나, 브라우저 개발자 도구(F12)의 Console/Network 탭에서 에러 메시지를 확인하세요.
 
 
+

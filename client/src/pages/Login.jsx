@@ -12,6 +12,7 @@ import {
   Search,
 } from "lucide-react";
 import { userApi, clubApi } from "../lib/api";
+import { validatePhoneNumber, normalizePhoneNumber } from "../lib/userUtils";
 
 // OWNER 이메일 (절대 권한자)
 const OWNER_EMAIL = "nandal4123@gmail.com";
@@ -66,6 +67,7 @@ function Login({ onLogin }) {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+    phone: "",
     role: "USER",
     tennisLevel: "NTRP_3_0",
     joinCode: "",
@@ -101,22 +103,34 @@ function Login({ onLogin }) {
         setClubInfo({
           name: "Good Morning Club",
           subdomain: "default",
+          usePhoneNumber: false, // 기존 클럽은 이메일 사용
         });
         return;
       }
       
       // URL 파라미터가 있으면 API 호출
       const info = await clubApi.getInfo();
-      setClubInfo(info);
-      console.log("[Login] 클럽 정보 로드 완료:", info.name, info.subdomain);
       
       // URL 파라미터와 실제 클럽 정보 일치 확인
-      if (clubParam !== info.subdomain) {
+      if (clubParam.trim() !== info.subdomain) {
         console.warn("[Login] ⚠️ URL 파라미터와 클럽 정보 불일치:", {
           urlParam: clubParam,
           actualSubdomain: info.subdomain,
         });
+        // 불일치 시 URL 파라미터를 우선시하여 임시로 표시
+        const clubName = clubParam
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        setClubInfo({
+          name: clubName,
+          subdomain: clubParam.trim(),
+        });
+        return;
       }
+      
+      setClubInfo(info);
+      console.log("[Login] 클럽 정보 로드 완료:", info.name, info.subdomain);
     } catch (error) {
       console.error("Failed to load club info:", error);
       
@@ -289,6 +303,31 @@ function Login({ onLogin }) {
       return;
     }
 
+    // 클럽 설정에 따라 필수 필드 검증
+    if (clubInfo?.usePhoneNumber) {
+      // 신규 클럽: 전화번호 필수
+      if (!newUser.phone || !newUser.phone.trim()) {
+        alert("전화번호를 입력해주세요.");
+        return;
+      }
+
+      // 전화번호 형식 검증
+      if (!validatePhoneNumber(newUser.phone)) {
+        alert("올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)");
+        return;
+      }
+
+      // 전화번호 정규화
+      const normalizedPhone = normalizePhoneNumber(newUser.phone);
+      newUser.phone = normalizedPhone;
+    } else {
+      // 기존 클럽: 이메일 필수
+      if (!newUser.email || !newUser.email.trim()) {
+        alert("이메일을 입력해주세요.");
+        return;
+      }
+    }
+
     try {
       setCreating(true);
       // joinCode는 서버로 전송하지 않음
@@ -375,21 +414,40 @@ function Login({ onLogin }) {
                     placeholder="홍길동"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">
-                    {t("login.email")}
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={newUser.email}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, email: e.target.value })
-                    }
-                    className="input"
-                    placeholder="example@email.com"
-                  />
-                </div>
+                {/* 클럽 설정에 따라 이메일 또는 전화번호 입력 */}
+                {clubInfo?.usePhoneNumber ? (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      전화번호 *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={newUser.phone}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, phone: e.target.value })
+                      }
+                      className="input"
+                      placeholder="010-1234-5678"
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
+                      {t("login.email")}
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={newUser.email}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, email: e.target.value })
+                      }
+                      className="input"
+                      placeholder="example@email.com"
+                    />
+                  </div>
+                )}
 
                 {/* Role Selection */}
                 <div>

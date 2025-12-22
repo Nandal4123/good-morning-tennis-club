@@ -45,6 +45,7 @@ model Club {
   id                String   @id @default(cuid())
   name              String
   subdomain         String   @unique
+  usePhoneNumber    Boolean  @default(false) // 신규 클럽용: true면 전화번호, false면 이메일
   adminPasswordHash String? // 관리자 비밀번호 해시
   joinCodeHash      String? // 가입 코드 해시
   createdAt         DateTime @default(now())
@@ -59,7 +60,8 @@ model Club {
 
 model User {
   id              String      @id @default(cuid())
-  email           String      @unique
+  email           String?     @unique // 기존 클럽용 (옵셔널)
+  phone           String?     @unique // 신규 클럽용 (옵셔널)
   name            String
   role            UserRole    @default(USER)
   tennisLevel     TennisLevel @default(NTRP_3_0)

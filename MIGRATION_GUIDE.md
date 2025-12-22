@@ -64,3 +64,4 @@ pnpm prisma studio
 - `pnpm install` 실행하여 의존성 설치 확인
 
 
+

@@ -23,6 +23,7 @@ export const getAllClubs = async (req, res) => {
         id: true,
         name: true,
         subdomain: true,
+        usePhoneNumber: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -73,7 +74,7 @@ export const getClubSummaryBySubdomain = async (req, res) => {
 // POST /api/clubs (클럽 생성)
 export const createClub = async (req, res) => {
   try {
-    const { name, subdomain, adminPassword, joinCode } = req.body;
+    const { name, subdomain, adminPassword, joinCode, usePhoneNumber = true } = req.body;
 
     // 필수 필드 검증
     if (!name || !subdomain) {
@@ -121,6 +122,7 @@ export const createClub = async (req, res) => {
       data: {
         name: name.trim(),
         subdomain: subdomain.trim().toLowerCase(),
+        usePhoneNumber: usePhoneNumber === true, // 신규 클럽은 기본적으로 전화번호 사용
         adminPasswordHash,
         joinCodeHash,
       },
@@ -128,6 +130,7 @@ export const createClub = async (req, res) => {
         id: true,
         name: true,
         subdomain: true,
+        usePhoneNumber: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -154,6 +157,7 @@ export const getClubBySubdomain = async (req, res) => {
         id: true,
         name: true,
         subdomain: true,
+        usePhoneNumber: true,
         createdAt: true,
         updatedAt: true,
         adminPasswordHash: true, // 비밀번호 해시 존재 여부만 확인

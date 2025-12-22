@@ -12,6 +12,9 @@ import {
   Save,
   Eye,
   EyeOff,
+  Share2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { clubsApi } from "../lib/api";
 
@@ -38,6 +41,7 @@ function OwnerDashboard({ currentUser }) {
     subdomain: "",
     adminPassword: "",
     joinCode: "",
+    usePhoneNumber: true, // 신규 클럽은 기본적으로 전화번호 사용
   });
   const [creating, setCreating] = useState(false);
 
@@ -52,6 +56,9 @@ function OwnerDashboard({ currentUser }) {
   const [newJoinCode, setNewJoinCode] = useState("");
   const [showJoinCode, setShowJoinCode] = useState(false);
   const [updatingJoinCode, setUpdatingJoinCode] = useState(false);
+
+  // 공유 링크 복사
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const isOwner = !!currentUser?.isOwner;
 
@@ -191,10 +198,11 @@ function OwnerDashboard({ currentUser }) {
         subdomain: newClub.subdomain,
         adminPassword: newClub.adminPassword || undefined,
         joinCode: newClub.joinCode || undefined,
+        usePhoneNumber: newClub.usePhoneNumber,
       });
       setSuccess("클럽이 생성되었습니다.");
       setShowCreateModal(false);
-      setNewClub({ name: "", subdomain: "", adminPassword: "", joinCode: "" });
+      setNewClub({ name: "", subdomain: "", adminPassword: "", joinCode: "", usePhoneNumber: true });
       await loadClubs(query);
       await handleSelect(club);
     } catch (e) {
@@ -247,6 +255,42 @@ function OwnerDashboard({ currentUser }) {
       setError(e.message || "가입 코드 변경에 실패했습니다.");
     } finally {
       setUpdatingJoinCode(false);
+    }
+  };
+
+  // 공유 링크 생성 및 복사
+  const handleCopyShareLink = async () => {
+    if (!selected || !selected.subdomain) {
+      setError("클럽을 선택해주세요.");
+      return;
+    }
+
+    const origin = window.location.origin;
+    const shareLink = `${origin}/share?club=${encodeURIComponent(selected.subdomain)}`;
+
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setLinkCopied(true);
+      setSuccess("공유 링크가 클립보드에 복사되었습니다!");
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (error) {
+      console.error("링크 복사 실패:", error);
+      // Fallback: 텍스트 영역 사용
+      const textArea = document.createElement("textarea");
+      textArea.value = shareLink;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
+        setLinkCopied(true);
+        setSuccess("공유 링크가 클립보드에 복사되었습니다!");
+        setTimeout(() => setLinkCopied(false), 2000);
+      } catch (e) {
+        setError("링크 복사에 실패했습니다. 수동으로 복사해주세요: " + shareLink);
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -510,6 +554,36 @@ function OwnerDashboard({ currentUser }) {
                     : "가입 코드가 설정되지 않았습니다."}
                 </div>
               </div>
+
+              {/* 공유 링크 */}
+              <div className="pt-4 border-t border-slate-700/40">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm text-slate-400">카카오톡 공유 링크</div>
+                  <button
+                    onClick={handleCopyShareLink}
+                    className="btn-primary px-3 py-1.5 text-xs flex items-center gap-1"
+                    title="카카오톡 공유용 링크 복사"
+                  >
+                    {linkCopied ? (
+                      <>
+                        <Check size={12} />
+                        복사됨
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={12} />
+                        복사
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="text-xs text-slate-500 break-all bg-slate-900/40 p-2 rounded mt-2 font-mono">
+                  {window.location.origin}/share?club={clubDetail.subdomain}
+                </div>
+                <div className="text-xs text-slate-600 mt-1">
+                  💡 이 링크를 카카오톡으로 공유하면 "{clubDetail.name}"으로 표시됩니다
+                </div>
+              </div>
             </div>
           ) : (
             <div className="text-slate-400 text-sm">
@@ -594,6 +668,27 @@ function OwnerDashboard({ currentUser }) {
                   className="input w-full"
                   placeholder="나중에 설정 가능"
                 />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-400 mb-1">
+                  회원가입 방식
+                </label>
+                <select
+                  value={newClub.usePhoneNumber ? "phone" : "email"}
+                  onChange={(e) =>
+                    setNewClub({
+                      ...newClub,
+                      usePhoneNumber: e.target.value === "phone",
+                    })
+                  }
+                  className="input w-full"
+                >
+                  <option value="phone">전화번호 (신규 권장)</option>
+                  <option value="email">이메일 (기존 방식)</option>
+                </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  신규 클럽은 전화번호 사용을 권장합니다.
+                </p>
               </div>
               <div className="flex gap-2 pt-2">
                 <button

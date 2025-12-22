@@ -100,3 +100,4 @@ pnpm run db:generate
 5. ✅ 클럽 추가/비밀번호 변경 기능 테스트
 
 
+

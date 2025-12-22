@@ -124,6 +124,7 @@ app.get("/api/club/info", async (req, res) => {
         id: resolvedClub.id,
         name: resolvedClub.name,
         subdomain: resolvedClub.subdomain,
+        usePhoneNumber: resolvedClub.usePhoneNumber || false,
       };
       console.log("[Club Info] ✅ 클럽 정보 반환:", clubInfo);
       
@@ -155,6 +156,7 @@ app.get("/api/club/info", async (req, res) => {
             id: club.id,
             name: club.name,
             subdomain: club.subdomain,
+            usePhoneNumber: club.usePhoneNumber || false,
           });
         } else {
           console.error("[Club Info] ❌ 쿼리 파라미터로 클럽을 찾을 수 없음:", queryClub);

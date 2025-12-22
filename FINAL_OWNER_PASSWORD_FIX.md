@@ -165,3 +165,4 @@ https://good-morning-tennis-club-v2.onrender.com/api/owner/debug
 **배포 완료 후 디버깅 엔드포인트(`/api/owner/debug`)를 접속하여 정확한 환경변수 값을 확인하세요!**
 
 
+

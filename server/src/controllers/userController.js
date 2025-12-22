@@ -7,6 +7,10 @@ import {
   getClubFilter,
   getClubInfo,
 } from "../utils/clubInfo.js";
+import {
+  validatePhoneNumber,
+  normalizePhoneNumber,
+} from "../utils/phoneValidation.js";
 
 // Get all users
 export const getAllUsers = async (req, res) => {
@@ -76,7 +80,8 @@ export const getUserById = async (req, res) => {
 export const createUser = async (req, res) => {
   try {
     const {
-      email,
+      phone,      // 신규 클럽용
+      email,      // 기존 클럽용
       name,
       role,
       tennisLevel,
@@ -85,7 +90,7 @@ export const createUser = async (req, res) => {
       profileMetadata,
     } = req.body;
 
-    console.log("Creating user with data:", { email, name, role, tennisLevel });
+    console.log("Creating user with data:", { phone, email, name, role, tennisLevel });
 
     // 멀티 테넌트: clubId 자동 할당
     let clubId = getClubFilter(req);
@@ -105,26 +110,104 @@ export const createUser = async (req, res) => {
       }
     }
 
-    const user = await req.prisma.user.create({
-      data: {
-        email,
-        name,
-        role: role || "USER",
-        tennisLevel: tennisLevel || "NTRP_3_0",
-        goals,
-        languagePref: languagePref || "ko",
-        profileMetadata,
-        clubId: clubId || null, // 멀티 테넌트 모드가 아니면 null
-      },
-    });
+    // 클럽 정보 조회 (usePhoneNumber 확인)
+    let club = null;
+    if (clubId) {
+      club = await req.prisma.club.findUnique({
+        where: { id: clubId },
+        select: { usePhoneNumber: true },
+      });
+    }
 
-    console.log("User created successfully:", user.id);
-    res.status(201).json(user);
+    // 클럽 설정에 따라 필수 필드 검증
+    if (club && club.usePhoneNumber) {
+      // 신규 클럽: 전화번호 필수
+      if (!phone) {
+        return res.status(400).json({
+          error: "전화번호를 입력해주세요.",
+        });
+      }
+
+      // 전화번호 형식 검증
+      if (!validatePhoneNumber(phone)) {
+        return res.status(400).json({
+          error: "올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)",
+        });
+      }
+
+      // 전화번호 정규화
+      const normalizedPhone = normalizePhoneNumber(phone);
+
+      // 전화번호 중복 체크
+      const existingPhone = await req.prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+      });
+      if (existingPhone) {
+        return res.status(400).json({
+          error: "이미 등록된 전화번호입니다.",
+        });
+      }
+
+      // 사용자 생성 (전화번호만)
+      const user = await req.prisma.user.create({
+        data: {
+          phone: normalizedPhone,
+          email: null,
+          name,
+          role: role || "USER",
+          tennisLevel: tennisLevel || "NTRP_3_0",
+          goals,
+          languagePref: languagePref || "ko",
+          profileMetadata,
+          clubId: clubId || null,
+        },
+      });
+
+      console.log("User created successfully:", user.id);
+      res.status(201).json(user);
+    } else {
+      // 기존 클럽: 이메일 필수
+      if (!email) {
+        return res.status(400).json({
+          error: "이메일을 입력해주세요.",
+        });
+      }
+
+      // 이메일 중복 체크
+      const existingEmail = await req.prisma.user.findUnique({
+        where: { email },
+      });
+      if (existingEmail) {
+        return res.status(400).json({
+          error: "이미 등록된 이메일입니다.",
+        });
+      }
+
+      // 사용자 생성 (이메일만)
+      const user = await req.prisma.user.create({
+        data: {
+          phone: null,
+          email,
+          name,
+          role: role || "USER",
+          tennisLevel: tennisLevel || "NTRP_3_0",
+          goals,
+          languagePref: languagePref || "ko",
+          profileMetadata,
+          clubId: clubId || null,
+        },
+      });
+
+      console.log("User created successfully:", user.id);
+      res.status(201).json(user);
+    }
   } catch (error) {
     console.error("Error creating user:", error);
     console.error("Error details:", error.message);
     if (error.code === "P2002") {
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(400).json({
+        error: "이미 등록된 전화번호 또는 이메일입니다.",
+      });
     }
     // 개발 환경에서 상세 에러 반환
     res.status(500).json({

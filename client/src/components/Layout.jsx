@@ -77,19 +77,29 @@ function Layout({ children, currentUser, onLogout }) {
   // 표시할 클럽 이름 결정
   // 중요: URL 파라미터가 없으면 기본 클럽 이름만 표시 (localStorage 무시)
   const displayClubName = () => {
-    // 1순위: API에서 로드된 실제 클럽 정보
-    if (clubInfo?.name && !loading) {
+    // URL 파라미터 확인 (최우선)
+    const urlParams = new URLSearchParams(location.search);
+    const clubParam = urlParams.get('club');
+    
+    // URL 파라미터가 없으면 무조건 기본 클럽 이름만 표시
+    if (!clubParam || !clubParam.trim()) {
+      // API에서 로드된 정보가 있더라도 URL 파라미터가 없으면 기본값 사용
+      return t('app.title');
+    }
+    
+    // URL 파라미터가 있는 경우:
+    // 1순위: API에서 로드된 실제 클럽 정보 (URL 파라미터와 일치하는 경우만)
+    if (clubInfo?.name && !loading && clubInfo.subdomain === clubParam.trim()) {
       return clubInfo.name;
     }
     
     // 2순위: URL 파라미터에서 읽은 클럽 이름 (로딩 중 임시 표시용)
-    // 주의: URL 파라미터가 없으면 null 반환하여 기본값 사용
     const urlClubName = getClubNameFromURL();
     if (urlClubName) {
       return urlClubName;
     }
     
-    // 3순위: 기본 클럽 이름 (URL 파라미터가 없을 때)
+    // 3순위: 기본 클럽 이름 (fallback)
     return t('app.title');
   };
 

@@ -58,3 +58,4 @@ node scripts/fix-admin-passwords.js
 - 이 스크립트는 클라이언트 코드의 하드코딩된 비밀번호를 기준으로 DB의 해시를 재설정합니다.
 
 
+
