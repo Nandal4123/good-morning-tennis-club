@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
-function AttendanceCalendar({ attendances, onClose }) {
+function AttendanceCalendar({ attendances = [], onClose, isModal = false }) {
   const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -72,21 +72,22 @@ function AttendanceCalendar({ attendances, onClose }) {
     return parseInt(y) === year && parseInt(m) === month + 1;
   }).length;
 
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md overflow-hidden animate-slide-up">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            📅 {t('attendance.history')}
-          </h2>
+  const calendarContent = (
+    <div className={`bg-slate-800 rounded-2xl border border-slate-700 w-full overflow-hidden ${isModal ? 'max-w-md animate-slide-up' : ''}`}>
+      {/* 헤더 */}
+      <div className="flex items-center justify-between p-4 border-b border-slate-700">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          📅 {t('attendance.history')}
+        </h2>
+        {isModal && onClose && (
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-slate-700 transition-colors"
           >
             <X className="text-slate-400" size={20} />
           </button>
-        </div>
+        )}
+      </div>
 
         {/* 월 네비게이션 */}
         <div className="flex items-center justify-between p-4">
@@ -164,6 +165,16 @@ function AttendanceCalendar({ attendances, onClose }) {
       </div>
     </div>
   );
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        {calendarContent}
+      </div>
+    );
+  }
+
+  return calendarContent;
 }
 
 export default AttendanceCalendar;

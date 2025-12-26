@@ -150,3 +150,4 @@ https://good-morning-tennis-club.vercel.app/share?club=ace-club
 - `/share` 엔드포인트를 사용하면 카카오톡에서 올바른 클럽 이름이 표시됩니다
 - 직접 URL을 공유하면 항상 "굿모닝 테니스 클럽"으로 표시됩니다
 
+

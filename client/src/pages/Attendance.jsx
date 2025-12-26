@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalendarCheck, Check, X, History } from 'lucide-react';
+import { CalendarCheck, Check, X } from 'lucide-react';
 import { sessionApi, attendanceApi, userApi } from '../lib/api';
-import AttendanceItem from '../components/AttendanceItem';
+import WeeklyAttendanceView from '../components/WeeklyAttendanceView';
 import LoadingScreen from '../components/LoadingScreen';
 
 function Attendance({ currentUser }) {
@@ -23,7 +23,7 @@ function Attendance({ currentUser }) {
       const [session, users, history] = await Promise.all([
         sessionApi.getToday(),
         userApi.getAll(),
-        attendanceApi.getAll({ limit: 20 })
+        attendanceApi.getAll({ limit: 1000 }) // 캘린더에 모든 출석 데이터 표시를 위해 limit 증가
       ]);
       setTodaySession(session);
       setAllUsers(users);
@@ -78,114 +78,96 @@ function Attendance({ currentUser }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Mark Attendance */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-white mb-4">
-            {t('attendance.todayAttendees')}
-          </h2>
-          <p className="text-slate-400 text-sm mb-6">
-            {todaySession?.description || t('attendance.morningSession')}
-          </p>
+      {/* 상단: 오늘 출석자 체크 패널 */}
+      <div className="card">
+        <h2 className="text-xl font-bold text-white mb-4">
+          {t('attendance.todayAttendees')}
+        </h2>
+        <p className="text-slate-400 text-sm mb-4">
+          {todaySession?.description || t('attendance.morningSession')}
+        </p>
 
-          <div className="space-y-3">
-            {allUsers
-              .filter((user) => {
-                // 게스트 사용자 제외
-                return (
-                  !user.email?.endsWith("@guest.local") &&
-                  !user.name?.startsWith("👤")
-                );
-              })
-              .map((user) => {
-              const status = getUserAttendanceStatus(user.id);
-              const isMarking = marking === user.id;
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {allUsers
+            .filter((user) => {
+              // 게스트 사용자 제외
               return (
-                <div 
-                  key={user.id}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
-                    status === 'ATTENDED' 
-                      ? 'bg-tennis-500/10 border-tennis-500/30'
-                      : status === 'ABSENT'
-                      ? 'bg-red-500/10 border-red-500/30'
-                      : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-lg font-bold text-white">
-                      {user.name?.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
-                    </div>
-                  </div>
+                !user.email?.endsWith("@guest.local") &&
+                !user.name?.startsWith("👤")
+              );
+            })
+            .map((user) => {
+            const status = getUserAttendanceStatus(user.id);
+            const isMarking = marking === user.id;
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleMarkAttendance(user.id, 'ATTENDED')}
-                      disabled={isMarking}
-                      className={`p-2 rounded-lg transition-all duration-300 ${
-                        status === 'ATTENDED'
-                          ? 'bg-tennis-500 text-white'
-                          : 'bg-slate-700/50 text-slate-400 hover:bg-tennis-500/20 hover:text-tennis-400'
-                      }`}
-                    >
-                      <Check size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleMarkAttendance(user.id, 'ABSENT')}
-                      disabled={isMarking}
-                      className={`p-2 rounded-lg transition-all duration-300 ${
-                        status === 'ABSENT'
-                          ? 'bg-red-500 text-white'
-                          : 'bg-slate-700/50 text-slate-400 hover:bg-red-500/20 hover:text-red-400'
-                      }`}
-                    >
-                      <X size={18} />
-                    </button>
+            return (
+              <div 
+                key={user.id}
+                className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-300 ${
+                  status === 'ATTENDED' 
+                    ? 'bg-tennis-500/10 border-tennis-500/30'
+                    : status === 'ABSENT'
+                    ? 'bg-red-500/10 border-red-500/30'
+                    : 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600'
+                }`}
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+                    {user.name?.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-white text-sm truncate">{user.name}</p>
+                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
                   </div>
                 </div>
-              );
-            })}
-            {allUsers.length === 0 && (
-              <p className="text-center text-slate-500 py-8">{t('attendance.noAttendees')}</p>
-            )}
-          </div>
-        </div>
 
-        {/* Attendance History */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <History className="text-slate-400" size={20} />
-            {t('attendance.history')}
-          </h2>
-          {attendanceHistory.length > 0 ? (
-            <div className="space-y-1 max-h-[600px] overflow-y-auto">
-              {attendanceHistory
-                .filter((attendance) => {
-                  // 게스트 사용자 출석 기록 제외
-                  const user = attendance.user;
-                  return (
-                    user &&
-                    !user.email?.endsWith("@guest.local") &&
-                    !user.name?.startsWith("👤")
-                  );
-                })
-                .map((attendance) => (
-                <AttendanceItem 
-                  key={attendance.id} 
-                  attendance={attendance}
-                  showUser={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-slate-500 py-8">{t('dashboard.noActivity')}</p>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => handleMarkAttendance(user.id, 'ATTENDED')}
+                    disabled={isMarking}
+                    className={`p-1.5 rounded-lg transition-all duration-300 ${
+                      status === 'ATTENDED'
+                        ? 'bg-tennis-500 text-white'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-tennis-500/20 hover:text-tennis-400'
+                    }`}
+                  >
+                    <Check size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleMarkAttendance(user.id, 'ABSENT')}
+                    disabled={isMarking}
+                    className={`p-1.5 rounded-lg transition-all duration-300 ${
+                      status === 'ABSENT'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-red-500/20 hover:text-red-400'
+                    }`}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {allUsers.filter((user) => 
+            !user.email?.endsWith("@guest.local") && !user.name?.startsWith("👤")
+          ).length === 0 && (
+            <p className="text-center text-slate-500 py-8 col-span-full">{t('attendance.noAttendees')}</p>
           )}
         </div>
       </div>
+
+      {/* 하단: 주간 캘린더 뷰 */}
+      <WeeklyAttendanceView 
+        attendances={attendanceHistory.filter((attendance) => {
+          // 게스트 사용자 출석 기록 제외
+          const user = attendance.user;
+          return (
+            user &&
+            !user.email?.endsWith("@guest.local") &&
+            !user.name?.startsWith("👤")
+          );
+        })}
+      />
     </div>
   );
 }
